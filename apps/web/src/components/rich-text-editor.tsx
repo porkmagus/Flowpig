@@ -218,7 +218,7 @@ export function RichTextEditor({
       {/* Bubble Menu (appears on selection) */}
       {editable && (
         <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="flex items-center gap-1 p-1 bg-gray-900 rounded-lg shadow-lg">
+          <div className="flex items-center gap-1 p-1 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/40">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
               isActive={editor.isActive('bold')}
@@ -244,7 +244,7 @@ export function RichTextEditor({
       {/* Floating Menu (appears on empty line) */}
       {editable && (
         <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="flex items-center gap-1 p-1 bg-gray-900 rounded-lg shadow-lg">
+          <div className="flex items-center gap-1 p-1 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/40">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
               isActive={editor.isActive('heading', { level: 1 })}
@@ -270,7 +270,7 @@ export function RichTextEditor({
       {/* Editor Content */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none p-4 min-h-[200px] focus:outline-none"
+        className="prose prose-sm max-w-none p-4 min-h-50 focus:outline-none"
       />
     </div>
   );

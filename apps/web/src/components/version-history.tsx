@@ -366,7 +366,7 @@ function VersionItem({
       {/* Compare mode indicators */}
       {compareMode && (
         <div className={`
-          flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center
+          shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center
           ${isCompareFrom ? 'border-blue-500 bg-blue-500 text-white' : ''}
           ${isCompareTo ? 'border-green-500 bg-green-500 text-white' : ''}
           ${!isCompareFrom && !isCompareTo ? 'border-linear-border' : ''}

@@ -525,7 +525,7 @@ export default function IssueDetail() {
                 <div className="space-y-4">
                   {/* Comment input */}
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-linear-accent text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-linear-accent text-white flex items-center justify-center text-xs font-medium shrink-0">
                       {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="flex-1">
@@ -563,7 +563,7 @@ export default function IssueDetail() {
                   <div className="space-y-4">
                     {issue.comments?.map((comment: Comment) => (
                       <div key={comment.id} className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-linear-surface border border-linear-border flex items-center justify-center text-xs font-medium text-linear-text-secondary flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-linear-surface border border-linear-border flex items-center justify-center text-xs font-medium text-linear-text-secondary shrink-0">
                           {comment.user.name?.[0]?.toUpperCase() || comment.user.email[0].toUpperCase()}
                         </div>
                         <div className="flex-1">
@@ -623,7 +623,7 @@ export default function IssueDetail() {
               {activeTab === 'activity' && (
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-linear-surface flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-linear-surface flex items-center justify-center shrink-0">
                       <History className="w-4 h-4 text-linear-text-secondary" />
                     </div>
                     <div>

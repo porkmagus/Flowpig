@@ -241,7 +241,7 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           {comment.creator.image ? (
             <img 
               src={comment.creator.image} 
@@ -344,7 +344,7 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
               >
                 {comment.replies.map((reply) => (
                   <div key={reply.id} className="flex gap-2">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {reply.creator.image ? (
                         <img 
                           src={reply.creator.image} 

@@ -33,7 +33,7 @@ export function AuthShell({
   return (
     <div className="relative min-h-screen overflow-hidden bg-linear-bg text-white">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 -top-32 h-96 w-96 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute -left-40 -top-32 h-96 w-96 rounded-full bg-linear-accent/8 blur-3xl" />
         <div className="absolute -right-32 top-48 h-88 w-88 rounded-full bg-indigo-500/12 blur-3xl" />
         <div className="absolute -bottom-36 left-1/3 h-80 w-104 rounded-full bg-emerald-400/8 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[88px_88px] opacity-5" />

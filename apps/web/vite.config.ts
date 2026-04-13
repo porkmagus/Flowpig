@@ -20,4 +20,21 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-router': ['react-router'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-ui': ['lucide-react', 'date-fns'],
+        },
+      },
+    },
+  },
+  optimizeDeps: {
+    include: ['framer-motion', '@tanstack/react-query', 'lucide-react'],
+  },
 });

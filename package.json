@@ -29,9 +29,13 @@
     "prod:up": "docker compose -f compose.prod.yml --env-file .env.prod up -d",
     "prod:down": "docker compose -f compose.prod.yml down",
     "prod:logs": "docker compose -f compose.prod.yml logs -f",
-    "prod:ps": "docker compose -f compose.prod.yml ps"
+    "prod:ps": "docker compose -f compose.prod.yml ps",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "typescript": "6.0.2",
     "vite": "^8.0.8"
   },

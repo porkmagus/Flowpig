@@ -249,7 +249,7 @@ export default function RoadmapPage() {
                       <motion.div
                         key={cycle.id}
                         whileHover={{ scale: 1.02 }}
-                        className={`flex-shrink-0 w-64 p-4 rounded-xl border-2 transition-colors ${
+                        className={`shrink-0 w-64 p-4 rounded-xl border-2 transition-colors ${
                           cycle.isActive
                             ? 'border-linear-accent bg-linear-accent/10'
                             : 'border-linear-border bg-linear-surface'
@@ -278,7 +278,7 @@ export default function RoadmapPage() {
                     ))}
 
                     {team.cycles.length === 0 && (
-                      <div className="flex-shrink-0 w-64 p-4 rounded-xl border border-dashed border-linear-border bg-linear-elevated/50">
+                      <div className="shrink-0 w-64 p-4 rounded-xl border border-dashed border-linear-border bg-linear-elevated/50">
                         <p className="text-sm text-linear-text-secondary text-center">
                           No cycles scheduled
                         </p>
@@ -307,7 +307,7 @@ export default function RoadmapPage() {
                   <Link
                     key={issue.id}
                     to={`/${workspace}/issues/${issue.id}`}
-                    className="flex-shrink-0 w-56 p-3 rounded-lg border border-linear-border hover:border-linear-accent/40 hover:bg-linear-elevated/50 transition-colors"
+                    className="shrink-0 w-56 p-3 rounded-lg border border-linear-border hover:border-linear-accent/40 hover:bg-linear-elevated/50 transition-colors"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-medium text-linear-text-secondary">
@@ -326,7 +326,7 @@ export default function RoadmapPage() {
                   </Link>
                 ))}
                 {unscheduled.count > 10 && (
-                  <div className="flex-shrink-0 w-56 flex items-center justify-center">
+                  <div className="shrink-0 w-56 flex items-center justify-center">
                     <span className="text-sm text-linear-text-secondary">
                       +{unscheduled.count - 10} more
                     </span>

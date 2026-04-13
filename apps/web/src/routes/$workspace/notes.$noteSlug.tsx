@@ -509,7 +509,7 @@ export default function NoteDetailRoute() {
                     exit={{ opacity: 0 }}
                     className="flex gap-3"
                   >
-                    <div className="w-8 h-8 bg-linear-elevated rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-linear-elevated rounded-full flex items-center justify-center shrink-0">
                       {comment.creator.image ? (
                         <img
                           src={comment.creator.image}
@@ -585,7 +585,7 @@ export default function NoteDetailRoute() {
 
             {/* Add comment */}
             <form onSubmit={handleAddComment} className="flex gap-3">
-              <div className="w-8 h-8 bg-linear-accent rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-medium">
+              <div className="w-8 h-8 bg-linear-accent rounded-full flex items-center justify-center shrink-0 text-white text-sm font-medium">
                 {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">

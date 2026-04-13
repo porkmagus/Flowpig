@@ -136,7 +136,7 @@ export default function IndexRoute() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute -left-48 -top-40 h-112 w-md rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute -left-48 -top-40 h-112 w-md rounded-full bg-linear-accent/8 blur-3xl" />
         <div className="absolute -right-32 top-40 h-88 w-88 rounded-full bg-indigo-500/12 blur-3xl" />
         <div className="absolute -bottom-32 left-1/2 h-80 w-md -translate-x-1/2 rounded-full bg-emerald-400/8 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[88px_88px] opacity-[0.06]" />
@@ -146,7 +146,7 @@ export default function IndexRoute() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-linear-accent/20 bg-linear-accent/10">
-              <Layers className="h-5 w-5 text-cyan-300" />
+              <Layers className="h-5 w-5 text-linear-accent" />
             </div>
             <div>
               <div className="text-base font-semibold tracking-tight">Flowpig</div>
@@ -188,7 +188,7 @@ export default function IndexRoute() {
         <section className="mx-auto grid max-w-7xl gap-16 px-5 pb-20 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-28 lg:pt-20">
           <div className="relative">
             <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-white/12 bg-white/6 px-3 py-1.5 text-sm text-white/70">
-              <Sparkles className="h-4 w-4 text-cyan-300" />
+              <Sparkles className="h-4 w-4 text-linear-accent" />
               A calmer operating system for product teams
             </div>
 
@@ -217,7 +217,7 @@ export default function IndexRoute() {
                 to="/acme-corp"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-white/12 bg-white/6 px-6 py-3 text-sm font-medium text-white/86 transition hover:border-white/20 hover:bg-white/9"
               >
-                <PlayCircle className="h-4 w-4 text-cyan-300" />
+                <PlayCircle className="h-4 w-4 text-linear-accent" />
                 Open live demo
               </Link>
             </div>
@@ -228,7 +228,7 @@ export default function IndexRoute() {
                   key={label}
                   className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/20 px-3 py-2"
                 >
-                  <Icon className="h-4 w-4 text-cyan-300" />
+                  <Icon className="h-4 w-4 text-linear-accent" />
                   <span>{label}</span>
                 </div>
               ))}
@@ -259,11 +259,11 @@ export default function IndexRoute() {
                           <div className="text-sm font-medium text-white/86">
                             Release 2.4 planning
                           </div>
-                          <div className="mt-1 text-xs uppercase tracking-[0.24em] text-cyan-200/70">
+                          <div className="mt-1 text-xs uppercase tracking-[0.24em] text-linear-accent/70">
                             Active cycle
                           </div>
                         </div>
-                        <div className="rounded-full bg-cyan-300/12 px-2.5 py-1 text-xs text-cyan-100">
+                        <div className="rounded-full bg-linear-accent/12 px-2.5 py-1 text-xs text-linear-accent">
                           8 open issues
                         </div>
                       </div>
@@ -271,7 +271,7 @@ export default function IndexRoute() {
                       <div className="mt-4 space-y-3">
                         {[
                           ['Improve triage intake', 'High priority', 'bg-amber-300/16 text-amber-100'],
-                          ['Polish workspace onboarding', 'In progress', 'bg-cyan-300/14 text-cyan-100'],
+                          ['Polish workspace onboarding', 'In progress', 'bg-linear-accent/14 text-linear-accent'],
                           ['Connect roadmap to issue rollups', 'Planned', 'bg-white/10 text-white/70'],
                         ].map(([title, badge, tone]) => (
                           <div
@@ -313,7 +313,7 @@ export default function IndexRoute() {
                     <div className="rounded-md border border-white/5 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium text-white/88">Team inbox</div>
-                        <Inbox className="h-4 w-4 text-cyan-300" />
+                        <Inbox className="h-4 w-4 text-linear-accent" />
                       </div>
                       <div className="mt-3 space-y-3 text-sm">
                         {[
@@ -331,7 +331,7 @@ export default function IndexRoute() {
                       </div>
                     </div>
 
-                    <div className="rounded-md border border-white/5 bg-linear-to-br from-cyan-300/8 via-white/2 to-emerald-300/8 p-4">
+                    <div className="rounded-md border border-white/5 bg-linear-to-br from-linear-accent/8 via-white/2 to-emerald-300/8 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-white/90">
                         <Bot className="h-4 w-4 text-emerald-200" />
                         AI assistant
@@ -340,7 +340,7 @@ export default function IndexRoute() {
                         Summarize the latest triage thread, draft follow-up issues, and
                         convert meeting notes into actionable work.
                       </p>
-                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-cyan-100">
+                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-linear-accent">
                         See how the team is moving
                         <ChevronRight className="h-4 w-4" />
                       </div>
@@ -383,7 +383,7 @@ export default function IndexRoute() {
 
         <section id="product" className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <motion.div {...fadeUp} className="max-w-3xl">
-            <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-200/72">
+            <div className="text-sm font-medium uppercase tracking-[0.24em] text-linear-accent/72">
               Product pillars
             </div>
             <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
@@ -405,7 +405,7 @@ export default function IndexRoute() {
                 className="group rounded-xl border border-white/6 bg-white/2 p-7 transition hover:border-white/10 hover:bg-white/4"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-md border border-linear-accent/20 bg-linear-accent/10">
-                  <Icon className="h-5 w-5 text-cyan-200" />
+                  <Icon className="h-5 w-5 text-linear-accent" />
                 </div>
                 <h3 className="mt-5 text-2xl font-semibold tracking-tight text-white">
                   {title}
@@ -463,11 +463,11 @@ export default function IndexRoute() {
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <motion.div
             {...fadeUp}
-            className="overflow-hidden rounded-xl border border-white/6 bg-linear-to-br from-cyan-300/10 via-white/3 to-emerald-300/8 p-8 sm:p-10"
+            className="overflow-hidden rounded-xl border border-white/6 bg-linear-to-br from-linear-accent/10 via-white/3 to-emerald-300/8 p-8 sm:p-10"
           >
             <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
-                <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-100/72">
+                <div className="text-sm font-medium uppercase tracking-[0.24em] text-linear-accent/72">
                   Ready to go deeper
                 </div>
                 <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">

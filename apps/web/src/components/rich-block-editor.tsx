@@ -218,7 +218,7 @@ function CalloutComponent({ editor, node, updateAttributes }: { editor: any; nod
   return (
     <div className={`callout my-3 p-4 rounded-lg border ${config.color}`}>
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 relative">
+        <div className="shrink-0 relative">
           <button
             onClick={() => setShowTypeMenu(!showTypeMenu)}
             className="p-1 hover:bg-black/5 rounded transition-colors"
@@ -857,7 +857,7 @@ export function RichBlockEditor({
                     index === selectedCommandIndex ? 'bg-blue-50 text-blue-700' : 'text-linear-text-secondary'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded bg-linear-elevated flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded bg-linear-elevated flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-linear-text-secondary" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -877,7 +877,7 @@ export function RichBlockEditor({
       {/* Bubble Menu (appears on text selection) */}
       {editable && (
         <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="flex items-center gap-1 p-1 bg-gray-900 rounded-lg shadow-lg">
+          <div className="flex items-center gap-1 p-1 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/40">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
               isActive={editor.isActive('bold')}
@@ -912,7 +912,7 @@ export function RichBlockEditor({
       {/* Editor Content */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none p-4 min-h-[300px] focus:outline-none [&_.ProseMirror:focus]:outline-none"
+        className="prose prose-sm max-w-none p-4 min-h-75 focus:outline-none [&_.ProseMirror:focus]:outline-none"
       />
 
       {/* Custom Styles for Blocks */}

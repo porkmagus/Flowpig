@@ -606,7 +606,7 @@ function DatabaseBoardView({
       {statusValues.map((status) => (
         <div
           key={status}
-          className="flex-shrink-0 w-72 bg-linear-elevated/50 rounded-xl p-4"
+          className="shrink-0 w-72 bg-linear-elevated/50 rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

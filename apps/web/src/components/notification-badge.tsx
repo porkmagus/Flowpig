@@ -189,7 +189,7 @@ export function NotificationBadge() {
                         </div>
                         
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-linear-accent rounded-full flex-shrink-0 mt-2" />
+                          <span className="w-2 h-2 bg-linear-accent rounded-full shrink-0 mt-2" />
                         )}
                       </div>
                     </motion.div>

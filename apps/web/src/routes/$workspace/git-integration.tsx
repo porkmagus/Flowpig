@@ -289,7 +289,7 @@ export default function GitIntegrationPage() {
                   >
                     {/* PR State Icon */}
                     <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                      "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                       pr.state === 'merged' && "bg-linear-accent/20 text-linear-accent",
                       pr.state === 'open' && "bg-linear-success/20 text-linear-success",
                       pr.state === 'closed' && "text-priority-urgent"

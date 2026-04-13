@@ -153,7 +153,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
           onStatusChange(issue.id, isDone ? 'TODO' : 'DONE');
         }}
         className={cn(
-          "flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all duration-150",
+          "shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all duration-150",
           isDone 
             ? 'bg-linear-success border-linear-success text-white' 
             : 'border-linear-border hover:border-linear-accent hover:bg-linear-accent-light'
@@ -163,12 +163,12 @@ function IssueRow({ issue, workspace, onStatusChange }: {
       </button>
 
       {/* Priority */}
-      <div className={cn("flex-shrink-0", priority.color)}>
+      <div className={cn("shrink-0", priority.color)}>
         <PriorityIcon className="w-4 h-4" />
       </div>
 
       {/* Team key + identifier */}
-      <div className="flex-shrink-0 text-xs font-medium text-linear-text-tertiary w-14">
+      <div className="shrink-0 text-xs font-medium text-linear-text-tertiary w-14">
         {issue.identifier}
       </div>
 
@@ -185,7 +185,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
 
       {/* Labels */}
       {issue.labels.length > 0 && (
-        <div className="flex-shrink-0 flex gap-1">
+        <div className="shrink-0 flex gap-1">
           {issue.labels.slice(0, 2).map((label) => (
             <Badge 
               key={label.id} 
@@ -209,7 +209,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
       )}
 
       {/* Due date */}
-      <div className="flex-shrink-0">
+      <div className="shrink-0">
         <Badge 
           variant={dueDate.variant === 'urgent' ? 'destructive' : dueDate.variant === 'warning' ? 'warning' : 'secondary'}
           className="text-[10px] px-1.5 py-0 h-5 gap-1"
@@ -230,7 +230,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
       )}
 
       {/* State */}
-      <div className="flex-shrink-0">
+      <div className="shrink-0">
         {issue.workflowState ? (
           <Badge
             variant="outline"
@@ -252,7 +252,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
 
       {/* Comments count */}
       {issue.commentCount > 0 && (
-        <div className="flex-shrink-0 flex items-center gap-1 text-xs text-linear-text-tertiary">
+        <div className="shrink-0 flex items-center gap-1 text-xs text-linear-text-tertiary">
           <div className="w-4 h-4 rounded-full bg-linear-surface flex items-center justify-center text-[10px] border border-linear-border">
             {issue.commentCount}
           </div>
@@ -266,7 +266,7 @@ function IssueRow({ issue, workspace, onStatusChange }: {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-shrink-0 p-1 hover:bg-linear-border rounded transition-colors"
+            className="shrink-0 p-1 hover:bg-linear-border rounded transition-colors"
           >
             <MoreHorizontal className="w-4 h-4 text-linear-text-secondary" />
           </motion.button>

@@ -1,6 +1,9 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { cn } from "~/lib/utils";
+
+/** Shared easing curve matching the Linear design system */
+export const ease = [0.25, 0.1, 0.25, 1] as const;
 
 interface AnimatedPageProps {
   children: React.ReactNode;
@@ -277,5 +280,119 @@ export function AnimatePresenceWrapper({ children }: { children: React.ReactNode
     <AnimatePresence mode="wait">
       {children}
     </AnimatePresence>
+  );
+}
+
+interface SlideUpProps {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}
+
+/** Slide-up for bottom sheets, action panels, or toast-like elements */
+export function SlideUp({ children, className, delay = 0 }: SlideUpProps) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: reduced ? 0 : 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: reduced ? 0 : 12 }}
+      transition={{ duration: 0.22, delay, ease }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+interface ModalBackdropProps {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+/** Full-screen backdrop with fade for modals/drawers */
+export function ModalBackdrop({ children, className, onClick }: ModalBackdropProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15, ease }}
+      className={cn("fixed inset-0 z-50 bg-black/60 backdrop-blur-sm", className)}
+      onClick={onClick}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+interface ModalContentProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+/** Modal panel with scale+fade in — use inside AnimatePresence */
+export function ModalContent({ children, className }: ModalContentProps) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: reduced ? 1 : 0.96, y: reduced ? 0 : 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: reduced ? 1 : 0.96, y: reduced ? 0 : 12 }}
+      transition={{ duration: 0.2, ease }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/** Stagger wrapper for list items — respects prefers-reduced-motion */
+export function MotionList({
+  children,
+  className,
+  staggerDelay = 0.045,
+  delayChildren = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  staggerDelay?: number;
+  delayChildren?: number;
+}) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: reduced ? 0 : staggerDelay,
+            delayChildren: reduced ? 0 : delayChildren,
+          },
+        },
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export function MotionItem({ children, className }: { children: React.ReactNode; className?: string }) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: reduced ? 0 : 8 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease } },
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 }
