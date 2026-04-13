@@ -123,7 +123,7 @@ const previewCards = [
 ];
 
 const fadeUp = {
-  initial: { opacity: 0, y: 18 },
+  initial: false,
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.25 },
   transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] },
@@ -186,12 +186,7 @@ export default function IndexRoute() {
 
       <main className="relative">
         <section className="mx-auto grid max-w-7xl gap-16 px-5 pb-20 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-28 lg:pt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-            className="relative"
-          >
+          <div className="relative">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-sm text-white/70">
               <Sparkles className="h-4 w-4 text-cyan-300" />
               A calmer operating system for product teams
@@ -238,14 +233,9 @@ export default function IndexRoute() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
-            className="relative"
-          >
+          <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-cyan-400/10 via-transparent to-emerald-300/10 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-5">
               <div className="rounded-[1.5rem] border border-white/10 bg-[#0b1016]/95 p-4 sm:p-5">
@@ -359,7 +349,7 @@ export default function IndexRoute() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         <section

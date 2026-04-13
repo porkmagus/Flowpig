@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowLeft, ChevronRight, Layers } from 'lucide-react';
 
@@ -41,12 +40,7 @@ export function AuthShell({
       </div>
 
       <div className="relative mx-auto grid min-h-screen max-w-7xl gap-10 px-5 py-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-8 lg:py-8">
-        <motion.aside
-          initial={{ opacity: 0, x: -18 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          className="hidden overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between"
-        >
+        <aside className="hidden overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between">
           <div>
             <Link to="/" className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
@@ -90,14 +84,9 @@ export function AuthShell({
             Built for product, design, and engineering
             <ChevronRight className="h-4 w-4 text-cyan-200" />
           </div>
-        </motion.aside>
+        </aside>
 
-        <motion.section
-          initial={{ opacity: 0, x: 18 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.06, ease: [0.25, 0.1, 0.25, 1] }}
-          className="flex min-h-[calc(100vh-3rem)] items-center"
-        >
+        <section className="flex min-h-[calc(100vh-3rem)] items-center">
           <div className="w-full rounded-[2rem] border border-white/10 bg-[#0b1016]/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
             <Link
               to="/"
@@ -130,7 +119,7 @@ export function AuthShell({
 
             <div className="mt-8 text-sm text-white/54">{footer}</div>
           </div>
-        </motion.section>
+        </section>
       </div>
     </div>
   );

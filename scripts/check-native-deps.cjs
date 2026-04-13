@@ -6,6 +6,8 @@ const path = require("node:path");
 const repoRoot = path.resolve(__dirname, "..");
 const platform = process.platform;
 const arch = process.arch;
+const currentNodeVersion = process.versions.node;
+const nvmrcPath = path.join(repoRoot, ".nvmrc");
 
 const esbuildTargets = {
   "darwin:arm64": "darwin-arm64",
@@ -51,6 +53,25 @@ function findMismatch(name, expected, dirs) {
   return { name, expected, installed };
 }
 
+function normalizeVersion(version) {
+  return version.trim().replace(/^v/, "");
+}
+
+function compareVersions(a, b) {
+  const left = normalizeVersion(a).split(".").map(Number);
+  const right = normalizeVersion(b).split(".").map(Number);
+  const length = Math.max(left.length, right.length);
+
+  for (let i = 0; i < length; i += 1) {
+    const leftPart = left[i] ?? 0;
+    const rightPart = right[i] ?? 0;
+    if (leftPart > rightPart) return 1;
+    if (leftPart < rightPart) return -1;
+  }
+
+  return 0;
+}
+
 const mismatches = [
   findMismatch("esbuild", esbuildTargets[`${platform}:${arch}`], [
     path.join(repoRoot, "node_modules", "@esbuild"),
@@ -61,7 +82,19 @@ const mismatches = [
   ]),
 ].filter(Boolean);
 
-if (mismatches.length === 0) {
+const expectedNodeVersion = fs.existsSync(nvmrcPath)
+  ? normalizeVersion(fs.readFileSync(nvmrcPath, "utf8"))
+  : null;
+
+const nodeMismatch =
+  expectedNodeVersion && compareVersions(currentNodeVersion, expectedNodeVersion) < 0
+    ? {
+        current: currentNodeVersion,
+        expected: expectedNodeVersion,
+      }
+    : null;
+
+if (mismatches.length === 0 && !nodeMismatch) {
   process.exit(0);
 }
 
@@ -70,26 +103,41 @@ const deleteCommand =
     ? "rmdir /s /q node_modules"
     : "rm -rf node_modules";
 
-console.error("");
-console.error("Native dependency mismatch detected for this checkout.");
-console.error(
-  `This repo's node_modules were installed for a different platform than ${platform}/${arch}.`
-);
-
-for (const mismatch of mismatches) {
+if (nodeMismatch) {
+  console.error("");
+  console.error("Node.js version mismatch detected for this checkout.");
   console.error(
-    `- ${mismatch.name}: expected ${mismatch.expected}, found ${mismatch.installed.join(", ")}`
+    `This repo expects Node ${nodeMismatch.expected} from .nvmrc, but this shell is running Node ${nodeMismatch.current}.`
   );
+  console.error("");
+  console.error("Fix:");
+  console.error(`1. Switch Node versions in this shell to ${nodeMismatch.expected}`);
+  console.error("2. Re-run npm install if you previously installed with a different Node major version");
+  console.error("3. Start the dev server again from that same shell or IDE terminal");
 }
 
-console.error("");
-console.error("Fix:");
-console.error(`1. From the repo root, run: ${deleteCommand}`);
-console.error("2. Reinstall dependencies from the same shell/OS you plan to use: npm install");
-console.error("3. Re-run your dev command from that same environment");
-console.error("");
-console.error(
-  "Tip: avoid sharing one node_modules between Windows and WSL. Use one environment consistently or keep separate checkouts."
-);
+if (mismatches.length > 0) {
+  console.error("");
+  console.error("Native dependency mismatch detected for this checkout.");
+  console.error(
+    `This repo's node_modules were installed for a different platform than ${platform}/${arch}.`
+  );
+
+  for (const mismatch of mismatches) {
+    console.error(
+      `- ${mismatch.name}: expected ${mismatch.expected}, found ${mismatch.installed.join(", ")}`
+    );
+  }
+
+  console.error("");
+  console.error("Fix:");
+  console.error(`1. From the repo root, run: ${deleteCommand}`);
+  console.error("2. Reinstall dependencies from the same shell/OS you plan to use: npm install");
+  console.error("3. Re-run your dev command from that same environment");
+  console.error("");
+  console.error(
+    "Tip: avoid sharing one node_modules between Windows and WSL. Use one environment consistently or keep separate checkouts."
+  );
+}
 
 process.exit(1);
