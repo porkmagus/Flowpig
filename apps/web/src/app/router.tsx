@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router';
 import { Layout } from './providers';
 import RootRoute from '~/routes/__root';
 import IndexRoute from '~/routes/index';
@@ -7,6 +7,7 @@ import SignupRoute from '~/routes/signup';
 import OnboardingRoute from '~/routes/onboarding';
 import WorkspaceLayout from '~/routes/$workspace/layout';
 import WorkspaceIndex from '~/routes/$workspace/index';
+import MyIssues from '~/routes/$workspace/my-issues';
 import IssuesList from '~/routes/$workspace/issues';
 import IssueDetail from '~/routes/$workspace/issues.$issueId';
 import NotesList from '~/routes/$workspace/notes';
@@ -17,6 +18,8 @@ import TeamPage from '~/routes/$workspace/team';
 import SettingsPage from '~/routes/$workspace/settings';
 import TriagePage from '~/routes/$workspace/triage';
 import RoadmapPage from '~/routes/$workspace/roadmap';
+import InboxPage from '~/routes/$workspace/inbox';
+import AnalyticsPage from '~/routes/$workspace/analytics';
 import DatabasesList from '~/routes/$workspace/databases';
 import DatabaseDetail from '~/routes/$workspace/databases.$databaseId';
 import ProjectsList from '~/routes/$workspace/projects';
@@ -40,6 +43,7 @@ const router = createBrowserRouter([
             element: <WorkspaceLayout />,
             children: [
               { index: true, element: <WorkspaceIndex /> },
+              { path: 'my-issues', element: <MyIssues /> },
               { path: 'issues', element: <IssuesList /> },
               { path: 'issues/:issueId', element: <IssueDetail /> },
               { path: 'notes', element: <NotesList /> },
@@ -49,6 +53,8 @@ const router = createBrowserRouter([
               { path: 'team', element: <TeamPage /> },
               { path: 'triage', element: <TriagePage /> },
               { path: 'roadmap', element: <RoadmapPage /> },
+              { path: 'inbox', element: <InboxPage /> },
+              { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'databases', element: <DatabasesList /> },
               { path: 'databases/:databaseId', element: <DatabaseDetail /> },

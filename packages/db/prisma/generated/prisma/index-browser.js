@@ -515,6 +515,7 @@ exports.Prisma.CommentScalarFieldEnum = {
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt',
   blockId: 'blockId',
+  blockType: 'blockType',
   noteId: 'noteId'
 };
 
@@ -568,6 +569,8 @@ exports.Prisma.NoteScalarFieldEnum = {
   coverImage: 'coverImage',
   isArchived: 'isArchived',
   isPublished: 'isPublished',
+  publicAccess: 'publicAccess',
+  shareToken: 'shareToken',
   parentId: 'parentId',
   createdById: 'createdById',
   lastEditedById: 'lastEditedById',
@@ -575,6 +578,30 @@ exports.Prisma.NoteScalarFieldEnum = {
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt',
   accessSettings: 'accessSettings'
+};
+
+exports.Prisma.NoteVersionScalarFieldEnum = {
+  id: 'id',
+  noteId: 'noteId',
+  title: 'title',
+  content: 'content',
+  emoji: 'emoji',
+  coverImage: 'coverImage',
+  editedById: 'editedById',
+  editReason: 'editReason',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.NoteShareScalarFieldEnum = {
+  id: 'id',
+  noteId: 'noteId',
+  userId: 'userId',
+  email: 'email',
+  permission: 'permission',
+  invitedById: 'invitedById',
+  createdAt: 'createdAt',
+  acceptedAt: 'acceptedAt',
+  deletedAt: 'deletedAt'
 };
 
 exports.Prisma.AgentConversationScalarFieldEnum = {
@@ -754,6 +781,76 @@ exports.Prisma.UserScalarFieldEnum = {
   notificationPreferences: 'notificationPreferences'
 };
 
+exports.Prisma.GitIntegrationScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  provider: 'provider',
+  installationId: 'installationId',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  tokenExpiresAt: 'tokenExpiresAt',
+  organization: 'organization',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.GitRepositoryScalarFieldEnum = {
+  id: 'id',
+  integrationId: 'integrationId',
+  externalId: 'externalId',
+  name: 'name',
+  fullName: 'fullName',
+  url: 'url',
+  defaultBranch: 'defaultBranch',
+  isPrivate: 'isPrivate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.GitPullRequestScalarFieldEnum = {
+  id: 'id',
+  integrationId: 'integrationId',
+  repositoryId: 'repositoryId',
+  externalId: 'externalId',
+  number: 'number',
+  title: 'title',
+  description: 'description',
+  state: 'state',
+  url: 'url',
+  branchName: 'branchName',
+  baseBranch: 'baseBranch',
+  authorName: 'authorName',
+  authorAvatar: 'authorAvatar',
+  draft: 'draft',
+  mergedAt: 'mergedAt',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.GitCommitScalarFieldEnum = {
+  id: 'id',
+  integrationId: 'integrationId',
+  sha: 'sha',
+  message: 'message',
+  authorName: 'authorName',
+  authorEmail: 'authorEmail',
+  authorDate: 'authorDate',
+  url: 'url',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.IssueGitLinkScalarFieldEnum = {
+  id: 'id',
+  issueId: 'issueId',
+  pullRequestId: 'pullRequestId',
+  commitId: 'commitId',
+  branchName: 'branchName',
+  linkType: 'linkType',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -886,6 +983,19 @@ exports.IssueRelationType = exports.$Enums.IssueRelationType = {
   DUPLICATED_BY: 'DUPLICATED_BY'
 };
 
+exports.PublicAccessLevel = exports.$Enums.PublicAccessLevel = {
+  PRIVATE: 'PRIVATE',
+  READONLY: 'READONLY',
+  COMMENT: 'COMMENT',
+  EDIT: 'EDIT'
+};
+
+exports.SharePermission = exports.$Enums.SharePermission = {
+  VIEW: 'VIEW',
+  COMMENT: 'COMMENT',
+  EDIT: 'EDIT'
+};
+
 exports.ConversationStatus = exports.$Enums.ConversationStatus = {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',
@@ -949,6 +1059,25 @@ exports.DeliveryStatus = exports.$Enums.DeliveryStatus = {
   RETRYING: 'RETRYING'
 };
 
+exports.GitProvider = exports.$Enums.GitProvider = {
+  GITHUB: 'GITHUB',
+  GITLAB: 'GITLAB',
+  BITBUCKET: 'BITBUCKET',
+  AZURE_DEVOPS: 'AZURE_DEVOPS'
+};
+
+exports.PullRequestState = exports.$Enums.PullRequestState = {
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+  MERGED: 'MERGED'
+};
+
+exports.GitLinkType = exports.$Enums.GitLinkType = {
+  AUTO: 'AUTO',
+  MANUAL: 'MANUAL',
+  WEBHOOK: 'WEBHOOK'
+};
+
 exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
@@ -987,6 +1116,8 @@ exports.Prisma.ModelName = {
   IssueRelation: 'IssueRelation',
   IssueNoteLink: 'IssueNoteLink',
   Note: 'Note',
+  NoteVersion: 'NoteVersion',
+  NoteShare: 'NoteShare',
   AgentConversation: 'AgentConversation',
   AgentMessage: 'AgentMessage',
   AgentAction: 'AgentAction',
@@ -999,7 +1130,12 @@ exports.Prisma.ModelName = {
   WebhookDelivery: 'WebhookDelivery',
   SlackIntegration: 'SlackIntegration',
   AIUsage: 'AIUsage',
-  User: 'User'
+  User: 'User',
+  GitIntegration: 'GitIntegration',
+  GitRepository: 'GitRepository',
+  GitPullRequest: 'GitPullRequest',
+  GitCommit: 'GitCommit',
+  IssueGitLink: 'IssueGitLink'
 };
 
 /**

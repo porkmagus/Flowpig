@@ -1,117 +1,256 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft,
+  MoreHorizontal,
+  Link as LinkIcon,
+  Copy,
+  Trash2,
+  Archive,
+  Clock,
+  Calendar,
+  Flag,
+  User,
+  Tag,
+  FolderKanban,
+  Layers,
+  GitBranch,
+  CheckCircle2,
+  CircleDot,
+  AlertCircle,
+  AlertTriangle,
+  ArrowRight,
+  MessageSquare,
+  Paperclip,
+  Edit3,
+  X,
+  Check,
+  Plus,
+  ChevronDown,
+  History,
+  GitPullRequest,
+  GitCommit,
+  ExternalLink,
+  CornerUpRight,
+  Loader2
+} from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
-import { AnimatedPage } from '@flowpigdev/ui';
-import { 
-  CircleDot,
-  ArrowLeft,
-  MessageSquare,
-  Send,
-  MoreHorizontal,
-  User,
-  Clock,
-  Smile,
-  Check,
-  X,
-} from 'lucide-react';
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
+import { Badge } from '~/components/ui/badge';
+import { Input } from '~/components/ui/input';
+import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
+
+interface Issue {
+  id: string;
+  identifier: string;
+  title: string;
+  description: string | null;
+  state: string;
+  priority: string;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  creator: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  };
+  assignee: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  } | null;
+  team: {
+    id: string;
+    name: string;
+    key: string;
+    color: string;
+  } | null;
+  project: {
+    id: string;
+    name: string;
+  } | null;
+  cycle: {
+    id: string;
+    number: number;
+    name: string | null;
+    isActive: boolean;
+  } | null;
+  labels: Label[];
+  workflowState: {
+    id: string;
+    name: string;
+    color: string;
+    category: string;
+  } | null;
+  comments: Comment[];
+  gitLinks: GitLink[];
+  relatedIssues: RelatedIssue[];
+}
 
 interface Comment {
   id: string;
   content: string;
   createdAt: string;
   updatedAt: string;
-  creator: {
+  user: {
     id: string;
     name: string | null;
+    email: string;
     image: string | null;
   };
-  reactions: Array<{
-    id: string;
-    emoji: string;
-    user: {
-      id: string;
-      name: string;
-    };
-  }>;
-  replies?: Comment[];
+  reactions: Reaction[];
 }
 
-interface Issue {
+interface Reaction {
+  id: string;
+  emoji: string;
+  userId: string;
+}
+
+interface GitLink {
+  id: string;
+  type: 'branch' | 'pr' | 'commit';
+  title: string;
+  url: string;
+  status?: string;
+  number?: number;
+}
+
+interface RelatedIssue {
   id: string;
   identifier: string;
   title: string;
-  description: Record<string, unknown> | null;
   state: string;
-  priority: string;
-  createdAt: string;
-  updatedAt: string;
-  dueDate: string | null;
-  assignee?: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email: string;
-  } | null;
-  creator: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    email: string;
-  };
-  team: {
-    id: string;
-    name: string;
-    key: string;
-    color: string;
-  };
-  workflowState?: {
-    id: string;
-    name: string;
-    key: string;
-    color: string;
-    category: string;
-  };
-  labels: Array<{
-    id: string;
-    name: string;
-    color: string;
-  }>;
-  comments: Comment[];
-  isSubscribed: boolean;
+  type: 'blocks' | 'blocked_by' | 'relates_to' | 'duplicates';
 }
 
-const priorityConfig: Record<string, { label: string; color: string; bg: string }> = {
-  'NO_PRIORITY': { label: 'No Priority', color: 'text-gray-500', bg: 'bg-gray-100' },
-  'LOW': { label: 'Low', color: 'text-blue-500', bg: 'bg-blue-50' },
-  'MEDIUM': { label: 'Medium', color: 'text-yellow-500', bg: 'bg-yellow-50' },
-  'HIGH': { label: 'High', color: 'text-orange-500', bg: 'bg-orange-50' },
-  'URGENT': { label: 'Urgent', color: 'text-red-500', bg: 'bg-red-50' },
-};
+interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
 
-export default function IssueDetailRoute() {
+const priorities = [
+  { id: 'URGENT', label: 'Urgent', color: 'text-priority-urgent', bg: 'bg-priority-urgent', icon: AlertTriangle },
+  { id: 'HIGH', label: 'High', color: 'text-priority-high', bg: 'bg-priority-high', icon: Flag },
+  { id: 'MEDIUM', label: 'Medium', color: 'text-priority-medium', bg: 'bg-priority-medium', icon: Flag },
+  { id: 'LOW', label: 'Low', color: 'text-priority-low', bg: 'bg-priority-low', icon: Flag },
+  { id: 'NO_PRIORITY', label: 'No priority', color: 'text-priority-none', bg: 'bg-linear-border', icon: CircleDot },
+];
+
+const states = [
+  { id: 'BACKLOG', label: 'Backlog', color: '#6E6E6E' },
+  { id: 'TODO', label: 'Todo', color: '#6E6E6E' },
+  { id: 'IN_PROGRESS', label: 'In progress', color: '#F2A50C' },
+  { id: 'DONE', label: 'Done', color: '#0D9B6A' },
+  { id: 'CANCELED', label: 'Canceled', color: '#D13B3B' },
+];
+
+const reactions = ['👍', '👎', '❤️', '🎉', '😕', '👀', '🚀'];
+
+export default function IssueDetail() {
   const { workspace, issueId } = useParams();
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [commentText, setCommentText] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+  const { user } = useAuth();
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['issue', workspace, issueId],
+  // UI State
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'comments' | 'activity' | 'git'>('comments');
+  const [showPropertyDropdown, setShowPropertyDropdown] = useState<string | null>(null);
+
+  // Fetch issue
+  const { data: issue, isLoading } = useQuery({
+    queryKey: ['issue', issueId],
     queryFn: async () => {
       const response = await fetch(
         `${API_URL}/workspaces/${workspace}/issues/${issueId}`,
         { credentials: 'include' }
       );
-      if (!response.ok) throw new Error('Failed to load issue');
+      if (!response.ok) throw new Error('Failed to fetch issue');
       return response.json();
     },
   });
 
-  const issue: Issue | undefined = data?.issue;
+  // Fetch workspace data for dropdowns
+  const { data: workspaceUsers } = useQuery({
+    queryKey: ['workspace-users', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/members`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: teams } = useQuery({
+    queryKey: ['teams', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/teams`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: projects } = useQuery({
+    queryKey: ['projects', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/projects`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: labels } = useQuery({
+    queryKey: ['labels', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/labels`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  // Mutations
+  const updateIssueMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/issues/${issueId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to update issue');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+    },
+  });
 
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -128,15 +267,15 @@ export default function IssueDetailRoute() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issue', workspace, issueId] });
-      setCommentText('');
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      setNewComment('');
     },
   });
 
   const addReactionMutation = useMutation({
     mutationFn: async ({ commentId, emoji }: { commentId: string; emoji: string }) => {
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/comments/${commentId}/reactions`,
+        `${API_URL}/comments/${commentId}/reactions`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,22 +287,80 @@ export default function IssueDetailRoute() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issue', workspace, issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
       setShowEmojiPicker(null);
     },
   });
 
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (commentText.trim()) {
-      addCommentMutation.mutate(commentText);
-    }
+  const deleteIssueMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/issues/${issueId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) throw new Error('Failed to delete issue');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      navigate(`/${workspace}/issues`);
+    },
+  });
+
+  // Handlers
+  const startEditingTitle = () => {
+    setEditTitle(issue?.title || '');
+    setIsEditingTitle(true);
   };
+
+  const saveTitle = () => {
+    if (editTitle.trim() && editTitle !== issue?.title) {
+      updateIssueMutation.mutate({ title: editTitle.trim() });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const startEditingDescription = () => {
+    setEditDescription(issue?.description || '');
+    setIsEditingDescription(true);
+  };
+
+  const saveDescription = () => {
+    if (editDescription !== issue?.description) {
+      updateIssueMutation.mutate({ description: editDescription });
+    }
+    setIsEditingDescription(false);
+  };
+
+  const handleStatusChange = (newState: string) => {
+    updateIssueMutation.mutate({ state: newState });
+    setShowPropertyDropdown(null);
+  };
+
+  const handlePriorityChange = (newPriority: string) => {
+    updateIssueMutation.mutate({ priority: newPriority });
+    setShowPropertyDropdown(null);
+  };
+
+  const handleAssigneeChange = (userId: string | null) => {
+    updateIssueMutation.mutate({ assigneeId: userId });
+    setShowPropertyDropdown(null);
+  };
+
+  const copyIssueLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+  };
+
+  const selectedPriority = priorities.find(p => p.id === issue?.priority);
+  const PriorityIcon = selectedPriority?.icon || CircleDot;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+        <Loader2 className="w-6 h-6 text-linear-accent animate-spin" />
       </div>
     );
   }
@@ -171,282 +368,523 @@ export default function IssueDetailRoute() {
   if (!issue) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900">Issue not found</h2>
-        <Link to={`/${workspace}/issues`} className="text-primary-500 hover:text-primary-600 mt-4 inline-block">
+        <h3 className="text-base font-medium text-linear-text">Issue not found</h3>
+        <Link to={`/${workspace}/issues`} className="text-linear-accent hover:text-linear-accent-hover text-sm mt-2 inline-block">
           Back to issues
         </Link>
       </div>
     );
   }
 
-  const priority = priorityConfig[issue.priority] || priorityConfig['NO_PRIORITY'];
-
   return (
-    <AnimatedPage className="max-w-5xl mx-auto">
-      {/* Breadcrumb */}
-      <Link 
-        to={`/${workspace}/issues`}
-        className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to issues
-      </Link>
-
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-sm text-gray-500 font-medium">{issue.identifier}</span>
-          <span className={`px-2 py-1 rounded text-xs font-medium ${priority.bg} ${priority.color}`}>
-            {priority.label}
-          </span>
-          {issue.workflowState && (
-            <span 
-              className="px-2 py-1 rounded text-xs font-medium text-white"
-              style={{ backgroundColor: issue.workflowState.color }}
-            >
-              {issue.workflowState.name}
-            </span>
-          )}
+      <FadeIn>
+        <div className="flex items-center gap-2 mb-4">
+          <Link 
+            to={`/${workspace}/issues`}
+            className="flex items-center gap-1 text-sm text-linear-text-secondary hover:text-linear-text transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Issues
+          </Link>
+          <span className="text-linear-text-tertiary">/</span>
+          <span className="text-sm text-linear-text-tertiary">{issue.identifier}</span>
         </div>
-        
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">{issue.title}</h1>
-        
-        {/* Meta row */}
-        <div className="flex items-center gap-6 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4" />
-            <span>Created by {issue.creator.name || issue.creator.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>{new Date(issue.createdAt).toLocaleDateString()}</span>
-          </div>
-          {issue.assignee && (
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Assigned to</span>
-              <span className="font-medium">{issue.assignee.name || issue.assignee.email}</span>
-            </div>
-          )}
-        </div>
-      </div>
+      </FadeIn>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left column - Description & Comments */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Description</h3>
-            {issue.description ? (
-              <div className="prose prose-sm max-w-none">
-                {/* Simple description renderer - in real app, use a proper editor renderer */}
-                <p className="text-gray-600">
-                  {JSON.stringify(issue.description).slice(0, 200)}...
-                </p>
+          {/* Title section */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-4">
+            {isEditingTitle ? (
+              <div className="flex items-start gap-2">
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="flex-1 text-lg font-semibold"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveTitle();
+                    if (e.key === 'Escape') setIsEditingTitle(false);
+                  }}
+                />
+                <Button size="sm" onClick={saveTitle}>
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setIsEditingTitle(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
             ) : (
-              <p className="text-gray-400 italic">No description provided</p>
+              <div className="flex items-start gap-3 group">
+                <h1 
+                  className="text-xl font-semibold text-linear-text flex-1 cursor-text"
+                  onClick={startEditingTitle}
+                >
+                  {issue.title}
+                </h1>
+                <button 
+                  onClick={startEditingTitle}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-linear-surface rounded transition-all"
+                >
+                  <Edit3 className="w-4 h-4 text-linear-text-secondary" />
+                </button>
+              </div>
+            )}
+
+            {/* Meta info */}
+            <div className="flex items-center gap-4 mt-3 text-sm text-linear-text-secondary">
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                Created {new Date(issue.createdAt).toLocaleDateString()}
+              </span>
+              {issue.completedAt && (
+                <span className="flex items-center gap-1.5 text-linear-success">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Completed {new Date(issue.completedAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-linear-text">Description</h3>
+              {!isEditingDescription && (
+                <button 
+                  onClick={startEditingDescription}
+                  className="text-xs text-linear-text-secondary hover:text-linear-text flex items-center gap-1"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  Edit
+                </button>
+              )}
+            </div>
+            
+            {isEditingDescription ? (
+              <div className="space-y-3">
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={10}
+                  className="w-full bg-linear-surface border border-linear-border rounded-lg px-3 py-2 text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent resize-none"
+                  placeholder="Add a description..."
+                />
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={saveDescription}>Save</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditingDescription(false)}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="prose prose-sm max-w-none text-linear-text-secondary">
+                {issue.description ? (
+                  <div className="whitespace-pre-wrap">{issue.description}</div>
+                ) : (
+                  <p className="text-linear-text-tertiary italic">No description provided</p>
+                )}
+              </div>
             )}
           </div>
 
-          {/* Comments */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Comments ({issue.comments.length})
-            </h3>
+          {/* Tabs */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border">
+            {/* Tab headers */}
+            <div className="flex items-center gap-1 px-4 border-b border-linear-border">
+              {[
+                { id: 'comments', label: 'Comments', count: issue.comments?.length || 0 },
+                { id: 'activity', label: 'Activity', icon: History },
+                { id: 'git', label: 'Git', count: issue.gitLinks?.length || 0, icon: GitBranch },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors",
+                    activeTab === tab.id
+                      ? "border-linear-accent text-linear-accent"
+                      : "border-transparent text-linear-text-secondary hover:text-linear-text"
+                  )}
+                >
+                  {tab.icon && <tab.icon className="w-4 h-4" />}
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 h-4">
+                      {tab.count}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
 
-            {/* Comment list */}
-            <div className="space-y-4 mb-6">
-              <AnimatePresence>
-                {issue.comments.map((comment) => (
-                  <motion.div
-                    key={comment.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex gap-3"
-                  >
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                      {comment.creator.image ? (
-                        <img 
-                          src={comment.creator.image} 
-                          alt={comment.creator.name || ''}
-                          className="w-8 h-8 rounded-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium">
-                          {(comment.creator.name || '?').charAt(0).toUpperCase()}
-                        </span>
-                      )}
+            {/* Tab content */}
+            <div className="p-4">
+              {activeTab === 'comments' && (
+                <div className="space-y-4">
+                  {/* Comment input */}
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-linear-accent text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
+                      {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="flex-1">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{comment.creator.name || 'Unknown'}</span>
-                          <span className="text-xs text-gray-400">
-                            {new Date(comment.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                      <textarea
+                        ref={commentInputRef}
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Add a comment..."
+                        rows={3}
+                        className="w-full bg-linear-surface border border-linear-border rounded-lg px-3 py-2 text-sm text-linear-text placeholder:text-linear-text-tertiary focus:outline-none focus:ring-2 focus:ring-linear-accent resize-none"
+                      />
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-linear-text-tertiary">
+                          Markdown supported
+                        </span>
+                        <Button 
+                          size="sm" 
+                          disabled={!newComment.trim() || addCommentMutation.isPending}
+                          onClick={() => addCommentMutation.mutate(newComment)}
+                        >
+                          {addCommentMutation.isPending ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <>
+                              <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                              Comment
+                            </>
+                          )}
+                        </Button>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Reactions */}
-                      <div className="flex items-center gap-2 mt-2">
-                        {comment.reactions.map((reaction) => (
-                          <button
-                            key={reaction.id}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm transition-colors"
-                            title={reaction.user.name}
-                          >
-                            <span>{reaction.emoji}</span>
-                          </button>
-                        ))}
-                        
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowEmojiPicker(showEmojiPicker === comment.id ? null : comment.id)}
-                            className="p-1 hover:bg-gray-100 rounded transition-colors"
-                          >
-                            <Smile className="w-4 h-4 text-gray-400" />
-                          </button>
+                  {/* Comments list */}
+                  <div className="space-y-4">
+                    {issue.comments?.map((comment: Comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-linear-surface border border-linear-border flex items-center justify-center text-xs font-medium text-linear-text-secondary flex-shrink-0">
+                          {comment.user.name?.[0]?.toUpperCase() || comment.user.email[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm text-linear-text">
+                              {comment.user.name || comment.user.email}
+                            </span>
+                            <span className="text-xs text-linear-text-tertiary">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="text-sm text-linear-text-secondary whitespace-pre-wrap">
+                            {comment.content}
+                          </div>
                           
-                          <AnimatePresence>
-                            {showEmojiPicker === comment.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 p-2 z-10"
+                          {/* Reactions */}
+                          <div className="flex items-center gap-1 mt-2">
+                            {comment.reactions?.map((reaction: Reaction) => (
+                              <button
+                                key={reaction.id}
+                                className="px-1.5 py-0.5 bg-linear-surface hover:bg-linear-border rounded text-sm transition-colors"
                               >
-                                <div className="flex gap-1">
-                                  {['👍', '👎', '😄', '🎉', '😕', '❤️', '🚀', '👀'].map((emoji) => (
+                                {reaction.emoji} 1
+                              </button>
+                            ))}
+                            
+                            <div className="relative">
+                              <button
+                                onClick={() => setShowEmojiPicker(showEmojiPicker === comment.id ? null : comment.id)}
+                                className="p-1 text-linear-text-tertiary hover:text-linear-text hover:bg-linear-surface rounded transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                              
+                              {showEmojiPicker === comment.id && (
+                                <div className="absolute bottom-full left-0 mb-1 p-1.5 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 flex gap-0.5">
+                                  {reactions.map((emoji) => (
                                     <button
                                       key={emoji}
                                       onClick={() => addReactionMutation.mutate({ commentId: comment.id, emoji })}
-                                      className="p-1 hover:bg-gray-100 rounded text-lg"
+                                      className="p-1 hover:bg-linear-surface rounded transition-colors text-lg"
                                     >
                                       {emoji}
                                     </button>
                                   ))}
                                 </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* Add comment */}
-            <form onSubmit={handleSubmitComment} className="flex gap-3">
-              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-medium">
-                {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <textarea
-                  ref={commentInputRef}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-                <div className="flex justify-end mt-2">
-                  <button
-                    type="submit"
-                    disabled={!commentText.trim() || addCommentMutation.isPending}
-                    className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    {addCommentMutation.isPending ? (
-                      'Sending...'
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Comment
-                      </>
-                    )}
-                  </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </form>
+              )}
+
+              {activeTab === 'activity' && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-linear-surface flex items-center justify-center flex-shrink-0">
+                      <History className="w-4 h-4 text-linear-text-secondary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-linear-text">
+                        Issue created by <span className="font-medium">{issue.creator.name || issue.creator.email}</span>
+                      </p>
+                      <p className="text-xs text-linear-text-tertiary">
+                        {new Date(issue.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'git' && (
+                <div className="space-y-3">
+                  {issue.gitLinks?.length === 0 ? (
+                    <p className="text-sm text-linear-text-secondary text-center py-4">
+                      No git links yet
+                    </p>
+                  ) : (
+                    issue.gitLinks?.map((link: GitLink) => (
+                      <a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 bg-linear-surface rounded-lg hover:bg-linear-border transition-colors"
+                      >
+                        {link.type === 'pr' ? (
+                          <GitPullRequest className="w-4 h-4 text-linear-accent" />
+                        ) : link.type === 'commit' ? (
+                          <GitCommit className="w-4 h-4 text-linear-accent" />
+                        ) : (
+                          <GitBranch className="w-4 h-4 text-linear-accent" />
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-linear-text">{link.title}</p>
+                          {link.number && (
+                            <p className="text-xs text-linear-text-secondary">#{link.number}</p>
+                          )}
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-linear-text-tertiary" />
+                      </a>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right column - Sidebar */}
+        {/* Sidebar */}
         <div className="space-y-4">
-          {/* Status card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Status</h4>
-            <select 
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
-              defaultValue={issue.state}
-            >
-              <option value="BACKLOG">Backlog</option>
-              <option value="TODO">Todo</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="IN_REVIEW">In Review</option>
-              <option value="DONE">Done</option>
-            </select>
-          </div>
-
-          {/* Assignee card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Assignee</h4>
-            {issue.assignee ? (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  {(issue.assignee.name || issue.assignee.email || '?').charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm">{issue.assignee.name || issue.assignee.email}</span>
-              </div>
-            ) : (
-              <button className="text-primary-500 hover:text-primary-600 text-sm">
-                + Assign someone
+          {/* Status */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+            <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+              Status
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowPropertyDropdown(showPropertyDropdown === 'status' ? null : 'status')}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border transition-colors",
+                  issue.workflowState?.category === 'DONE' || issue.state === 'DONE'
+                    ? "bg-linear-success/10 border-linear-success/30 text-linear-success"
+                    : "bg-linear-surface border-linear-border hover:border-linear-border-hover"
+                )}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: issue.workflowState?.color || '#6E6E6E' }}
+                />
+                <span className="flex-1 text-left">
+                  {issue.workflowState?.name || issue.state}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
-            )}
+              
+              {showPropertyDropdown === 'status' && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 z-50 py-1">
+                  {states.map((state) => (
+                    <button
+                      key={state.id}
+                      onClick={() => handleStatusChange(state.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-linear-surface transition-colors text-left"
+                    >
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: state.color }} />
+                      <span>{state.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Labels card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Labels</h4>
-            {issue.labels.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {issue.labels.map((label) => (
-                  <span
+          {/* Priority */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+            <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+              Priority
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowPropertyDropdown(showPropertyDropdown === 'priority' ? null : 'priority')}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border transition-colors",
+                  selectedPriority?.bg.replace('/10', '/20'),
+                  selectedPriority?.color
+                )}
+              >
+                <PriorityIcon className="w-3.5 h-3.5" />
+                <span className="flex-1 text-left">{selectedPriority?.label}</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              
+              {showPropertyDropdown === 'priority' && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 z-50 py-1">
+                  {priorities.map((priority) => (
+                    <button
+                      key={priority.id}
+                      onClick={() => handlePriorityChange(priority.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-linear-surface transition-colors text-left",
+                        priority.color
+                      )}
+                    >
+                      <priority.icon className="w-3.5 h-3.5" />
+                      <span>{priority.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Assignee */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+            <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+              Assignee
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowPropertyDropdown(showPropertyDropdown === 'assignee' ? null : 'assignee')}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium border border-linear-border bg-linear-surface hover:border-linear-border-hover transition-colors"
+              >
+                {issue.assignee ? (
+                  <>
+                    <div className="w-5 h-5 rounded-full bg-linear-accent text-white flex items-center justify-center text-[10px] font-medium">
+                      {issue.assignee.name?.[0]?.toUpperCase() || issue.assignee.email[0].toUpperCase()}
+                    </div>
+                    <span className="flex-1 text-left">{issue.assignee.name || issue.assignee.email}</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4 text-linear-text-tertiary" />
+                    <span className="flex-1 text-left text-linear-text-secondary">No assignee</span>
+                  </>
+                )}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              
+              {showPropertyDropdown === 'assignee' && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 z-50 py-1">
+                  <button
+                    onClick={() => handleAssigneeChange(null)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-linear-surface transition-colors text-left text-linear-text-secondary"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>No assignee</span>
+                  </button>
+                  {workspaceUsers?.map((user: any) => (
+                    <button
+                      key={user.id}
+                      onClick={() => handleAssigneeChange(user.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-linear-surface transition-colors text-left"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-linear-accent text-white flex items-center justify-center text-[10px] font-medium">
+                        {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                      </div>
+                      <span>{user.name || user.email}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Labels */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+            <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+              Labels
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {issue.labels.length === 0 ? (
+                <span className="text-sm text-linear-text-tertiary">None</span>
+              ) : (
+                issue.labels.map((label: Label) => (
+                  <Badge
                     key={label.id}
-                    className="px-2 py-1 rounded text-xs font-medium"
-                    style={{ 
-                      backgroundColor: `${label.color}20`,
-                      color: label.color,
+                    variant="outline"
+                    className="text-[10px]"
+                    style={{
+                      borderColor: label.color + '40',
+                      backgroundColor: label.color + '15',
+                      color: label.color
                     }}
                   >
                     {label.name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <button className="text-primary-500 hover:text-primary-600 text-sm">
-                + Add labels
-              </button>
-            )}
+                  </Badge>
+                ))
+              )}
+            </div>
           </div>
 
-          {/* Team card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Team</h4>
-            <div 
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white"
-              style={{ backgroundColor: issue.team.color }}
-            >
-              {issue.team.key}
+          {/* Related issues */}
+          {issue.relatedIssues && issue.relatedIssues.length > 0 && (
+            <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+              <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+                Related
+              </label>
+              <div className="space-y-2">
+                {issue.relatedIssues.map((related: RelatedIssue) => (
+                  <Link
+                    key={related.id}
+                    to={`/${workspace}/issues/${related.id}`}
+                    className="flex items-center gap-2 text-sm hover:text-linear-accent transition-colors"
+                  >
+                    {related.type === 'blocks' && <CornerUpRight className="w-3.5 h-3.5 text-priority-urgent" />}
+                    {related.type === 'blocked_by' && <CornerUpRight className="w-3.5 h-3.5 text-priority-urgent rotate-180" />}
+                    {related.type === 'relates_to' && <LinkIcon className="w-3.5 h-3.5 text-linear-text-tertiary" />}
+                    <span className="text-linear-text-tertiary">{related.identifier}</span>
+                    <span className="truncate">{related.title}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* Actions */}
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3 space-y-2">
+            <button
+              onClick={copyIssueLink}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:text-linear-text hover:bg-linear-surface rounded-md transition-colors"
+            >
+              <Copy className="w-4 h-4" />
+              Copy link
+            </button>
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this issue?')) {
+                  deleteIssueMutation.mutate();
+                }
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-priority-urgent hover:bg-priority-urgent/10 rounded-md transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete issue
+            </button>
           </div>
         </div>
       </div>
-    </AnimatedPage>
+    </div>
   );
 }

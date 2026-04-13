@@ -1,3 +1,9 @@
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables
+config({ path: resolve(process.cwd(), '../../.env.dev') });
+
 import Fastify from 'fastify';
 import { app } from './app.js';
 

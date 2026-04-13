@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { AnimatedPage } from '@flowpigdev/ui';

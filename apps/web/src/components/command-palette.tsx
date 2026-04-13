@@ -1,232 +1,514 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
+import { Command } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, FileText, CircleDot, Users, X, Loader2 } from 'lucide-react';
+import { 
+  Search, 
+  FileText, 
+  CircleDot, 
+  Home, 
+  Settings, 
+  Users, 
+  GitBranch,
+  BarChart3,
+  Calendar,
+  Inbox,
+  Plus,
+  ArrowRight,
+  Command as CommandIcon,
+  Keyboard,
+  Moon,
+  Sun,
+  LogOut,
+  FolderKanban,
+  Target,
+  RotateCcw,
+  Filter,
+  Map,
+  UserCircle,
+  Database,
+  Layers,
+  Sparkles,
+  Clock,
+  Star,
+  Pin,
+  Archive,
+  Trash2,
+  Eye,
+  Copy,
+  ExternalLink
+} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
-import { useDebounce } from '~/hooks/use-debounce';
-
-interface SearchResult {
-  type: 'issue' | 'note' | 'user';
-  id: string;
-  title: string;
-  subtitle: string;
-  url: string;
-  meta: Record<string, any>;
-}
+import { useAuth } from '~/lib/auth-client';
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
+import { Badge } from '~/components/ui/badge';
 
 interface CommandPaletteProps {
   workspaceId: string;
   workspaceSlug: string;
 }
 
+interface SearchResult {
+  id: string;
+  type: 'issue' | 'note' | 'page' | 'user' | 'project';
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  url: string;
+  metadata?: Record<string, string>;
+}
+
+interface KeyboardShortcut {
+  key: string;
+  label: string;
+  category: string;
+}
+
+const GLOBAL_SHORTCUTS: KeyboardShortcut[] = [
+  { key: 'G', label: 'Go to...', category: 'Navigation' },
+  { key: 'C', label: 'Create issue', category: 'Actions' },
+  { key: '⌘ K', label: 'Command palette', category: 'Navigation' },
+  { key: '⌘ /', label: 'Keyboard shortcuts', category: 'Navigation' },
+  { key: 'Esc', label: 'Close/Back', category: 'Navigation' },
+];
+
+const NAVIGATION_ITEMS = [
+  { id: 'home', label: 'Home', icon: Home, url: '', shortcut: 'G H' },
+  { id: 'my-issues', label: 'My Issues', icon: UserCircle, url: 'my-issues', shortcut: 'G M' },
+  { id: 'inbox', label: 'Inbox', icon: Inbox, url: 'inbox', shortcut: 'G I' },
+  { id: 'issues', label: 'Issues', icon: CircleDot, url: 'issues', shortcut: 'G S' },
+  { id: 'cycles', label: 'Cycles', icon: RotateCcw, url: 'cycles', shortcut: 'G C' },
+  { id: 'triage', label: 'Triage', icon: Filter, url: 'triage', shortcut: 'G T' },
+  { id: 'roadmap', label: 'Roadmap', icon: Map, url: 'roadmap', shortcut: 'G R' },
+  { id: 'projects', label: 'Projects', icon: FolderKanban, url: 'projects', shortcut: 'G P' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, url: 'analytics', shortcut: 'G A' },
+  { id: 'notes', label: 'Notes', icon: FileText, url: 'notes', shortcut: 'G N' },
+  { id: 'databases', label: 'Databases', icon: Database, url: 'databases', shortcut: 'G D' },
+  { id: 'team', label: 'Team', icon: Users, url: 'team', shortcut: 'G E' },
+  { id: 'settings', label: 'Settings', icon: Settings, url: 'settings', shortcut: 'G ,' },
+];
+
+const QUICK_ACTIONS = [
+  { id: 'new-issue', label: 'Create new issue', icon: Plus, action: 'create-issue', shortcut: 'C' },
+  { id: 'new-project', label: 'Create new project', icon: FolderKanban, action: 'create-project' },
+  { id: 'new-note', label: 'Create new note', icon: FileText, action: 'create-note' },
+  { id: 'new-cycle', label: 'Create new cycle', icon: RotateCcw, action: 'create-cycle' },
+];
+
+const VIEW_OPTIONS = [
+  { id: 'toggle-theme', label: 'Toggle theme', icon: Moon, action: 'toggle-theme' },
+  { id: 'fullscreen', label: 'Toggle fullscreen', icon: ExternalLink, action: 'fullscreen' },
+];
+
 export function CommandPalette({ workspaceId, workspaceSlug }: CommandPaletteProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [pages, setPages] = useState<string[]>([]);
+  const [selectedShortcut, setSelectedShortcut] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const params = useParams();
+  const currentWorkspace = params.workspace || workspaceSlug;
 
-  const debouncedQuery = useDebounce(query, 200);
+  const activePage = pages[pages.length - 1];
 
-  // Search API
+  // Fetch search results
+  const { data: searchResults, isLoading } = useQuery({
+    queryKey: ['search', search],
+    queryFn: async () => {
+      if (!search || search.length < 2) return [];
+      const response = await fetch(
+        `${API_URL}/search?q=${encodeURIComponent(search)}&workspaceId=${workspaceId}`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: search.length >= 2 && activePage !== 'shortcuts',
+  });
+
+  // Toggle with keyboard shortcut
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
-      setResults([]);
-      return;
-    }
-
-    setIsLoading(true);
-    fetch(
-      `${API_URL}/search/workspace/${workspaceId}?q=${encodeURIComponent(debouncedQuery)}`,
-      { credentials: 'include' }
-    )
-      .then(res => res.json())
-      .then(data => {
-        setResults(data.results || []);
-        setSelectedIndex(0);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
-  }, [debouncedQuery, workspaceId]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // CMD+K or Ctrl+K to open
+    const down = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsOpen(true);
+        setOpen((open) => !open);
       }
-
-      // Escape to close
+      // Cmd/Ctrl + /
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault();
+        setOpen(true);
+        setPages(['shortcuts']);
+      }
+      // C for create
+      if (e.key === 'c' && !e.metaKey && !e.ctrlKey && !open) {
+        e.preventDefault();
+        setOpen(true);
+        setPages(['create']);
+      }
+      // G for go to
+      if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !open) {
+        e.preventDefault();
+        setPages(['goto']);
+        setOpen(true);
+      }
+      // Escape
       if (e.key === 'Escape') {
-        setIsOpen(false);
-      }
-
-      if (!isOpen) return;
-
-      // Arrow navigation
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex(prev => Math.max(prev - 1, 0));
-      }
-
-      // Enter to select
-      if (e.key === 'Enter' && results[selectedIndex]) {
-        e.preventDefault();
-        navigate(results[selectedIndex].url);
-        setIsOpen(false);
+        if (pages.length > 0) {
+          e.preventDefault();
+          setPages((pages) => pages.slice(0, -1));
+        } else if (open) {
+          setOpen(false);
+        }
       }
     };
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, [open, pages, workspaceId]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, navigate]);
+  const handleNavigate = useCallback((url: string) => {
+    navigate(`/${currentWorkspace}/${url}`);
+    setOpen(false);
+    setSearch('');
+    setPages([]);
+  }, [navigate, currentWorkspace]);
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'issue':
-        return <CircleDot className="w-4 h-4" />;
-      case 'note':
-        return <FileText className="w-4 h-4" />;
-      case 'user':
-        return <Users className="w-4 h-4" />;
-      default:
-        return <Search className="w-4 h-4" />;
+  const handleAction = useCallback((action: string) => {
+    switch (action) {
+      case 'create-issue':
+        // Dispatch custom event for create issue modal
+        window.dispatchEvent(new CustomEvent('open-create-issue'));
+        setOpen(false);
+        break;
+      case 'create-project':
+        navigate(`/${currentWorkspace}/projects`);
+        setOpen(false);
+        break;
+      case 'create-note':
+        navigate(`/${currentWorkspace}/notes`);
+        setOpen(false);
+        break;
+      case 'toggle-theme':
+        document.documentElement.classList.toggle('dark');
+        setOpen(false);
+        break;
+      case 'fullscreen':
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+        setOpen(false);
+        break;
     }
-  };
+  }, [navigate, currentWorkspace]);
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'issue':
-        return 'bg-red-100 text-red-600';
-      case 'note':
-        return 'bg-blue-100 text-blue-600';
-      case 'user':
-        return 'bg-green-100 text-green-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
+  const pushPage = (page: string) => {
+    setPages([...pages, page]);
+    setSearch('');
   };
 
   return (
     <>
       {/* Trigger button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-600 transition-colors"
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-64 justify-between text-linear-text-secondary bg-linear-surface border-linear-border hover:bg-linear-border hover:text-linear-text"
+        onClick={() => setOpen(true)}
       >
-        <Search className="w-4 h-4" />
-        <span>Search...</span>
-        <kbd className="px-1.5 py-0.5 bg-white rounded text-xs border border-gray-200">
+        <div className="flex items-center gap-2">
+          <Search className="w-3.5 h-3.5" />
+          <span className="text-sm">Search or jump to...</span>
+        </div>
+        <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-linear-border bg-linear-elevated px-1.5 font-mono text-[10px] font-medium text-linear-text-tertiary">
           ⌘K
         </kbd>
-      </button>
+      </Button>
 
+      {/* Command Palette Modal */}
       <AnimatePresence>
-        {isOpen && (
-          <>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+            onClick={() => setOpen(false)}
+          >
             {/* Backdrop */}
+            <div className="absolute inset-0 bg-linear-text/20 backdrop-blur-sm" />
+            
+            {/* Command Dialog */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
-              onClick={() => setIsOpen(false)}
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              initial={{ opacity: 0, scale: 0.98, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
+              exit={{ opacity: 0, scale: 0.98, y: -10 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="relative w-full max-w-2xl mx-4"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Search input */}
-              <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-                <Search className="w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search issues, notes, and people..."
-                  className="flex-1 text-lg outline-none placeholder:text-gray-400"
-                  autoFocus
-                />
-                {isLoading && <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
-              </div>
+              <Command 
+                className="bg-linear-elevated rounded-xl border border-linear-border shadow-elevation-modal overflow-hidden"
+                loop
+              >
+                {/* Header */}
+                <div className="flex items-center border-b border-linear-border px-3">
+                  <Search className="w-4 h-4 text-linear-text-tertiary mr-2" />
+                  <Command.Input
+                    value={search}
+                    onValueChange={setSearch}
+                    placeholder={
+                      activePage === 'shortcuts' ? 'Search keyboard shortcuts...' :
+                      activePage === 'goto' ? 'Go to page...' :
+                      activePage === 'create' ? 'Create new...' :
+                      'Search issues, notes, and more...'
+                    }
+                    className="flex-1 h-12 bg-transparent text-sm text-linear-text placeholder:text-linear-text-tertiary focus:outline-none"
+                    autoFocus
+                  />
+                  {pages.length > 0 && (
+                    <button
+                      onClick={() => setPages([])}
+                      className="text-xs text-linear-text-tertiary hover:text-linear-text px-2 py-1 rounded hover:bg-linear-surface transition-colors"
+                    >
+                      Esc to close
+                    </button>
+                  )}
+                </div>
 
-              {/* Results */}
-              <div className="max-h-96 overflow-y-auto">
-                {query.length < 2 ? (
-                  <div className="p-8 text-center text-gray-500">
-                    <p>Type at least 2 characters to search</p>
-                  </div>
-                ) : results.length === 0 && !isLoading ? (
-                  <div className="p-8 text-center text-gray-500">
-                    <p>No results found for &quot;{query}&quot;</p>
-                  </div>
-                ) : (
-                  <div className="py-2">
-                    {results.map((result, index) => (
-                      <motion.button
-                        key={result.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        onClick={() => {
-                          navigate(result.url);
-                          setIsOpen(false);
-                        }}
-                        className={`
-                          w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
-                          ${index === selectedIndex ? 'bg-gray-100' : 'hover:bg-gray-50'}
-                        `}
-                        onMouseEnter={() => setSelectedIndex(index)}
-                      >
-                        <div className={`p-2 rounded-lg ${getTypeColor(result.type)}`}>
-                          {getIcon(result.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">
-                            {result.title}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {result.type === 'issue' && result.meta.identifier}
-                            {result.type === 'note' && result.meta.creator?.name}
-                            {result.type === 'user' && result.meta.role}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-400 capitalize">
-                          {result.type}
-                        </span>
-                      </motion.button>
+                {/* Breadcrumbs for nested pages */}
+                {pages.length > 0 && (
+                  <div className="flex items-center gap-1 px-3 py-2 border-b border-linear-border bg-linear-surface/50 text-xs">
+                    <button
+                      onClick={() => setPages([])}
+                      className="text-linear-text-secondary hover:text-linear-text transition-colors"
+                    >
+                      Home
+                    </button>
+                    {pages.map((page, i) => (
+                      <span key={page} className="flex items-center gap-1 text-linear-text-tertiary">
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="capitalize">{page}</span>
+                      </span>
                     ))}
                   </div>
                 )}
-              </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 text-xs text-gray-500 border-t border-gray-100">
-                <div className="flex items-center gap-4">
-                  <span>↑↓ Navigate</span>
-                  <span>↵ Select</span>
-                  <span>esc Close</span>
+                {/* Content */}
+                <Command.List className="max-h-[60vh] overflow-y-auto p-2">
+                  {!activePage && search.length === 0 && (
+                    <>
+                      {/* Quick Actions */}
+                      <Command.Group heading="Quick Actions" className="text-xs text-linear-text-tertiary uppercase tracking-wider font-semibold px-2 py-1.5">
+                        {QUICK_ACTIONS.map((action) => (
+                          <Command.Item
+                            key={action.id}
+                            onSelect={() => handleAction(action.action)}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                          >
+                            <div className="w-7 h-7 rounded-md bg-linear-accent-light flex items-center justify-center">
+                              <action.icon className="w-3.5 h-3.5 text-linear-accent" />
+                            </div>
+                            <span className="flex-1">{action.label}</span>
+                            {action.shortcut && (
+                              <kbd className="text-[10px] text-linear-text-tertiary bg-linear-surface px-1.5 py-0.5 rounded">
+                                {action.shortcut}
+                              </kbd>
+                            )}
+                          </Command.Item>
+                        ))}
+                      </Command.Group>
+
+                      <Command.Separator className="h-px bg-linear-border my-2" />
+
+                      {/* Navigation */}
+                      <Command.Group heading="Navigation" className="text-xs text-linear-text-tertiary uppercase tracking-wider font-semibold px-2 py-1.5">
+                        <Command.Item
+                          onSelect={() => pushPage('goto')}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-linear-surface flex items-center justify-center">
+                            <Map className="w-3.5 h-3.5 text-linear-text-secondary" />
+                          </div>
+                          <span className="flex-1">Go to page...</span>
+                          <kbd className="text-[10px] text-linear-text-tertiary bg-linear-surface px-1.5 py-0.5 rounded">G</kbd>
+                        </Command.Item>
+                        <Command.Item
+                          onSelect={() => pushPage('shortcuts')}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-linear-surface flex items-center justify-center">
+                            <Keyboard className="w-3.5 h-3.5 text-linear-text-secondary" />
+                          </div>
+                          <span className="flex-1">Keyboard shortcuts</span>
+                          <kbd className="text-[10px] text-linear-text-tertiary bg-linear-surface px-1.5 py-0.5 rounded">⌘/</kbd>
+                        </Command.Item>
+                      </Command.Group>
+
+                      <Command.Separator className="h-px bg-linear-border my-2" />
+
+                      {/* View Options */}
+                      <Command.Group heading="View" className="text-xs text-linear-text-tertiary uppercase tracking-wider font-semibold px-2 py-1.5">
+                        {VIEW_OPTIONS.map((option) => (
+                          <Command.Item
+                            key={option.id}
+                            onSelect={() => handleAction(option.action)}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                          >
+                            <div className="w-7 h-7 rounded-md bg-linear-surface flex items-center justify-center">
+                              <option.icon className="w-3.5 h-3.5 text-linear-text-secondary" />
+                            </div>
+                            <span>{option.label}</span>
+                          </Command.Item>
+                        ))}
+                      </Command.Group>
+                    </>
+                  )}
+
+                  {/* Go to page */}
+                  {activePage === 'goto' && (
+                    <Command.Group>
+                      {NAVIGATION_ITEMS.map((item) => (
+                        <Command.Item
+                          key={item.id}
+                          onSelect={() => handleNavigate(item.url)}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-linear-surface flex items-center justify-center">
+                            <item.icon className="w-3.5 h-3.5 text-linear-text-secondary" />
+                          </div>
+                          <span className="flex-1">{item.label}</span>
+                          <kbd className="text-[10px] text-linear-text-tertiary bg-linear-surface px-1.5 py-0.5 rounded">
+                            {item.shortcut}
+                          </kbd>
+                        </Command.Item>
+                      ))}
+                    </Command.Group>
+                  )}
+
+                  {/* Create page */}
+                  {activePage === 'create' && (
+                    <Command.Group>
+                      {QUICK_ACTIONS.map((action) => (
+                        <Command.Item
+                          key={action.id}
+                          onSelect={() => handleAction(action.action)}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-linear-accent-light flex items-center justify-center">
+                            <action.icon className="w-3.5 h-3.5 text-linear-accent" />
+                          </div>
+                          <span className="flex-1">{action.label}</span>
+                          {action.shortcut && (
+                            <kbd className="text-[10px] text-linear-text-tertiary bg-linear-surface px-1.5 py-0.5 rounded">
+                              {action.shortcut}
+                            </kbd>
+                          )}
+                        </Command.Item>
+                      ))}
+                    </Command.Group>
+                  )}
+
+                  {/* Shortcuts page */}
+                  {activePage === 'shortcuts' && (
+                    <Command.Group>
+                      {GLOBAL_SHORTCUTS.map((shortcut) => (
+                        <Command.Item
+                          key={shortcut.key}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text"
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium">{shortcut.label}</div>
+                            <div className="text-xs text-linear-text-secondary">{shortcut.category}</div>
+                          </div>
+                          <kbd className="text-xs text-linear-text-secondary bg-linear-surface px-2 py-1 rounded border border-linear-border">
+                            {shortcut.key}
+                          </kbd>
+                        </Command.Item>
+                      ))}
+                    </Command.Group>
+                  )}
+
+                  {/* Search results */}
+                  {search.length >= 2 && !activePage && (
+                    <>
+                      <Command.Group heading="Issues" className="text-xs text-linear-text-tertiary uppercase tracking-wider font-semibold px-2 py-1.5">
+                        {searchResults?.issues?.map((issue: any) => (
+                          <Command.Item
+                            key={issue.id}
+                            onSelect={() => handleNavigate(`issues/${issue.id}`)}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                          >
+                            <CircleDot className="w-4 h-4 text-linear-text-tertiary" />
+                            <div className="flex-1">
+                              <div className="font-medium">{issue.title}</div>
+                              <div className="text-xs text-linear-text-secondary">{issue.identifier}</div>
+                            </div>
+                          </Command.Item>
+                        ))}
+                        {(!searchResults?.issues || searchResults.issues.length === 0) && (
+                          <div className="px-2 py-3 text-sm text-linear-text-secondary">No issues found</div>
+                        )}
+                      </Command.Group>
+
+                      <Command.Group heading="Notes" className="text-xs text-linear-text-tertiary uppercase tracking-wider font-semibold px-2 py-1.5">
+                        {searchResults?.notes?.map((note: any) => (
+                          <Command.Item
+                            key={note.id}
+                            onSelect={() => handleNavigate(`notes/${note.slug}`)}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-linear-text hover:bg-linear-surface cursor-pointer data-[selected=true]:bg-linear-surface"
+                          >
+                            <FileText className="w-4 h-4 text-linear-text-tertiary" />
+                            <div className="flex-1">
+                              <div className="font-medium">{note.title}</div>
+                              <div className="text-xs text-linear-text-secondary">
+                                Edited {new Date(note.updatedAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </Command.Item>
+                        ))}
+                        {(!searchResults?.notes || searchResults.notes.length === 0) && (
+                          <div className="px-2 py-3 text-sm text-linear-text-secondary">No notes found</div>
+                        )}
+                      </Command.Group>
+                    </>
+                  )}
+
+                  <Command.Empty className="py-6 text-center text-sm text-linear-text-secondary">
+                    No results found for "{search}"
+                  </Command.Empty>
+                </Command.List>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between px-3 py-2 border-t border-linear-border bg-linear-surface/50 text-xs text-linear-text-secondary">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 bg-linear-elevated border border-linear-border rounded text-[10px]">↑↓</kbd>
+                      <span>Navigate</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 bg-linear-elevated border border-linear-border rounded text-[10px]">↵</kbd>
+                      <span>Select</span>
+                    </span>
+                    {pages.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <kbd className="px-1.5 py-0.5 bg-linear-elevated border border-linear-border rounded text-[10px]">Esc</kbd>
+                        <span>Back</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-linear-text-tertiary">
+                    Flowpig
+                  </div>
                 </div>
-              </div>
+              </Command>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

@@ -445,4 +445,277 @@ export default async function issueRoutes(fastify: FastifyInstance) {
 
     return { success: true };
   });
+
+  // Get my assigned issues (grouped like Linear)
+  fastify.get('/my-issues/grouped', {
+    preHandler: [requireAuth, extractWorkspace]
+  }, async (request: WorkspaceRequest, reply) => {
+    const userId = (request as any).user!.id;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const baseWhere = {
+      workspaceId: request.workspace!.id,
+      assigneeId: userId,
+      deletedAt: null,
+      archivedAt: null,
+      state: { not: 'CANCELLED' },
+    };
+
+    // Fetch all assigned issues
+    const issues = await fastify.prisma.issue.findMany({
+      where: baseWhere,
+      include: {
+        assignee: {
+          select: { id: true, name: true, image: true },
+        },
+        creator: {
+          select: { id: true, name: true, image: true },
+        },
+        team: {
+          select: { id: true, name: true, key: true, color: true },
+        },
+        workflowState: {
+          select: { id: true, name: true, key: true, color: true, category: true },
+        },
+        labels: {
+          select: { id: true, name: true, color: true },
+        },
+        cycle: {
+          select: { id: true, name: true, number: true, isActive: true },
+        },
+        _count: {
+          select: { comments: { where: { deletedAt: null } } },
+        },
+      },
+      orderBy: [
+        { priority: 'desc' },
+        { dueDate: 'asc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    // Group issues like Linear
+    const overdue: typeof issues = [];
+    const todayIssues: typeof issues = [];
+    const upcoming: typeof issues = [];
+    const noDueDate: typeof issues = [];
+    const completedRecently: typeof issues = [];
+
+    for (const issue of issues) {
+      const isDone = issue.state === 'DONE' || issue.workflowState?.category === 'DONE';
+      
+      if (isDone && issue.completedAt) {
+        const completedDate = new Date(issue.completedAt);
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        if (completedDate >= sevenDaysAgo) {
+          completedRecently.push(issue);
+        }
+        continue;
+      }
+
+      if (!issue.dueDate) {
+        noDueDate.push(issue);
+        continue;
+      }
+
+      const dueDate = new Date(issue.dueDate);
+      const dueDateStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+      if (dueDateStart < today) {
+        overdue.push(issue);
+      } else if (dueDateStart.getTime() === today.getTime()) {
+        todayIssues.push(issue);
+      } else {
+        upcoming.push(issue);
+      }
+    }
+
+    // Format issues for response
+    const formatIssue = (issue: typeof issues[0]) => ({
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      state: issue.state,
+      priority: issue.priority,
+      dueDate: issue.dueDate?.toISOString() || null,
+      completedAt: issue.completedAt?.toISOString() || null,
+      createdAt: issue.createdAt.toISOString(),
+      assignee: issue.assignee,
+      creator: issue.creator,
+      team: issue.team,
+      workflowState: issue.workflowState,
+      labels: issue.labels,
+      cycle: issue.cycle,
+      commentCount: issue._count.comments,
+    });
+
+    return {
+      groups: [
+        {
+          id: 'overdue',
+          title: 'Overdue',
+          count: overdue.length,
+          issues: overdue.map(formatIssue),
+        },
+        {
+          id: 'today',
+          title: 'Due today',
+          count: todayIssues.length,
+          issues: todayIssues.map(formatIssue),
+        },
+        {
+          id: 'upcoming',
+          title: 'Upcoming',
+          count: upcoming.length,
+          issues: upcoming.map(formatIssue),
+        },
+        {
+          id: 'noDueDate',
+          title: 'No due date',
+          count: noDueDate.length,
+          issues: noDueDate.map(formatIssue),
+        },
+        {
+          id: 'completed',
+          title: 'Completed recently',
+          count: completedRecently.length,
+          issues: completedRecently.map(formatIssue),
+        },
+      ],
+      stats: {
+        totalAssigned: issues.length,
+        overdue: overdue.length,
+        dueToday: todayIssues.length,
+        completedThisWeek: completedRecently.length,
+      },
+    };
+  });
+
+  // Bulk update issues
+  fastify.post('/bulk-update', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const userId = (request as any).user!.id;
+    const { issueIds, updates } = request.body as {
+      issueIds: string[];
+      updates: {
+        state?: string;
+        priority?: string;
+        assigneeId?: string;
+        cycleId?: string | null;
+        labelIds?: string[];
+      };
+    };
+
+    if (!issueIds || issueIds.length === 0) {
+      return reply.status(400).send({ error: 'No issue IDs provided' });
+    }
+
+    const issues = await fastify.prisma.issue.findMany({
+      where: {
+        id: { in: issueIds },
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+    });
+
+    if (issues.length !== issueIds.length) {
+      return reply.status(400).send({ error: 'Some issues not found' });
+    }
+
+    const updateData: any = {};
+    if (updates.state) updateData.state = updates.state;
+    if (updates.priority) updateData.priority = updates.priority;
+    if (updates.assigneeId !== undefined) updateData.assigneeId = updates.assigneeId;
+    if (updates.cycleId !== undefined) updateData.cycleId = updates.cycleId;
+
+    await fastify.prisma.issue.updateMany({
+      where: { id: { in: issueIds } },
+      data: updateData,
+    });
+
+    if (updates.labelIds) {
+      for (const issueId of issueIds) {
+        await fastify.prisma.issue.update({
+          where: { id: issueId },
+          data: {
+            labels: {
+              set: updates.labelIds.map(id => ({ id })),
+            },
+          },
+        });
+      }
+    }
+
+    if (updates.state) {
+      for (const issue of issues) {
+        await fastify.prisma.activity.create({
+          data: {
+            workspaceId: request.workspace!.id,
+            issueId: issue.id,
+            actorId: userId,
+            type: 'ISSUE_STATE_CHANGED',
+            description: `changed state to ${updates.state}`,
+            metadata: { to: updates.state },
+          },
+        });
+      }
+    }
+
+    return {
+      success: true,
+      updatedCount: issueIds.length,
+    };
+  });
+
+  // Bulk delete issues
+  fastify.post('/bulk-delete', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const userId = (request as any).user!.id;
+    const { issueIds } = request.body as { issueIds: string[] };
+
+    if (!issueIds || issueIds.length === 0) {
+      return reply.status(400).send({ error: 'No issue IDs provided' });
+    }
+
+    const issues = await fastify.prisma.issue.findMany({
+      where: {
+        id: { in: issueIds },
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+    });
+
+    if (issues.length !== issueIds.length) {
+      return reply.status(400).send({ error: 'Some issues not found' });
+    }
+
+    await fastify.prisma.issue.updateMany({
+      where: { id: { in: issueIds } },
+      data: { deletedAt: new Date() },
+    });
+
+    for (const issue of issues) {
+      await fastify.prisma.activity.create({
+        data: {
+          workspaceId: request.workspace!.id,
+          issueId: issue.id,
+          actorId: userId,
+          type: 'ISSUE_DELETED',
+          description: `deleted issue ${issue.identifier}`,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      deletedCount: issueIds.length,
+    };
+  });
 }

@@ -298,4 +298,154 @@ export default async function notificationRoutes(fastify: FastifyInstance) {
 
     return { success: true };
   });
+
+  // Archive notification (soft delete)
+  fastify.delete('/:notificationId', {
+    preHandler: [requireAuth],
+  }, async (request: AuthenticatedRequest, reply) => {
+    const userId = request.user!.id;
+    const { notificationId } = request.params as { notificationId: string };
+
+    const notification = await fastify.prisma.notification.findFirst({
+      where: {
+        id: notificationId,
+        userId,
+      },
+    });
+
+    if (!notification) {
+      return reply.status(404).send({ error: 'Notification not found' });
+    }
+
+    await fastify.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return { success: true };
+  });
+
+  // Get notifications grouped by date (for Inbox view)
+  fastify.get('/inbox', {
+    preHandler: [requireAuth],
+  }, async (request: AuthenticatedRequest, reply) => {
+    const userId = request.user!.id;
+    const { filter = 'all', page = '1', limit = '50' } = 
+      request.query as { filter?: 'all' | 'unread' | 'archive'; page?: string; limit?: string };
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: any = {
+      userId,
+    };
+
+    if (filter === 'unread') {
+      where.isRead = false;
+      where.deletedAt = null;
+    } else if (filter === 'archive') {
+      where.deletedAt = { not: null };
+    } else {
+      where.deletedAt = null;
+    }
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      fastify.prisma.notification.findMany({
+        where,
+        include: {
+          workspace: {
+            select: { id: true, name: true, slug: true },
+          },
+          issue: {
+            select: { id: true, identifier: true, title: true, state: true },
+          },
+          note: {
+            select: { id: true, title: true, slug: true },
+          },
+          actor: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limitNum,
+      }),
+      fastify.prisma.notification.count({ where }),
+      fastify.prisma.notification.count({
+        where: { userId, isRead: false, deletedAt: null },
+      }),
+    ]);
+
+    // Group notifications by date
+    const groups: Record<string, typeof notifications> = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(thisWeekStart.getDate() - today.getDay());
+    const lastWeekStart = new Date(thisWeekStart);
+    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+    for (const notification of notifications) {
+      const date = new Date(notification.createdAt);
+      date.setHours(0, 0, 0, 0);
+
+      let groupKey: string;
+      if (date.getTime() === today.getTime()) {
+        groupKey = 'Today';
+      } else if (date.getTime() === yesterday.getTime()) {
+        groupKey = 'Yesterday';
+      } else if (date >= thisWeekStart) {
+        groupKey = 'This week';
+      } else if (date >= lastWeekStart) {
+        groupKey = 'Last week';
+      } else {
+        groupKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(notification);
+    }
+
+    const formattedGroups = Object.entries(groups).map(([title, items]) => ({
+      title,
+      count: items.length,
+      notifications: items.map(n => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        content: n.content,
+        workspace: n.workspace,
+        issue: n.issue,
+        note: n.note,
+        actor: n.actor,
+        metadata: n.metadata,
+        isRead: n.isRead,
+        readAt: n.readAt?.toISOString() || null,
+        createdAt: n.createdAt.toISOString(),
+        canArchive: filter !== 'archive',
+      })),
+    }));
+
+    return {
+      groups: formattedGroups,
+      stats: {
+        total,
+        unread: unreadCount,
+        archived: filter === 'archive' ? total : undefined,
+      },
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        hasMore: skip + notifications.length < total,
+      },
+    };
+  });
 }

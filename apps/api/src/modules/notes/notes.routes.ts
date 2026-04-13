@@ -332,6 +332,37 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     if (isArchived !== undefined) updateData.isArchived = isArchived;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
 
+    // Create a version snapshot before updating (only if content or title changes)
+    if (title !== undefined || content !== undefined) {
+      await fastify.prisma.noteVersion.create({
+        data: {
+          noteId: existingNote.id,
+          title: existingNote.title,
+          content: existingNote.content,
+          emoji: existingNote.emoji,
+          coverImage: existingNote.coverImage,
+          editedById: existingNote.lastEditedById || existingNote.createdById,
+        },
+      });
+
+      // Clean up old versions (keep only last 50)
+      const versionsToKeep = await fastify.prisma.noteVersion.findMany({
+        where: { noteId: existingNote.id },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: { id: true },
+      });
+
+      const versionIdsToKeep = versionsToKeep.map(v => v.id);
+
+      await fastify.prisma.noteVersion.deleteMany({
+        where: {
+          noteId: existingNote.id,
+          id: { notIn: versionIdsToKeep },
+        },
+      });
+    }
+
     const note = await fastify.prisma.note.update({
       where: { id: existingNote.id },
       data: updateData,
@@ -390,5 +421,185 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     });
 
     return { success: true };
+  });
+
+  // Get breadcrumb path for a note
+  fastify.get('/:noteId/breadcrumbs', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { noteId } = request.params as { noteId: string };
+
+    const note = await fastify.prisma.note.findFirst({
+      where: {
+        OR: [
+          { id: noteId },
+          { slug: noteId, workspaceId: request.workspace!.id },
+        ],
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+      select: { parentId: true },
+    });
+
+    if (!note) {
+      return reply.status(404).send({ error: 'Note not found' });
+    }
+
+    // Build breadcrumb trail by traversing up the tree
+    const breadcrumbs: Array<{ id: string; title: string; slug: string; emoji: string | null }> = [];
+    let currentParentId = note.parentId;
+
+    while (currentParentId) {
+      const parent = await fastify.prisma.note.findUnique({
+        where: { id: currentParentId },
+        select: { id: true, title: true, slug: true, emoji: true, parentId: true },
+      });
+
+      if (!parent || parent.deletedAt) break;
+
+      breadcrumbs.unshift(parent);
+      currentParentId = parent.parentId;
+    }
+
+    return { breadcrumbs };
+  });
+
+  // Get full page tree/hierarchy
+  fastify.get('/tree', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const workspaceId = request.workspace!.id;
+
+    // Get all non-deleted, non-archived notes
+    const notes = await fastify.prisma.note.findMany({
+      where: {
+        workspaceId,
+        deletedAt: null,
+        isArchived: false,
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        emoji: true,
+        parentId: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            children: { where: { deletedAt: null, isArchived: false } },
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Build tree structure
+    const noteMap = new Map(notes.map(n => ({ ...n, children: [] as typeof notes })));
+    const rootNotes: typeof notes = [];
+
+    notes.forEach(note => {
+      const node = noteMap.get(note.id)!;
+      if (note.parentId) {
+        const parent = noteMap.get(note.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          rootNotes.push(node); // Parent not found, treat as root
+        }
+      } else {
+        rootNotes.push(node);
+      }
+    });
+
+    return {
+      tree: rootNotes.map(n => ({
+        id: n.id,
+        title: n.title,
+        slug: n.slug,
+        emoji: n.emoji,
+        parentId: n.parentId,
+        updatedAt: n.updatedAt.toISOString(),
+        childCount: n._count.children,
+        children: n.children.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          slug: c.slug,
+          emoji: c.emoji,
+          updatedAt: c.updatedAt.toISOString(),
+          childCount: c._count.children,
+        })),
+      })),
+    };
+  });
+
+  // Move note to new parent
+  fastify.post('/:noteId/move', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { noteId } = request.params as { noteId: string };
+    const { parentId } = request.body as { parentId: string | null };
+    const workspaceId = request.workspace!.id;
+
+    const note = await fastify.prisma.note.findFirst({
+      where: {
+        OR: [
+          { id: noteId },
+          { slug: noteId },
+        ],
+        workspaceId,
+        deletedAt: null,
+      },
+    });
+
+    if (!note) {
+      return reply.status(404).send({ error: 'Note not found' });
+    }
+
+    // Validate parent if provided
+    if (parentId) {
+      if (parentId === note.id) {
+        return reply.status(400).send({ error: 'Cannot move note to itself' });
+      }
+
+      const parent = await fastify.prisma.note.findFirst({
+        where: { id: parentId, workspaceId, deletedAt: null },
+      });
+
+      if (!parent) {
+        return reply.status(404).send({ error: 'Parent note not found' });
+      }
+
+      // Check for circular reference
+      let currentId = parentId;
+      while (currentId) {
+        if (currentId === note.id) {
+          return reply.status(400).send({ error: 'Cannot move note to its own descendant' });
+        }
+        const ancestor = await fastify.prisma.note.findUnique({
+          where: { id: currentId },
+          select: { parentId: true },
+        });
+        currentId = ancestor?.parentId || null;
+      }
+    }
+
+    const updatedNote = await fastify.prisma.note.update({
+      where: { id: note.id },
+      data: { parentId: parentId || null },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        parentId: true,
+        parent: {
+          select: { id: true, title: true, slug: true },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      note: updatedNote,
+    };
   });
 }

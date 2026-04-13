@@ -1,58 +1,50 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* Theme configuration */
+@theme {
+  /* Font family */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, monospace;
   
-  color-scheme: light;
-  color: #1f2937;
-  background-color: #ffffff;
-  
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  /* Linear-style colors */
+  --color-linear-bg: #ffffff;
+  --color-linear-surface: #f8f9fa;
+  --color-linear-elevated: #ffffff;
+  --color-linear-border: #e5e7eb;
+  --color-linear-border-hover: #d1d5db;
+  --color-linear-text: #111827;
+  --color-linear-text-secondary: #4b5563;
+  --color-linear-text-tertiary: #9ca3af;
+  --color-linear-accent: #5E6AD2;
+  --color-linear-accent-hover: #4f5bb8;
+  --color-linear-accent-light: rgba(94, 106, 210, 0.1);
+  --color-linear-success: #0D9B6A;
+  --color-linear-success-light: rgba(13, 155, 106, 0.1);
+  --color-linear-warning: #F2A50C;
+  --color-linear-warning-light: rgba(242, 165, 12, 0.1);
+  --color-linear-error: #D13B3B;
+  --color-linear-error-light: rgba(209, 59, 59, 0.1);
+}
+
+/* Base styles */
+* {
+  border-color: var(--color-linear-border);
+}
+
+html {
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
-  min-width: 320px;
+  background-color: var(--color-linear-bg);
+  color: var(--color-linear-text);
   min-height: 100vh;
 }
 
-#root {
-  min-height: 100vh;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* Focus styles */
-*:focus-visible {
-  outline: 2px solid #5E6AD2;
-  outline-offset: 2px;
+/* Utility classes */
+.glass {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
 }

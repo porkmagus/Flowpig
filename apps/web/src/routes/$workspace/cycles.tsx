@@ -1,66 +1,240 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { API_URL } from '~/lib/api';
-import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Target, 
-  Calendar, 
-  Users, 
-  CheckCircle2, 
-  ArrowRight,
   Plus,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Target,
+  CheckCircle2,
+  CircleDot,
+  AlertCircle,
   TrendingUp,
-  Clock
+  Calendar,
+  MoreHorizontal,
+  Play,
+  Pause,
+  RotateCcw,
+  GitBranch,
+  BarChart3,
+  Flame,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
+import { API_URL } from '~/lib/api';
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
+import { Badge } from '~/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  Cell
+} from 'recharts';
 
 interface Cycle {
   id: string;
   number: number;
-  name: string;
+  name: string | null;
+  description: string | null;
   startDate: string;
   endDate: string;
   isActive: boolean;
-  sprintGoal?: string;
-  capacity?: number;
-  team: {
-    id: string;
-    name: string;
-    key: string;
-    color: string;
-  };
-  issueCount: number;
-  stats?: {
+  isCompleted: boolean;
+  status: 'planned' | 'active' | 'completed' | 'cancelled';
+  goals: string[];
+  stats: {
     totalIssues: number;
     completedIssues: number;
     inProgressIssues: number;
-    completionRate: number;
+    backlogIssues: number;
+    completionPercentage: number;
+    velocity: number;
+    averageCycleTime: number;
   };
+  burndown: Array<{
+    date: string;
+    ideal: number;
+    actual: number;
+  }>;
+  velocity: Array<{
+    cycle: number;
+    points: number;
+  }>;
+  issues: Array<{
+    id: string;
+    identifier: string;
+    title: string;
+    state: string;
+    priority: string;
+    assignee: {
+      id: string;
+      name: string;
+    } | null;
+    estimate: number | null;
+  }>;
 }
 
-export default function CyclesListRoute() {
-  const { workspace } = useParams();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+interface CreateCycleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate: (data: any) => void;
+}
 
-  const { data: cyclesData, isLoading } = useQuery({
+function CreateCycleModal({ isOpen, onClose, onCreate }: CreateCycleModalProps) {
+  const [name, setName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [goals, setGoals] = useState<string[]>(['']);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onCreate({
+      name: name || null,
+      startDate,
+      endDate,
+      goals: goals.filter(g => g.trim()),
+    });
+    onClose();
+    setName('');
+    setStartDate('');
+    setEndDate('');
+    setGoals(['']);
+  };
+
+  const addGoal = () => setGoals([...goals, '']);
+  const updateGoal = (index: number, value: string) => {
+    const newGoals = [...goals];
+    newGoals[index] = value;
+    setGoals(newGoals);
+  };
+  const removeGoal = (index: number) => {
+    setGoals(goals.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-linear-text/30 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative w-full max-w-lg bg-linear-elevated rounded-xl border border-linear-border shadow-elevation-modal p-6"
+      >
+        <h2 className="text-lg font-semibold text-linear-text mb-4">Create New Cycle</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-linear-text mb-1">Name (optional)</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Sprint 23 - User Authentication"
+              className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-linear-text mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-linear-text mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+                className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-linear-text mb-1">Goals</label>
+            <div className="space-y-2">
+              {goals.map((goal, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={goal}
+                    onChange={(e) => updateGoal(index, e.target.value)}
+                    placeholder={`Goal ${index + 1}`}
+                    className="flex-1 px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
+                  />
+                  {goals.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeGoal(index)}
+                      className="p-2 text-priority-urgent hover:bg-priority-urgent/10 rounded-lg"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addGoal}
+              className="mt-2 text-sm text-linear-accent hover:text-linear-accent-hover"
+            >
+              + Add another goal
+            </button>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button type="submit">Create Cycle</Button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+export default function CyclesList() {
+  const { workspace } = useParams();
+  const queryClient = useQueryClient();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedCycle, setSelectedCycle] = useState<string | null>(null);
+
+  // Fetch cycles
+  const { data: cycles, isLoading } = useQuery({
     queryKey: ['cycles', workspace],
     queryFn: async () => {
       const response = await fetch(
         `${API_URL}/workspaces/${workspace}/cycles`,
         { credentials: 'include' }
       );
-      if (!response.ok) throw new Error('Failed to load cycles');
+      if (!response.ok) throw new Error('Failed to fetch cycles');
       return response.json();
     },
   });
 
-  const { data: activeCycleData } = useQuery({
-    queryKey: ['cycles', workspace, 'active'],
+  // Fetch active cycle details
+  const { data: activeCycle } = useQuery({
+    queryKey: ['active-cycle', workspace],
     queryFn: async () => {
-      // Get first team's active cycle
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/cycles/active?teamId=team_eng_001`,
+        `${API_URL}/workspaces/${workspace}/cycles/active`,
         { credentials: 'include' }
       );
       if (!response.ok) return null;
@@ -68,158 +242,347 @@ export default function CyclesListRoute() {
     },
   });
 
-  const cycles: Cycle[] = cyclesData?.cycles || [];
-  const activeCycle: Cycle | null = activeCycleData?.cycle || null;
+  // Mutations
+  const createCycleMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/cycles`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        }
+      );
+      if (!response.ok) throw new Error('Failed to create cycle');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
+    },
+  });
 
-  // Group cycles by team
-  const cyclesByTeam = cycles.reduce((acc, cycle) => {
-    if (!acc[cycle.team.id]) {
-      acc[cycle.team.id] = { team: cycle.team, cycles: [] };
-    }
-    acc[cycle.team.id].cycles.push(cycle);
-    return acc;
-  }, {} as Record<string, { team: Cycle['team']; cycles: Cycle[] }>);
+  const startCycleMutation = useMutation({
+    mutationFn: async (cycleId: string) => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/cycles/${cycleId}/start`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) throw new Error('Failed to start cycle');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
+      queryClient.invalidateQueries({ queryKey: ['active-cycle', workspace] });
+    },
+  });
+
+  const completeCycleMutation = useMutation({
+    mutationFn: async (cycleId: string) => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/cycles/${cycleId}/complete`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) throw new Error('Failed to complete cycle');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
+      queryClient.invalidateQueries({ queryKey: ['active-cycle', workspace] });
+    },
+  });
+
+  const activeCycleData = cycles?.find((c: Cycle) => c.isActive) || activeCycle;
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cycles</h1>
-          <p className="text-gray-600 mt-1">
-            Sprint planning and retrospectives
-          </p>
-        </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Start new cycle
-        </button>
-      </div>
-
-      {/* Active Cycle Card */}
-      {activeCycle && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white mb-8"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span 
-                  className="px-2 py-1 rounded text-xs font-medium bg-white/20"
-                  style={{ backgroundColor: activeCycle.team.color }}
-                >
-                  {activeCycle.team.key}
-                </span>
-                <span className="text-sm opacity-90">Active Cycle</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{activeCycle.name}</h2>
-              {activeCycle.sprintGoal && (
-                <p className="text-white/90 mb-4 max-w-xl">{activeCycle.sprintGoal}</p>
-              )}
-              <div className="flex items-center gap-6 text-sm">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(activeCycle.startDate).toLocaleDateString()} - {new Date(activeCycle.endDate).toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {activeCycle.stats?.completedIssues || 0} / {activeCycle.stats?.totalIssues || 0} issues
-                </span>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-4xl font-bold mb-1">
-                {activeCycle.stats?.completionRate || 0}%
-              </div>
-              <div className="text-sm opacity-90">Completion</div>
-            </div>
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-linear-text tracking-tight">Cycles</h1>
+            <p className="text-sm text-linear-text-secondary mt-0.5">
+              Plan and track sprints across your workspace
+            </p>
           </div>
-        </motion.div>
-      )}
-
-      {/* Cycles List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          <Button onClick={() => setShowCreateModal(true)} className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            New cycle
+          </Button>
         </div>
-      ) : (
-        <div className="space-y-8">
-          {Object.values(cyclesByTeam).map(({ team, cycles: teamCycles }) => (
-            <div key={team.id}>
-              <div className="flex items-center gap-2 mb-4">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: team.color }}
-                />
-                <h2 className="font-semibold text-gray-900">{team.name}</h2>
-                <span className="text-sm text-gray-500">({team.key})</span>
+      </FadeIn>
+
+      {/* Active Cycle */}
+      {activeCycleData && (
+        <FadeIn delay={0.1}>
+          <Card className="border-linear-accent/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-linear-accent flex items-center justify-center">
+                    <Flame className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Active Cycle</CardTitle>
+                    <p className="text-sm text-linear-text-secondary">
+                      Cycle {activeCycleData.number}{activeCycleData.name ? ` - ${activeCycleData.name}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="accent" className="gap-1">
+                    <Play className="w-3 h-3" />
+                    In Progress
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => completeCycleMutation.mutate(activeCycleData.id)}
+                    disabled={completeCycleMutation.isPending}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                    Complete
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="p-3 bg-linear-surface rounded-lg">
+                  <p className="text-xs text-linear-text-secondary uppercase tracking-wider">Progress</p>
+                  <p className="text-2xl font-semibold text-linear-text mt-1">
+                    {activeCycleData.stats?.completionPercentage || 0}%
+                  </p>
+                  <div className="mt-2 h-1.5 bg-linear-border rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-linear-accent rounded-full transition-all"
+                      style={{ width: `${activeCycleData.stats?.completionPercentage || 0}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="p-3 bg-linear-surface rounded-lg">
+                  <p className="text-xs text-linear-text-secondary uppercase tracking-wider">Issues</p>
+                  <p className="text-2xl font-semibold text-linear-text mt-1">
+                    {activeCycleData.stats?.completedIssues || 0}/{activeCycleData.stats?.totalIssues || 0}
+                  </p>
+                  <p className="text-xs text-linear-text-tertiary mt-1">
+                    {activeCycleData.stats?.inProgressIssues || 0} in progress
+                  </p>
+                </div>
+                <div className="p-3 bg-linear-surface rounded-lg">
+                  <p className="text-xs text-linear-text-secondary uppercase tracking-wider">Velocity</p>
+                  <p className="text-2xl font-semibold text-linear-text mt-1">
+                    {activeCycleData.stats?.velocity || 0}
+                  </p>
+                  <p className="text-xs text-linear-text-tertiary mt-1">issues/day</p>
+                </div>
+                <div className="p-3 bg-linear-surface rounded-lg">
+                  <p className="text-xs text-linear-text-secondary uppercase tracking-wider">Days Left</p>
+                  <p className="text-2xl font-semibold text-linear-text mt-1">
+                    {Math.max(0, Math.ceil((new Date(activeCycleData.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
+                  </p>
+                  <p className="text-xs text-linear-text-tertiary mt-1">
+                    ends {new Date(activeCycleData.endDate).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
 
-              <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {teamCycles.map((cycle) => (
-                  <AnimatedItem key={cycle.id}>
-                    <Link to={`/${workspace}/cycles/${cycle.id}`}>
-                      <AnimatedCard className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-lg transition-all h-full">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-lg font-bold text-gray-900">
-                            {cycle.name}
-                          </span>
-                          {cycle.isActive && (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
-                              Active
-                            </span>
-                          )}
-                        </div>
-
-                        {cycle.sprintGoal && (
-                          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                            {cycle.sprintGoal}
-                          </p>
-                        )}
-
-                        <div className="space-y-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>
-                              {new Date(cycle.startDate).toLocaleDateString()} - {new Date(cycle.endDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Target className="w-4 h-4" />
-                            <span>{cycle.issueCount} issues</span>
-                          </div>
-                        </div>
-
-                        {cycle.stats && (
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-500">Progress</span>
-                              <span className="font-medium text-gray-900">
-                                {cycle.stats.completionRate}%
-                              </span>
-                            </div>
-                            <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary-500 rounded-full"
-                                style={{ width: `${cycle.stats.completionRate}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </AnimatedCard>
-                    </Link>
-                  </AnimatedItem>
-                ))}
-              </AnimatedList>
-            </div>
-          ))}
-        </div>
+              {/* Burndown Chart */}
+              {activeCycleData.burndown && activeCycleData.burndown.length > 0 && (
+                <div className="h-48">
+                  <p className="text-xs text-linear-text-secondary mb-2">Burndown Chart</p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={activeCycleData.burndown}>
+                      <defs>
+                        <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#5E6AD2" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#5E6AD2" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E6E6E6" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        stroke="#8E8E8E"
+                        fontSize={10}
+                      />
+                      <YAxis stroke="#8E8E8E" fontSize={10} />
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1F1F1F', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          color: '#fff'
+                        }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="ideal" 
+                        stroke="#8E8E8E" 
+                        strokeDasharray="5 5"
+                        fill="none"
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="actual" 
+                        stroke="#5E6AD2" 
+                        fillOpacity={1}
+                        fill="url(#colorActual)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </FadeIn>
       )}
+
+      {/* All Cycles */}
+      <FadeIn delay={0.2}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-linear-text uppercase tracking-wider">All Cycles</h2>
+          <div className="flex items-center gap-2">
+            <button className="p-1.5 hover:bg-linear-surface rounded-md text-linear-text-secondary">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-sm text-linear-text-secondary">2024</span>
+            <button className="p-1.5 hover:bg-linear-surface rounded-md text-linear-text-secondary">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="w-5 h-5 border-2 border-linear-accent border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {cycles?.map((cycle: Cycle) => (
+              <motion.div
+                key={cycle.id}
+                layout
+                className={cn(
+                  "group flex items-center gap-4 p-4 bg-linear-elevated border border-linear-border rounded-lg transition-all hover:border-linear-border-hover",
+                  cycle.isActive && "border-linear-accent/30 bg-linear-accent-light/30"
+                )}
+              >
+                {/* Cycle number */}
+                <div className={cn(
+                  "w-12 h-12 rounded-lg flex items-center justify-center text-lg font-semibold",
+                  cycle.isActive 
+                    ? "bg-linear-accent text-white" 
+                    : cycle.isCompleted
+                    ? "bg-linear-success/20 text-linear-success"
+                    : "bg-linear-surface text-linear-text-secondary"
+                )}>
+                  {cycle.number}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-linear-text truncate">
+                      {cycle.name || `Cycle ${cycle.number}`}
+                    </h3>
+                    {cycle.isActive && (
+                      <Badge variant="accent" className="text-[10px]">Active</Badge>
+                    )}
+                    {cycle.isCompleted && (
+                      <Badge variant="success" className="text-[10px]">Completed</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-linear-text-secondary">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(cycle.startDate).toLocaleDateString()} - {new Date(cycle.endDate).toLocaleDateString()}
+                    </span>
+                    <span>•</span>
+                    <span>{cycle.stats?.totalIssues || 0} issues</span>
+                    {cycle.stats?.completionPercentage > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className={cn(
+                          cycle.stats.completionPercentage === 100 
+                            ? "text-linear-success" 
+                            : "text-linear-text-secondary"
+                        )}>
+                          {cycle.stats.completionPercentage}% complete
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats preview */}
+                <div className="hidden sm:flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-linear-success" />
+                    <span className="text-linear-text-secondary">{cycle.stats?.completedIssues || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CircleDot className="w-4 h-4 text-priority-high" />
+                    <span className="text-linear-text-secondary">{cycle.stats?.inProgressIssues || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-linear-text-tertiary" />
+                    <span className="text-linear-text-secondary">{cycle.stats?.backlogIssues || 0}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1">
+                  {!cycle.isActive && !cycle.isCompleted && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => startCycleMutation.mutate(cycle.id)}
+                      disabled={startCycleMutation.isPending}
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                  <Link to={`/${workspace}/cycles/${cycle.id}`}>
+                    <Button size="sm" variant="ghost">
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+
+            {(!cycles || cycles.length === 0) && (
+              <div className="text-center py-12 bg-linear-elevated rounded-lg border border-linear-border">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-linear-surface flex items-center justify-center">
+                  <RotateCcw className="w-6 h-6 text-linear-text-tertiary" />
+                </div>
+                <h3 className="text-base font-medium text-linear-text mb-1">No cycles yet</h3>
+                <p className="text-sm text-linear-text-secondary mb-4">
+                  Create your first cycle to start planning sprints
+                </p>
+                <Button size="sm" onClick={() => setShowCreateModal(true)}>
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />
+                  Create cycle
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </FadeIn>
+
+      {/* Create Modal */}
+      <CreateCycleModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreate={(data) => createCycleMutation.mutate(data)}
+      />
     </div>
   );
 }

@@ -91,6 +91,7 @@ model Workspace {
   webhooks             Webhook[]
   attachments          IssueAttachment[]
   members              WorkspaceMember[]
+  gitIntegration       GitIntegration?
   owner                User                @relation(fields: [ownerId], references: [id])
 
   @@index([slug])
@@ -323,46 +324,48 @@ model TeamWorkflowState {
 }
 
 model Issue {
-  id                 String              @id @default(cuid())
+  id                 String                   @id @default(cuid())
   identifier         String
   workspaceId        String
   teamId             String
   title              String
   description        Json?
-  state              IssueState          @default(BACKLOG)
-  priority           Priority            @default(NO_PRIORITY)
+  searchVector       Unsupported("tsvector")? @map("search_vector")
+  state              IssueState               @default(BACKLOG)
+  priority           Priority                 @default(NO_PRIORITY)
   creatorId          String
   assigneeId         String?
   cycleId            String?
   projectId          String?
   parentId           String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
   completedAt        DateTime?
   dueDate            DateTime?
   deletedAt          DateTime?
   estimate           Int?
-  workflowStateId    String?             @map("workflow_state_id")
-  archivedAt         DateTime?           @map("archived_at")
+  workflowStateId    String?                  @map("workflow_state_id")
+  archivedAt         DateTime?                @map("archived_at")
   activities         Activity[]
-  agentConversations AgentConversation[] @relation("AgentConversationIssue")
+  agentConversations AgentConversation[]      @relation("AgentConversationIssue")
   comments           Comment[]
   linkedNotes        IssueNoteLink[]
-  relations          IssueRelation[]     @relation("IssueRelations")
-  relatedTo          IssueRelation[]     @relation("RelatedToIssue")
+  relations          IssueRelation[]          @relation("IssueRelations")
+  relatedTo          IssueRelation[]          @relation("RelatedToIssue")
   subscriptions      IssueSubscription[]
   IssueSuggestion    IssueSuggestion[]
   attachments        IssueAttachment[]
-  assignee           User?               @relation("IssueAssignee", fields: [assigneeId], references: [id])
-  creator            User                @relation("IssueCreator", fields: [creatorId], references: [id])
-  cycle              Cycle?              @relation(fields: [cycleId], references: [id])
-  parent             Issue?              @relation("SubIssues", fields: [parentId], references: [id])
-  children           Issue[]             @relation("SubIssues")
-  project            Project?            @relation("ProjectIssues", fields: [projectId], references: [id])
-  team               Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  workflowState      TeamWorkflowState?  @relation(fields: [workflowStateId], references: [id])
-  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  labels             Label[]             @relation("IssueToLabel")
+  gitLinks           IssueGitLink[]
+  assignee           User?                    @relation("IssueAssignee", fields: [assigneeId], references: [id])
+  creator            User                     @relation("IssueCreator", fields: [creatorId], references: [id])
+  cycle              Cycle?                   @relation(fields: [cycleId], references: [id])
+  parent             Issue?                   @relation("SubIssues", fields: [parentId], references: [id])
+  children           Issue[]                  @relation("SubIssues")
+  project            Project?                 @relation("ProjectIssues", fields: [projectId], references: [id])
+  team               Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  workflowState      TeamWorkflowState?       @relation(fields: [workflowStateId], references: [id])
+  workspace          Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  labels             Label[]                  @relation("IssueToLabel")
 
   @@unique([workspaceId, identifier])
   @@index([workspaceId])
@@ -664,7 +667,8 @@ model Comment {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   deletedAt   DateTime?
-  blockId     String?
+  blockId     String?           @map("block_id")
+  blockType   String?           @map("block_type") // paragraph, heading, list, etc.
   noteId      String?
   reactions   CommentReaction[]
   creator     User              @relation(fields: [createdById], references: [id])
@@ -756,37 +760,86 @@ model IssueNoteLink {
 }
 
 model Note {
-  id                 String              @id @default(cuid())
+  id                 String                   @id @default(cuid())
   workspaceId        String
   title              String
   slug               String
   content            Json
-  emoji              String?             @default("📄")
+  searchVector       Unsupported("tsvector")? @map("search_vector")
+  emoji              String?                  @default("📄")
   coverImage         String?
-  isArchived         Boolean             @default(false)
-  isPublished        Boolean             @default(false)
+  isArchived         Boolean                  @default(false)
+  isPublished        Boolean                  @default(false)
+  publicAccess       PublicAccessLevel        @default(PRIVATE) @map("public_access")
+  shareToken         String?                  @unique @map("share_token")
   parentId           String?
   createdById        String
   lastEditedById     String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
   deletedAt          DateTime?
-  accessSettings     Json?               @default("{}")
-  agentConversations AgentConversation[] @relation("AgentConversationNote")
+  accessSettings     Json?                    @default("{}")
+  agentConversations AgentConversation[]      @relation("AgentConversationNote")
   comments           Comment[]
   linkedIssues       IssueNoteLink[]
   subscriptions      NoteSubscription[]
-  creator            User                @relation("NoteCreator", fields: [createdById], references: [id])
-  lastEditor         User                @relation("NoteEditor", fields: [lastEditedById], references: [id])
-  parent             Note?               @relation("NoteChildren", fields: [parentId], references: [id])
-  children           Note[]              @relation("NoteChildren")
-  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  shares             NoteShare[]
+  versions           NoteVersion[]
+  creator            User                     @relation("NoteCreator", fields: [createdById], references: [id])
+  lastEditor         User                     @relation("NoteEditor", fields: [lastEditedById], references: [id])
+  parent             Note?                    @relation("NoteChildren", fields: [parentId], references: [id])
+  children           Note[]                   @relation("NoteChildren")
+  workspace          Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, slug])
   @@index([workspaceId])
   @@index([parentId])
   @@index([createdById])
+  @@index([publicAccess])
+  @@index([shareToken])
   @@map("notes")
+}
+
+model NoteVersion {
+  id         String   @id @default(cuid())
+  noteId     String   @map("note_id")
+  title      String
+  content    Json
+  emoji      String?  @default("📄")
+  coverImage String?
+  editedById String   @map("edited_by_id")
+  editReason String?  @map("edit_reason")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  note     Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  editedBy User @relation(fields: [editedById], references: [id])
+
+  @@index([noteId])
+  @@index([createdAt])
+  @@map("note_versions")
+}
+
+model NoteShare {
+  id          String          @id @default(cuid())
+  noteId      String          @map("note_id")
+  userId      String?         @map("user_id")
+  email       String?         @map("email")
+  permission  SharePermission @default(VIEW) @map("permission")
+  invitedById String          @map("invited_by_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  acceptedAt  DateTime?       @map("accepted_at")
+  deletedAt   DateTime?       @map("deleted_at")
+
+  note      Note  @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy User  @relation("NoteShareInvitedBy", fields: [invitedById], references: [id])
+
+  @@unique([noteId, userId])
+  @@unique([noteId, email])
+  @@index([noteId])
+  @@index([userId])
+  @@index([email])
+  @@map("note_shares")
 }
 
 model AgentConversation {
@@ -1093,6 +1146,9 @@ model User {
   webhooks              Webhook[]
   workspaceMembers      WorkspaceMember[]
   workspaces            Workspace[]
+  sharedNotes           NoteShare[]         @relation("NoteShareInvitedBy")
+  noteInvitations       NoteShare[]
+  noteVersions          NoteVersion[]
 
   @@map("users")
 }
@@ -1262,4 +1318,149 @@ enum DeliveryStatus {
   DELIVERED
   FAILED
   RETRYING
+}
+
+// Git Integration Models
+model GitIntegration {
+  id             String      @id @default(cuid())
+  workspaceId    String      @unique @map("workspace_id")
+  provider       GitProvider @default(GITHUB)
+  installationId String?     @map("installation_id")
+  accessToken    String?     @map("access_token")
+  refreshToken   String?     @map("refresh_token")
+  tokenExpiresAt DateTime?   @map("token_expires_at")
+  organization   String?     @map("organization")
+  isActive       Boolean     @default(true) @map("is_active")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  workspace    Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pullRequests GitPullRequest[]
+  commits      GitCommit[]
+
+  @@index([workspaceId])
+  @@index([provider, installationId])
+  @@map("git_integrations")
+}
+
+model GitRepository {
+  id            String   @id @default(cuid())
+  integrationId String   @map("integration_id")
+  externalId    String   @unique @map("external_id")
+  name          String
+  fullName      String   @map("full_name")
+  url           String
+  defaultBranch String   @default("main") @map("default_branch")
+  isPrivate     Boolean  @default(true) @map("is_private")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  pullRequests GitPullRequest[]
+
+  @@index([integrationId])
+  @@map("git_repositories")
+}
+
+model GitPullRequest {
+  id            String           @id @default(cuid())
+  integrationId String           @map("integration_id")
+  repositoryId  String?          @map("repository_id")
+  externalId    String           @unique @map("external_id")
+  number        Int
+  title         String
+  description   String?
+  state         PullRequestState @default(OPEN)
+  url           String
+  branchName    String           @map("branch_name")
+  baseBranch    String           @map("base_branch")
+  authorName    String           @map("author_name")
+  authorAvatar  String?          @map("author_avatar")
+  draft         Boolean          @default(false)
+  mergedAt      DateTime?        @map("merged_at")
+  closedAt      DateTime?        @map("closed_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  integration GitIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  repository  GitRepository? @relation(fields: [repositoryId], references: [id])
+  issueLinks  IssueGitLink[]
+
+  @@unique([integrationId, number])
+  @@index([integrationId])
+  @@index([repositoryId])
+  @@index([state])
+  @@map("git_pull_requests")
+}
+
+model GitCommit {
+  id            String   @id @default(cuid())
+  integrationId String   @map("integration_id")
+  sha           String   @unique
+  message       String
+  authorName    String   @map("author_name")
+  authorEmail   String   @map("author_email")
+  authorDate    DateTime @map("author_date")
+  url           String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  integration GitIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  issueLinks  IssueGitLink[]
+
+  @@index([integrationId])
+  @@index([sha])
+  @@map("git_commits")
+}
+
+model IssueGitLink {
+  id            String      @id @default(cuid())
+  issueId       String      @map("issue_id")
+  pullRequestId String?     @map("pull_request_id")
+  commitId      String?     @map("commit_id")
+  branchName    String?     @map("branch_name")
+  linkType      GitLinkType @default(MANUAL) @map("link_type")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  issue       Issue           @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  pullRequest GitPullRequest? @relation(fields: [pullRequestId], references: [id])
+  commit      GitCommit?      @relation(fields: [commitId], references: [id])
+
+  @@unique([issueId, pullRequestId, commitId])
+  @@index([issueId])
+  @@index([pullRequestId])
+  @@index([commitId])
+  @@map("issue_git_links")
+}
+
+// Enums for Git
+enum GitProvider {
+  GITHUB
+  GITLAB
+  BITBUCKET
+  AZURE_DEVOPS
+}
+
+enum PullRequestState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum GitLinkType {
+  AUTO // Auto-linked via branch name or commit message
+  MANUAL // Manually linked by user
+  WEBHOOK // Linked via webhook
+}
+
+// Enums for Note Sharing
+enum PublicAccessLevel {
+  PRIVATE // Only invited users/workspace members
+  READONLY // Anyone with link can view
+  COMMENT // Anyone with link can comment
+  EDIT // Anyone with link can edit (public wiki)
+}
+
+enum SharePermission {
+  VIEW // Can only view
+  COMMENT // Can view and comment
+  EDIT // Can view, comment, and edit
 }

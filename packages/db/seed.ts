@@ -1,4 +1,13 @@
-import { prisma } from './src/client.js';
+import { config } from 'dotenv';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Load environment variables FIRST (before importing prisma client)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: resolve(__dirname, '../../.env.dev') });
+
+// Now import prisma after env vars are loaded
+const { prisma } = await import('./src/client.js');
 import { hash } from 'bcryptjs';
 import type { IssueState, Priority } from './prisma/generated/prisma/index.js';
 

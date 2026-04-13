@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { AnimatedPage } from '@flowpigdev/ui';
+import { Link, useNavigate } from 'react-router';
+import { ArrowLeft, Loader2, Layers, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '~/lib/auth-client';
-import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function LoginRoute() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,7 +19,7 @@ export default function LoginRoute() {
 
     try {
       await login(email, password);
-      navigate('/onboarding');
+      navigate('/acme-corp');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -28,116 +27,230 @@ export default function LoginRoute() {
     }
   }
 
-  return (
-    <AnimatedPage className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl p-8"
-        >
-          {/* Back button */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </Link>
+  const styles = {
+    container: {
+      minHeight: '100vh',
+      display: 'flex',
+      backgroundColor: '#ffffff',
+    },
+    leftPanel: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '2rem',
+      background: 'linear-gradient(135deg, #5E6AD2 0%, #764ba2 100%)',
+      color: 'white',
+    },
+    rightPanel: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center',
+      padding: '2rem',
+      maxWidth: '480px',
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '2rem',
+    },
+    logoIcon: {
+      width: '2rem',
+      height: '2rem',
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      borderRadius: '0.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heading: {
+      fontSize: '1.875rem',
+      fontWeight: 700,
+      color: '#111827',
+      marginBottom: '0.5rem',
+    },
+    subheading: {
+      fontSize: '1rem',
+      color: '#6b7280',
+      marginBottom: '1.5rem',
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '1rem',
+    },
+    inputGroup: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.25rem',
+    },
+    label: {
+      fontSize: '0.875rem',
+      fontWeight: 500,
+      color: '#374151',
+    },
+    input: {
+      padding: '0.75rem 1rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      outline: 'none',
+    },
+    passwordWrapper: {
+      position: 'relative' as const,
+    },
+    passwordToggle: {
+      position: 'absolute' as const,
+      right: '0.75rem',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      color: '#6b7280',
+    },
+    button: {
+      padding: '0.75rem 1rem',
+      backgroundColor: '#5E6AD2',
+      color: 'white',
+      borderRadius: '0.5rem',
+      border: 'none',
+      fontSize: '1rem',
+      fontWeight: 500,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.5rem',
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+      cursor: 'not-allowed',
+    },
+    error: {
+      padding: '0.75rem',
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+      borderRadius: '0.5rem',
+      fontSize: '0.875rem',
+    },
+    footer: {
+      marginTop: '1.5rem',
+      textAlign: 'center' as const,
+      fontSize: '0.875rem',
+      color: '#6b7280',
+    },
+    link: {
+      color: '#5E6AD2',
+      textDecoration: 'none',
+      fontWeight: 500,
+    },
+    backLink: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+      color: '#6b7280',
+      textDecoration: 'none',
+      fontSize: '0.875rem',
+      marginBottom: '1.5rem',
+    },
+  };
 
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="mt-2 text-gray-600">
-              Sign in to your account to continue
-            </p>
+  return (
+    <div style={styles.container}>
+      {/* Left Panel */}
+      <div style={styles.leftPanel}>
+        <div style={styles.logo}>
+          <div style={styles.logoIcon}>
+            <Layers style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+          </div>
+          <span style={{ fontSize: '1.5rem', fontWeight: 600 }}>Flowpig</span>
+        </div>
+        <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
+          Welcome back
+        </h2>
+        <p style={{ fontSize: '1.125rem', opacity: 0.9, textAlign: 'center', maxWidth: '400px' }}>
+          Sign in to continue building amazing products with your team.
+        </p>
+      </div>
+
+      {/* Right Panel */}
+      <div style={styles.rightPanel}>
+        <Link to="/" style={styles.backLink}>
+          <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
+          Back to home
+        </Link>
+
+        <h1 style={styles.heading}>Sign in to your account</h1>
+        <p style={styles.subheading}>
+          Enter your credentials to access your workspace.
+        </p>
+
+        {error && <div style={styles.error}>{error}</div>}
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={styles.input}
+              placeholder="you@example.com"
+              required
+            />
           </div>
 
-          {/* Error message */}
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Password</label>
+            <div style={styles.passwordWrapper}>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                placeholder="you@company.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                style={{ ...styles.input, width: '100%' }}
+                placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={styles.passwordToggle}
+              >
+                {showPassword ? <EyeOff style={{ width: '1rem', height: '1rem' }} /> : <Eye style={{ width: '1rem', height: '1rem' }} />}
+              </button>
             </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="w-4 h-4 text-primary-500 rounded border-gray-300" />
-                <span className="text-sm text-gray-600">Remember me</span>
-              </label>
-              <Link to="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">
-                Forgot password?
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
-              )}
-            </button>
-          </form>
-
-          {/* Sign up link */}
-          <p className="mt-6 text-center text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-semibold">
-              Sign up
-            </Link>
-          </p>
-
-          {/* Test credentials hint */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 font-medium">Test credentials:</p>
-            <p className="text-sm text-gray-500">Email: test@flowpig.dev</p>
-            <p className="text-sm text-gray-500">Password: testpassword123</p>
           </div>
-        </motion.div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              ...styles.button,
+              ...(isLoading ? styles.buttonDisabled : {}),
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                Signing in...
+              </>
+            ) : (
+              'Sign in'
+            )}
+          </button>
+        </form>
+
+        <div style={styles.footer}>
+          Don't have an account?{' '}
+          <Link to="/signup" style={styles.link}>
+            Create one
+          </Link>
+        </div>
       </div>
-    </AnimatedPage>
+    </div>
   );
 }

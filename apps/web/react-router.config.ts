@@ -1,4 +1,5 @@
-import type { RouteConfig } from "@react-router/dev/routes";
-import { flatRoutes } from "@react-router/fs-routes";
+import type { Config } from "@react-router/dev/config";
 
-export const routes: RouteConfig = flatRoutes();
+export default {
+  appDirectory: "src/app",
+} satisfies Config;

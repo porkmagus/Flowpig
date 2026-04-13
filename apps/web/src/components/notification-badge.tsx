@@ -4,7 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, X } from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { useWorkspaceRealtime } from '~/lib/ws';
-import type { Notification } from '@flowpigdev/contracts';
+
+interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+  issue?: { id: string; identifier?: string };
+  note?: { slug: string };
+  workspace?: { slug: string };
+}
 
 export function NotificationBadge() {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, type AuthenticatedRequest } from '../plugins/auth.js';
-import { extractWorkspace, type WorkspaceRequest } from '../middleware/workspace.js';
+import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth';
+import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace';
 import { OpenAI } from 'openai';
 import { Anthropic } from '@anthropic-ai/sdk';
 

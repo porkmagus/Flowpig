@@ -1,0 +1,29 @@
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
+
+export default [
+  index("../routes/index.tsx"),
+  route("login", "../routes/login.tsx"),
+  route("signup", "../routes/signup.tsx"),
+  route("onboarding", "../routes/onboarding.tsx"),
+  route(":workspace", "../routes/$workspace/layout.tsx", [
+    index("../routes/$workspace/index.tsx"),
+    route("issues", "../routes/$workspace/issues.tsx"),
+    route("issues/:issueId", "../routes/$workspace/issues.$issueId.tsx"),
+    route("notes", "../routes/$workspace/notes.tsx"),
+    route("notes/:noteSlug", "../routes/$workspace/notes.$noteSlug.tsx"),
+    route("cycles", "../routes/$workspace/cycles.tsx"),
+    route("cycles/:cycleId", "../routes/$workspace/cycles.$cycleId.tsx"),
+    route("analytics", "../routes/$workspace/analytics.tsx"),
+    route("settings", "../routes/$workspace/settings.tsx"),
+    route("inbox", "../routes/$workspace/inbox.tsx"),
+    route("team", "../routes/$workspace/team.tsx"),
+    route("databases", "../routes/$workspace/databases.tsx"),
+    route("databases/:databaseId", "../routes/$workspace/databases.$databaseId.tsx"),
+    route("projects", "../routes/$workspace/projects.tsx"),
+    route("projects/:projectId", "../routes/$workspace/projects.$projectId.tsx"),
+    route("roadmap", "../routes/$workspace/roadmap.tsx"),
+    route("triage", "../routes/$workspace/triage.tsx"),
+    route("my-issues", "../routes/$workspace/my-issues.tsx"),
+    route("git-integration", "../routes/$workspace/git-integration.tsx"),
+  ]),
+] satisfies RouteConfig;

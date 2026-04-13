@@ -1,35 +1,58 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+function addContentTypeParser(fastify: FastifyInstance) {
+  // Remove any existing parser
+  fastify.removeAllContentTypeParsers();
+  
+  // Add raw body parser for everything
+  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, async (_req, body) => {
+    return body;
+  });
+}
 
 export default async function authRoutes(fastify: FastifyInstance) {
-  // Better Auth handles most auth routes automatically
-  // We just need to mount the handler
-  
-  // Get current session
-  fastify.get('/session', async (request, reply) => {
-    try {
-      const session = await fastify.auth.api.getSession({
-        headers: request.headers,
-      });
+  // Add a body parser that preserves raw body
+  addContentTypeParser(fastify);
 
-      if (!session) {
-        return reply.status(401).send({ error: 'No session found' });
+  // Catch-all route for the auth paths
+  fastify.all('/auth/*', async (request: FastifyRequest, reply: FastifyReply) => {
+    const auth = fastify.auth;
+    const baseURL = process.env.BETTER_AUTH_URL ?? `http://127.0.0.1:3001`;
+    
+    // Reconstruct full request URL
+    const path = request.url.replace('/auth', '');
+    const url = new URL(path, baseURL);
+
+    const headers = new Headers(request.headers as Record<string, string>);
+    const rawBody = request.body as Buffer | undefined;
+    
+    const init: RequestInit = {
+      method: request.method,
+      headers,
+      body: rawBody
+    };
+
+    try {
+      const req = new Request(url, init);
+      const response = await auth.handler(req);
+      
+      // Forward headers
+      for (const [key, value] of response.headers.entries()) {
+        if (key === 'set-cookie') {
+          const cookies = Array.isArray(value) ? value : [value];
+          for (const cookie of cookies) {
+            reply.header('Set-Cookie', cookie);
+          }
+        } else if (!['content-encoding', 'transfer-encoding'].includes(key.toLowerCase())) {
+          reply.header(key, value);
+        }
       }
-
-      return { user: session.user, expiresAt: session.session.expiresAt };
+      
+      const responseBody = await response.text();
+      return reply.status(response.status).send(responseBody);
     } catch (error) {
-      return reply.status(401).send({ error: 'Invalid session' });
-    }
-  });
-
-  // Sign out
-  fastify.post('/sign-out', async (request, reply) => {
-    try {
-      await fastify.auth.api.signOut({
-        headers: request.headers,
-      });
-      return { success: true };
-    } catch (error) {
-      return reply.status(500).send({ error: 'Failed to sign out' });
+      console.error('Auth handler error:', error);
+      reply.status(500).send({ error: 'Internal server error' });
     }
   });
 }

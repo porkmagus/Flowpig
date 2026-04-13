@@ -1,4 +1,6 @@
-import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import BubbleMenu from '@tiptap/extension-bubble-menu';
+import FloatingMenu from '@tiptap/extension-floating-menu';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';

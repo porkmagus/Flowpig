@@ -7,11 +7,27 @@ import { prisma } from '@flowpigdev/db';
 interface Client {
   socket: WebSocket;
   userId: string;
+  userInfo?: {
+    name: string;
+    image?: string;
+  };
   workspaceId?: string;
   subscriptions: Set<string>;
+  currentPage?: {
+    type: 'issue' | 'note';
+    id: string;
+  };
+  cursor?: {
+    x: number;
+    y: number;
+    blockId?: string;
+  };
 }
 
 const clients = new Map<string, Client>();
+
+// Presence tracking - who is viewing what
+const pageViewers = new Map<string, Set<string>>(); // pageKey -> Set of clientIds
 
 // Extend Fastify instance
 declare module 'fastify' {
@@ -115,6 +131,100 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
             connection.socket.send(JSON.stringify({ type: 'pong' }));
             break;
 
+          case 'presence':
+            // Update user's current location/page
+            if (message.page && client.userId) {
+              const oldPage = client.currentPage;
+              client.currentPage = message.page;
+              
+              // Remove from old page viewers
+              if (oldPage) {
+                const oldPageKey = `${oldPage.type}:${oldPage.id}`;
+                pageViewers.get(oldPageKey)?.delete(clientId);
+                broadcastPagePresence(oldPage.type, oldPage.id, workspaceId);
+              }
+              
+              // Add to new page viewers
+              if (message.page.id) {
+                const pageKey = `${message.page.type}:${message.page.id}`;
+                if (!pageViewers.has(pageKey)) {
+                  pageViewers.set(pageKey, new Set());
+                }
+                pageViewers.get(pageKey)?.add(clientId);
+                broadcastPagePresence(message.page.type, message.page.id, workspaceId);
+              }
+            }
+            
+            // Update user info if provided
+            if (message.userInfo) {
+              client.userInfo = message.userInfo;
+            }
+            break;
+
+          case 'cursor':
+            // Update cursor position for collaborative editing
+            if (message.cursor && client.currentPage && client.userId) {
+              client.cursor = message.cursor;
+              
+              // Broadcast cursor to other viewers of the same page
+              const pageKey = `${client.currentPage.type}:${client.currentPage.id}`;
+              const viewers = pageViewers.get(pageKey);
+              
+              if (viewers) {
+                const cursorUpdate = {
+                  type: 'cursor.update',
+                  timestamp: Date.now(),
+                  payload: {
+                    userId: client.userId,
+                    userName: client.userInfo?.name,
+                    userImage: client.userInfo?.image,
+                    cursor: message.cursor,
+                    page: client.currentPage,
+                  },
+                };
+                
+                viewers.forEach(viewerClientId => {
+                  if (viewerClientId !== clientId) {
+                    const viewer = clients.get(viewerClientId);
+                    if (viewer && viewer.socket.readyState === 1) {
+                      viewer.socket.send(JSON.stringify(cursorUpdate));
+                    }
+                  }
+                });
+              }
+            }
+            break;
+
+          case 'typing':
+            // Broadcast typing indicator
+            if (message.isTyping && client.currentPage && client.userId) {
+              const pageKey = `${client.currentPage.type}:${client.currentPage.id}`;
+              const viewers = pageViewers.get(pageKey);
+              
+              if (viewers) {
+                const typingUpdate = {
+                  type: 'typing',
+                  timestamp: Date.now(),
+                  payload: {
+                    userId: client.userId,
+                    userName: client.userInfo?.name,
+                    isTyping: message.isTyping,
+                    page: client.currentPage,
+                  },
+                };
+                
+                viewers.forEach(viewerClientId => {
+                  if (viewerClientId !== clientId) {
+                    const viewer = clients.get(viewerClientId);
+                    if (viewer && viewer.socket.readyState === 1) {
+                      viewer.socket.send(JSON.stringify(typingUpdate));
+                    }
+                  }
+                });
+              }
+            }
+            break;
+
           default:
             connection.socket.send(JSON.stringify({
               type: 'error',
@@ -133,6 +243,14 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
     // Handle disconnect
     connection.socket.on('close', () => {
       console.log(`WebSocket client disconnected: ${clientId}`);
+      
+      // Remove from page viewers
+      if (client.currentPage) {
+        const pageKey = `${client.currentPage.type}:${client.currentPage.id}`;
+        pageViewers.get(pageKey)?.delete(clientId);
+        broadcastPagePresence(client.currentPage.type, client.currentPage.id, client.workspaceId);
+      }
+      
       clients.delete(clientId);
     });
 
@@ -162,6 +280,48 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
       }
     });
   });
+
+  // Helper to broadcast page presence
+  function broadcastPagePresence(pageType: string, pageId: string, workspaceId?: string) {
+    if (!workspaceId) return;
+    
+    const pageKey = `${pageType}:${pageId}`;
+    const viewerIds = pageViewers.get(pageKey);
+    
+    if (!viewerIds || viewerIds.size === 0) return;
+    
+    const viewers = Array.from(viewerIds).map(viewerId => {
+      const viewer = clients.get(viewerId);
+      if (viewer && viewer.userId && viewer.userInfo) {
+        return {
+          userId: viewer.userId,
+          name: viewer.userInfo.name,
+          image: viewer.userInfo.image,
+          cursor: viewer.cursor,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+    
+    const presenceEvent = {
+      type: 'presence.update',
+      timestamp: Date.now(),
+      payload: {
+        pageType,
+        pageId,
+        viewers,
+        count: viewers.length,
+      },
+    };
+    
+    // Broadcast to all viewers of the page
+    viewerIds.forEach(viewerId => {
+      const viewer = clients.get(viewerId);
+      if (viewer && viewer.socket.readyState === 1) {
+        viewer.socket.send(JSON.stringify(presenceEvent));
+      }
+    });
+  }
 });
 
 // Hook to broadcast database changes

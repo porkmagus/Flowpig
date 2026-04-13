@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { API_URL } from '~/lib/api';
@@ -277,7 +277,7 @@ export default function DatabaseDetailRoute() {
               value ? 'bg-primary-500 border-primary-500' : 'border-gray-300 hover:border-primary-400'
             }`}
           >
-            {value && <Check className="w-3 h-3 text-white" />}
+            {value ? <Check className="w-3 h-3 text-white" /> : null}
           </button>
         );
 

@@ -1,7 +1,13 @@
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createAuthClient } from 'better-auth/react';
+import { Navigate } from 'react-router';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const authClient = createAuthClient({
+  baseURL: import.meta.env.VITE_AUTH_URL || 'http://localhost:5173/api/auth',
+  fetchOptions: {
+    credentials: 'include',
+  },
+});
 
 interface User {
   id: string;
@@ -30,13 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function checkSession() {
     try {
-      const response = await fetch(`${API_URL}/auth/session`, {
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
+      const { data, error } = await authClient.getSession();
+      if (data?.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name || null,
+          image: data.user.image || null,
+        });
       }
     } catch (error) {
       console.error('Failed to check session:', error);
@@ -46,44 +53,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    const response = await fetch(`${API_URL}/auth/sign-in/email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
+    const { data, error } = await authClient.signIn.email({
+      email,
+      password,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    if (error) {
       throw new Error(error.message || 'Login failed');
     }
 
-    const data = await response.json();
-    setUser(data.user);
+    if (data?.user) {
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name || null,
+        image: data.user.image || null,
+      });
+    }
   }
 
   async function signup(email: string, password: string, name: string) {
-    const response = await fetch(`${API_URL}/auth/sign-up/email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password, name }),
+    const { data, error } = await authClient.signUp.email({
+      email,
+      password,
+      name,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    if (error) {
       throw new Error(error.message || 'Signup failed');
     }
 
-    const data = await response.json();
-    setUser(data.user);
+    if (data?.user) {
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name || null,
+        image: data.user.image || null,
+      });
+    }
   }
 
   async function logout() {
-    await fetch(`${API_URL}/auth/sign-out`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    await authClient.signOut();
     setUser(null);
   }
 
@@ -106,7 +117,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!user) {

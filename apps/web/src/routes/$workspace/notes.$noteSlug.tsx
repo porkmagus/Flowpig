@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '~/lib/api';
@@ -464,7 +464,7 @@ export default function NoteDetailRoute() {
               <div className="p-6">
                 <RichTextEditor
                   content={editContent || { type: 'doc', content: [] }}
-                  onChange={handleContentChange}
+                  onChange={(content: object) => handleContentChange(content as Record<string, unknown>)}
                   placeholder="Start typing..."
                 />
               </div>
@@ -476,7 +476,7 @@ export default function NoteDetailRoute() {
                     <RichTextEditor
                       content={note.content}
                       onChange={() => {}}
-                      readOnly
+                      editable={false}
                     />
                   </div>
                 ) : (
@@ -715,7 +715,6 @@ export default function NoteDetailRoute() {
             <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Attachments</h4>
             <FileUploader
               workspaceId={workspace!}
-              noteId={note.id}
               onUploadComplete={() => {
                 queryClient.invalidateQueries({ queryKey: ['note', workspace, noteSlug] });
               }}

@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { API_URL } from '~/lib/api';
-import { AnimatedPage } from '@flowpigdev/ui';
 import { 
-  Settings, 
+  Settings,
   Users, 
   Palette, 
   Bell,
@@ -14,8 +11,24 @@ import {
   Webhook,
   Database,
   Save,
-  Check
+  Check,
+  Loader2,
+  Trash2,
+  Moon,
+  Sun,
+  Monitor,
+  Link,
+  ChevronRight,
+  Plus,
+  X
 } from 'lucide-react';
+import { API_URL } from '~/lib/api';
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Badge } from '~/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
+import { FadeIn } from '~/components/ui/motion';
 
 interface WorkspaceSettings {
   id: string;
@@ -31,7 +44,7 @@ interface WorkspaceSettings {
   };
 }
 
-export default function SettingsRoute() {
+export default function SettingsPage() {
   const { workspace } = useParams();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('general');
@@ -81,65 +94,82 @@ export default function SettingsRoute() {
   ];
 
   return (
-    <AnimatedPage className="max-w-6xl mx-auto">
-      <div className="flex gap-8">
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <FadeIn>
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-linear-text tracking-tight flex items-center gap-2">
+            <Settings className="w-5 h-5 text-linear-accent" />
+            Settings
+          </h1>
+          <p className="text-sm text-linear-text-secondary mt-0.5">
+            Manage your workspace configuration
+          </p>
+        </div>
+      </FadeIn>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
-          <nav className="space-y-1">
+        <FadeIn delay={0.05}>
+          <div className="space-y-0.5">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left",
                   activeTab === tab.id
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                    ? "bg-linear-accent-light text-linear-accent"
+                    : "text-linear-text-secondary hover:bg-linear-surface hover:text-linear-text"
+                )}
               >
                 <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <span>{tab.label}</span>
               </button>
             ))}
-          </nav>
-        </div>
+          </div>
+        </FadeIn>
 
         {/* Content */}
-        <div className="flex-1">
-          {activeTab === 'general' && workspace && (
-            <GeneralSettings 
-              workspace={workspace} 
-              onUpdate={(updates) => updateMutation.mutate(updates)}
-              isUpdating={updateMutation.isPending}
-            />
-          )}
-          {activeTab === 'members' && (
-            <MemberSettings workspace={workspace} />
-          )}
-          {activeTab === 'appearance' && workspace && (
-            <AppearanceSettings 
-              workspace={workspace}
-              onUpdate={(updates) => updateMutation.mutate(updates)}
-              isUpdating={updateMutation.isPending}
-            />
-          )}
-          {activeTab === 'notifications' && (
-            <NotificationSettings />
-          )}
-          {activeTab === 'integrations' && (
-            <IntegrationSettings />
-          )}
-          {activeTab === 'data' && (
-            <DataSettings />
-          )}
-          {['security', 'webhooks'].includes(activeTab) && (
-            <div className="text-center py-16 text-gray-500">
-              <p>Coming soon</p>
-            </div>
-          )}
+        <div className="md:col-span-3">
+          <FadeIn key={activeTab} delay={0.1}>
+            {activeTab === 'general' && workspaceData && (
+              <GeneralSettings 
+                workspace={workspaceData} 
+                onUpdate={(updates) => updateMutation.mutate(updates)}
+                isUpdating={updateMutation.isPending}
+              />
+            )}
+            {activeTab === 'members' && (
+              <MemberSettings workspace={workspace} />
+            )}
+            {activeTab === 'appearance' && workspaceData && (
+              <AppearanceSettings 
+                workspace={workspaceData}
+                onUpdate={(updates) => updateMutation.mutate(updates)}
+                isUpdating={updateMutation.isPending}
+              />
+            )}
+            {activeTab === 'notifications' && (
+              <NotificationSettings />
+            )}
+            {activeTab === 'integrations' && (
+              <IntegrationSettings />
+            )}
+            {activeTab === 'data' && (
+              <DataSettings />
+            )}
+            {['security', 'webhooks'].includes(activeTab) && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-linear-text-secondary">Coming soon</p>
+                </CardContent>
+              </Card>
+            )}
+          </FadeIn>
         </div>
       </div>
-    </AnimatedPage>
+    </div>
   );
 }
 
@@ -152,97 +182,114 @@ function GeneralSettings({
   onUpdate: (updates: Partial<WorkspaceSettings>) => void;
   isUpdating: boolean;
 }) {
-  const [name, setName] = useState(workspaceData.name);
-  const [description, setDescription] = useState(workspaceData.description || '');
+  const [name, setName] = useState(workspace.name);
+  const [description, setDescription] = useState(workspace.description || '');
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">General Settings</h2>
-      
-      <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">General Settings</CardTitle>
+        <CardDescription>
+          Configure your workspace name, URL, and public information
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-linear-text mb-1.5">
             Workspace Name
           </label>
-          <input
-            type="text"
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+            placeholder="My Workspace"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-linear-text mb-1.5">
+            URL Slug
+          </label>
+          <div className="flex items-center gap-2 px-3 py-2 bg-linear-surface border border-linear-border rounded-lg">
+            <span className="text-sm text-linear-text-secondary">flowpig.app/</span>
+            <input
+              type="text"
+              value={workspace.slug}
+              disabled
+              className="flex-1 bg-transparent text-sm text-linear-text focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-linear-text mb-1.5">
             Description
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent resize-none"
+            placeholder="What does this workspace do?"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            URL Slug
-          </label>
-          <input
-            type="text"
-            value={workspaceData.slug}
-            disabled
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Your workspace is accessible at /{workspaceData.slug}
-          </p>
-        </div>
-
-        <div className="pt-4">
-          <button
+        <div className="pt-2">
+          <Button 
             onClick={() => onUpdate({ name, description })}
             disabled={isUpdating}
-            className="flex items-center gap-2 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
+            className="gap-1.5"
           >
-            <Save className="w-4 h-4" />
-            {isUpdating ? 'Saving...' : 'Save Changes'}
-          </button>
+            {isUpdating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            Save changes
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function MemberSettings({ workspace }: { workspace?: WorkspaceSettings }) {
+function MemberSettings({ workspace }: { workspace?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Member Settings</h2>
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Member Settings</CardTitle>
+        <CardDescription>
+          Manage who has access to this workspace
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
           <div>
-            <h3 className="font-medium text-gray-900">Allow Guest Access</h3>
-            <p className="text-sm text-gray-500">Let external users join with limited permissions</p>
+            <h3 className="font-medium text-linear-text text-sm">Allow Guest Access</h3>
+            <p className="text-xs text-linear-text-secondary">Let external users join with limited permissions</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+            <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
           </label>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
           <div>
-            <h3 className="font-medium text-gray-900">Require Approval</h3>
-            <p className="text-sm text-gray-500">New members must be approved by an admin</p>
+            <h3 className="font-medium text-linear-text text-sm">Require Approval</h3>
+            <p className="text-xs text-linear-text-secondary">New members must be approved by an admin</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+            <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
           </label>
         </div>
-      </div>
-    </div>
+
+        <Button variant="outline" className="w-full gap-1.5">
+          <Plus className="w-3.5 h-3.5" />
+          Invite member
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -260,151 +307,239 @@ function AppearanceSettings({
     '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'
   ];
 
-  const [selectedColor, setSelectedColor] = useState(workspaceData.color);
+  const [selectedColor, setSelectedColor] = useState(workspace.color);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Appearance</h2>
-      
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Workspace Color
-          </label>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Workspace Color</CardTitle>
+          <CardDescription>
+            Choose a color that represents your workspace
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-wrap gap-3">
             {colors.map((color) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
-                className={`w-10 h-10 rounded-lg transition-transform ${
-                  selectedColor === color ? 'scale-110 ring-2 ring-offset-2 ring-gray-400' : ''
-                }`}
+                className={cn(
+                  "w-10 h-10 rounded-lg transition-all",
+                  selectedColor === color && "ring-2 ring-offset-2 ring-linear-accent scale-110"
+                )}
                 style={{ backgroundColor: color }}
               >
                 {selectedColor === color && <Check className="w-5 h-5 text-white mx-auto" />}
               </button>
             ))}
           </div>
-        </div>
+          <div className="mt-4">
+            <Button
+              onClick={() => onUpdate({ color: selectedColor })}
+              disabled={isUpdating || selectedColor === workspace.color}
+              className="gap-1.5"
+            >
+              {isUpdating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              Save color
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="pt-4">
-          <button
-            onClick={() => onUpdate({ color: selectedColor })}
-            disabled={isUpdating || selectedColor === workspaceData.color}
-            className="flex items-center gap-2 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {isUpdating ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Theme</CardTitle>
+          <CardDescription>
+            Choose your preferred appearance
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setTheme('light')}
+              className={cn(
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                theme === 'light' 
+                  ? "border-linear-accent bg-linear-accent-light" 
+                  : "border-linear-border hover:border-linear-border-hover"
+              )}
+            >
+              <Sun className="w-5 h-5 text-linear-accent" />
+              <span className="text-sm font-medium">Light</span>
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={cn(
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                theme === 'dark' 
+                  ? "border-linear-accent bg-linear-accent-light" 
+                  : "border-linear-border hover:border-linear-border-hover"
+              )}
+            >
+              <Moon className="w-5 h-5 text-linear-accent" />
+              <span className="text-sm font-medium">Dark</span>
+            </button>
+            <button
+              onClick={() => setTheme('system')}
+              className={cn(
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                theme === 'system' 
+                  ? "border-linear-accent bg-linear-accent-light" 
+                  : "border-linear-border hover:border-linear-border-hover"
+              )}
+            >
+              <Monitor className="w-5 h-5 text-linear-accent" />
+              <span className="text-sm font-medium">System</span>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function NotificationSettings() {
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [desktopNotifications, setDesktopNotifications] = useState(true);
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-      
-      <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Notification Preferences</CardTitle>
+        <CardDescription>
+          Choose what you want to be notified about
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {[
-          { id: 'issueAssigned', label: 'Issue Assigned', desc: 'When someone assigns you an issue' },
-          { id: 'issueMentioned', label: 'Mentioned', desc: 'When someone mentions you in a comment' },
-          { id: 'issueCommented', label: 'New Comments', desc: 'When someone comments on an issue you follow' },
-          { id: 'cycleUpdates', label: 'Cycle Updates', desc: 'Updates about active sprint cycles' },
-          { id: 'weeklyDigest', label: 'Weekly Digest', desc: 'Weekly summary of your workspace activity' },
+          { id: 'issueAssigned', label: 'Issue Assigned', desc: 'When someone assigns you an issue', default: true },
+          { id: 'issueMentioned', label: 'Mentioned', desc: 'When someone mentions you in a comment', default: true },
+          { id: 'issueCommented', label: 'New Comments', desc: 'When someone comments on an issue you follow', default: true },
+          { id: 'cycleUpdates', label: 'Cycle Updates', desc: 'Updates about active sprint cycles', default: false },
+          { id: 'weeklyDigest', label: 'Weekly Digest', desc: 'Weekly summary of your workspace activity', default: true },
         ].map((pref) => (
-          <div key={pref.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div key={pref.id} className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
             <div>
-              <h3 className="font-medium text-gray-900">{pref.label}</h3>
-              <p className="text-sm text-gray-500">{pref.desc}</p>
+              <h3 className="font-medium text-linear-text text-sm">{pref.label}</h3>
+              <p className="text-xs text-linear-text-secondary">{pref.desc}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked={pref.id !== 'cycleUpdates'} />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+              <input 
+                type="checkbox" 
+                defaultChecked={pref.default}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
             </label>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
 function IntegrationSettings() {
   const integrations = [
-    { name: 'GitHub', icon: '🔧', description: 'Sync issues with GitHub repositories', connected: false },
-    { name: 'Slack', icon: '💬', description: 'Get notifications in Slack channels', connected: false },
-    { name: 'Figma', icon: '🎨', description: 'Embed Figma designs in issues', connected: false },
-    { name: 'GitLab', icon: '🦊', description: 'Sync issues with GitLab projects', connected: false },
-    { name: 'Jira', icon: '📋', description: 'Import issues from Jira', connected: false },
-    { name: 'Notion', icon: '📝', description: 'Sync documents with Notion', connected: false },
+    { name: 'GitHub', icon: Link, description: 'Sync issues with GitHub repositories', connected: true, color: '#24292e' },
+    { name: 'Slack', icon: Bell, description: 'Get notifications in Slack channels', connected: false, color: '#4A154B' },
+    { name: 'Figma', icon: Palette, description: 'Embed Figma designs in issues', connected: false, color: '#F24E1E' },
+    { name: 'GitLab', icon: Link, description: 'Sync issues with GitLab projects', connected: false, color: '#FC6D26' },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Integrations</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Integrations</CardTitle>
+        <CardDescription>
+          Connect third-party services to your workspace
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {integrations.map((integration) => (
-          <div key={integration.name} className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg">
-            <span className="text-2xl">{integration.icon}</span>
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900">{integration.name}</h3>
-              <p className="text-sm text-gray-500">{integration.description}</p>
-            </div>
-            <button
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                integration.connected
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+          <div 
+            key={integration.name} 
+            className="flex items-center gap-3 p-3 bg-linear-surface rounded-lg"
+          >
+            <div 
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: integration.color }}
             >
-              {integration.connected ? 'Connected' : 'Connect'}
-            </button>
+              <integration.icon className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-linear-text text-sm">{integration.name}</h3>
+              <p className="text-xs text-linear-text-secondary">{integration.description}</p>
+            </div>
+            <Button
+              variant={integration.connected ? "outline" : "default"}
+              size="sm"
+            >
+              {integration.connected ? 'Manage' : 'Connect'}
+            </Button>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
 function DataSettings() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Data Management</h2>
-      
-      <div className="space-y-4">
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <h3 className="font-medium text-gray-900 mb-2">Export Data</h3>
-          <p className="text-sm text-gray-500 mb-3">
-            Download all your workspace data in JSON format
-          </p>
-          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-            Export JSON
-          </button>
-        </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Data Management</CardTitle>
+          <CardDescription>
+            Export or import your workspace data
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
+            <div>
+              <h3 className="font-medium text-linear-text text-sm">Export Data</h3>
+              <p className="text-xs text-linear-text-secondary">Download all your workspace data in JSON format</p>
+            </div>
+            <Button variant="outline" size="sm">Export JSON</Button>
+          </div>
 
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <h3 className="font-medium text-gray-900 mb-2">Import Data</h3>
-          <p className="text-sm text-gray-500 mb-3">
-            Import issues from Linear, Jira, GitHub Issues, or CSV
-          </p>
-          <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-            Import Data
-          </button>
-        </div>
+          <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
+            <div>
+              <h3 className="font-medium text-linear-text text-sm">Import Data</h3>
+              <p className="text-xs text-linear-text-secondary">Import from Linear, Jira, GitHub Issues, or CSV</p>
+            </div>
+            <Button variant="outline" size="sm">Import</Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-          <h3 className="font-medium text-red-900 mb-2">Danger Zone</h3>
-          <p className="text-sm text-red-700 mb-3">
-            Once you delete a workspace, there is no going back. Please be certain.
-          </p>
-          <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
-            Delete Workspace
-          </button>
-        </div>
-      </div>
+      <Card className="border-priority-urgent/30">
+        <CardHeader>
+          <CardTitle className="text-base text-priority-urgent">Danger Zone</CardTitle>
+          <CardDescription>
+            Destructive actions that cannot be undone
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-3 bg-priority-urgent/5 rounded-lg">
+            <div>
+              <h3 className="font-medium text-priority-urgent text-sm">Delete workspace</h3>
+              <p className="text-xs text-priority-urgent/70">
+                Permanently delete this workspace and all its data
+              </p>
+            </div>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Delete
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
