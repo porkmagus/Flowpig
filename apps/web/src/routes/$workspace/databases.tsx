@@ -95,29 +95,29 @@ export default function DatabasesListRoute() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Databases</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-linear-text">Databases</h1>
+          <p className="text-linear-text-secondary mt-1">
             {databases.length} {databases.length === 1 ? 'database' : 'databases'}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-linear-elevated rounded-lg p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`p-2 rounded transition-colors ${viewMode === 'grid' ? 'bg-linear-surface shadow-sm text-linear-text' : 'text-linear-text-secondary hover:text-linear-text-secondary'}`}
             >
               <Grid3X3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`p-2 rounded transition-colors ${viewMode === 'list' ? 'bg-linear-surface shadow-sm text-linear-text' : 'text-linear-text-secondary hover:text-linear-text-secondary'}`}
             >
               <List className="w-4 h-4" />
             </button>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Database
@@ -128,20 +128,20 @@ export default function DatabasesListRoute() {
       {/* Search */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search databases..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 focus:border-transparent"
           />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <Filter className="w-4 h-4" />
           Filter
         </button>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <ArrowUpDown className="w-4 h-4" />
           Sort
         </button>
@@ -162,42 +162,42 @@ export default function DatabasesListRoute() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl"
+              className="bg-linear-surface rounded-xl p-6 w-full max-w-md shadow-xl"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Database</h2>
+              <h2 className="text-xl font-semibold text-linear-text mb-4">Create Database</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Name</label>
                   <input
                     type="text"
                     value={newDatabaseName}
                     onChange={(e) => setNewDatabaseName(e.target.value)}
                     placeholder="e.g., Product Roadmap"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Description (optional)</label>
                   <textarea
                     value={newDatabaseDescription}
                     onChange={(e) => setNewDatabaseDescription(e.target.value)}
                     placeholder="What is this database for?"
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 resize-none"
                   />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                    className="px-4 py-2 text-linear-text-secondary hover:text-linear-text"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newDatabaseName.trim() || createMutation.isPending}
-                    className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     {createMutation.isPending ? 'Creating...' : 'Create'}
                   </button>
@@ -211,16 +211,16 @@ export default function DatabasesListRoute() {
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
         </div>
       ) : databases.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Database className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No databases yet</h3>
-          <p className="text-gray-500 mb-4">Create your first database to organize your data</p>
+        <div className="text-center py-16 bg-linear-surface rounded-xl border border-linear-border">
+          <Database className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-linear-text mb-2">No databases yet</h3>
+          <p className="text-linear-text-secondary mb-4">Create your first database to organize your data</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="text-primary-500 hover:text-primary-600 font-medium"
+            className="text-linear-accent hover:text-linear-accent font-medium"
           >
             Create database
           </button>
@@ -230,7 +230,7 @@ export default function DatabasesListRoute() {
           {databases.map((database) => (
             <AnimatedItem key={database.id}>
               <Link to={`/${workspace}/databases/${database.id}`}>
-                <AnimatedCard className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-all h-full group">
+                <AnimatedCard className="bg-linear-surface p-5 rounded-xl border border-linear-border hover:shadow-md transition-all h-full group">
                   {/* Emoji/Icon */}
                   <div className="flex items-start justify-between mb-4">
                     <span className="text-3xl">{database.emoji || '🗄️'}</span>
@@ -239,22 +239,22 @@ export default function DatabasesListRoute() {
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-linear-elevated rounded transition-all"
                     >
-                      <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                      <MoreHorizontal className="w-4 h-4 text-linear-text-tertiary" />
                     </button>
                   </div>
 
                   {/* Name */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{database.name}</h3>
+                  <h3 className="font-semibold text-linear-text mb-2 line-clamp-1">{database.name}</h3>
 
                   {/* Description */}
                   {database.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{database.description}</p>
+                    <p className="text-sm text-linear-text-secondary mb-3 line-clamp-2">{database.description}</p>
                   )}
 
                   {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-4">
+                  <div className="flex items-center gap-4 text-sm text-linear-text-secondary mt-4">
                     <span className="flex items-center gap-1">
                       <Table2 className="w-3 h-3" />
                       {database._count?.rows || 0} rows
@@ -266,11 +266,11 @@ export default function DatabasesListRoute() {
                   </div>
 
                   {/* Creator */}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                    <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-linear-border">
+                    <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                       {(database.creator.name || '?').charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-linear-text-secondary">
                       {database.creator.name || 'Unknown'}
                     </span>
                   </div>
@@ -280,22 +280,22 @@ export default function DatabasesListRoute() {
           ))}
         </AnimatedList>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="divide-y divide-gray-200">
+        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden">
+          <div className="divide-y divide-linear-border">
             {databases.map((database) => (
               <Link
                 key={database.id}
                 to={`/${workspace}/databases/${database.id}`}
-                className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 p-4 hover:bg-linear-elevated/50 transition-colors"
               >
                 <span className="text-2xl">{database.emoji || '🗄️'}</span>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900">{database.name}</h3>
+                  <h3 className="font-medium text-linear-text">{database.name}</h3>
                   {database.description && (
-                    <p className="text-sm text-gray-500 truncate">{database.description}</p>
+                    <p className="text-sm text-linear-text-secondary truncate">{database.description}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-6 text-sm text-linear-text-secondary">
                   <span className="flex items-center gap-1">
                     <Table2 className="w-4 h-4" />
                     {database._count?.rows || 0} rows
@@ -305,7 +305,7 @@ export default function DatabasesListRoute() {
                     {database._count?.views || 1} view
                   </span>
                   <span className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                    <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                       {(database.creator.name || '?').charAt(0).toUpperCase()}
                     </div>
                   </span>

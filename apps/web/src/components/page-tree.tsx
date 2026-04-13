@@ -55,7 +55,7 @@ function TreeNode({
         className={`
           group flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer
           transition-colors text-sm
-          ${isActive ? 'bg-primary-50 text-primary-700' : 'hover:bg-gray-100 text-gray-700'}
+          ${isActive ? 'bg-linear-accent/10 text-linear-accent' : 'hover:bg-linear-elevated text-linear-text-secondary'}
         `}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
@@ -67,12 +67,12 @@ function TreeNode({
               e.stopPropagation();
               toggleExpand(node.id);
             }}
-            className="p-0.5 hover:bg-gray-200 rounded transition-colors"
+            className="p-0.5 hover:bg-linear-elevated rounded transition-colors"
           >
             {isExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+              <ChevronDown className="w-3.5 h-3.5 text-linear-text-tertiary" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+              <ChevronRight className="w-3.5 h-3.5 text-linear-text-tertiary" />
             )}
           </button>
         ) : (
@@ -88,7 +88,7 @@ function TreeNode({
             {node.emoji || (hasChildren ? (
               isExpanded ? <FolderOpen className="w-4 h-4 text-yellow-500" /> : <Folder className="w-4 h-4 text-yellow-500" />
             ) : (
-              <FileText className="w-4 h-4 text-gray-400" />
+              <FileText className="w-4 h-4 text-linear-text-tertiary" />
             ))}
           </span>
           <span className="truncate flex-1">{node.title || 'Untitled'}</span>
@@ -102,10 +102,10 @@ function TreeNode({
               e.stopPropagation();
               onCreatePage?.(node.id);
             }}
-            className="p-1 hover:bg-gray-200 rounded"
+            className="p-1 hover:bg-linear-elevated rounded"
             title="Add subpage"
           >
-            <Plus className="w-3.5 h-3.5 text-gray-400" />
+            <Plus className="w-3.5 h-3.5 text-linear-text-tertiary" />
           </button>
         </div>
       </div>
@@ -184,7 +184,7 @@ export function PageTree({ onPageClick, onCreatePage, currentPageId }: PageTreeP
     return (
       <div className="p-4 space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+          <div key={i} className="h-8 bg-linear-elevated rounded animate-pulse" />
         ))}
       </div>
     );
@@ -193,27 +193,27 @@ export function PageTree({ onPageClick, onCreatePage, currentPageId }: PageTreeP
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-3 border-b border-gray-100">
+      <div className="p-3 border-b border-linear-border">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-700">Pages</h3>
+          <h3 className="text-sm font-semibold text-linear-text">Pages</h3>
           <button
             onClick={() => onCreatePage?.()}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-linear-elevated rounded-lg transition-colors"
             title="Create new page"
           >
-            <Plus className="w-4 h-4 text-gray-500" />
+            <Plus className="w-4 h-4 text-linear-text-secondary" />
           </button>
         </div>
         
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-linear-text-tertiary" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search pages..."
-            className="w-full pl-8 pr-3 py-1.5 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full pl-8 pr-3 py-1.5 bg-linear-elevated border border-linear-border rounded-lg text-linear-text text-sm placeholder:text-linear-text-tertiary focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
           />
         </div>
       </div>
@@ -222,11 +222,11 @@ export function PageTree({ onPageClick, onCreatePage, currentPageId }: PageTreeP
       <div className="flex-1 overflow-y-auto p-2">
         {data?.tree.length === 0 ? (
           <div className="text-center py-8">
-            <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No pages yet</p>
+            <FileText className="w-8 h-8 text-linear-text-tertiary mx-auto mb-2" />
+            <p className="text-sm text-linear-text-secondary">No pages yet</p>
             <button
               onClick={() => onCreatePage?.()}
-              className="mt-2 text-sm text-primary-600 hover:text-primary-700"
+              className="mt-2 text-sm text-linear-accent hover:text-linear-accent/80"
             >
               Create your first page
             </button>
@@ -248,10 +248,10 @@ export function PageTree({ onPageClick, onCreatePage, currentPageId }: PageTreeP
       </div>
 
       {/* Footer */}
-      <div className="p-2 border-t border-gray-100">
+      <div className="p-2 border-t border-linear-border">
         <button
           onClick={() => onCreatePage?.()}
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           New page

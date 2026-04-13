@@ -132,12 +132,12 @@ function ToggleListComponent({ editor, node, getPos }: { editor: any; node: any;
     <div className="toggle-list my-2">
       <button
         onClick={toggle}
-        className="flex items-center gap-2 w-full text-left p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+        className="flex items-center gap-2 w-full text-left p-2 hover:bg-linear-elevated rounded-lg transition-colors group"
       >
         <div className={`transform transition-transform ${isOpen ? 'rotate-90' : ''}`}>
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-linear-text-secondary" />
         </div>
-        <span className="font-medium text-gray-700 flex-1">{summary}</span>
+        <span className="font-medium text-linear-text-secondary flex-1">{summary}</span>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
           <button
             onClick={(e) => {
@@ -151,7 +151,7 @@ function ToggleListComponent({ editor, node, getPos }: { editor: any; node: any;
         </div>
       </button>
       {isOpen && (
-        <div className="pl-6 mt-2 border-l-2 border-gray-200">
+        <div className="pl-6 mt-2 border-l-2 border-linear-border">
           <EditorContent editor={editor} />
         </div>
       )}
@@ -227,7 +227,7 @@ function CalloutComponent({ editor, node, updateAttributes }: { editor: any; nod
           </button>
           
           {showTypeMenu && (
-            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+            <div className="absolute top-full left-0 mt-1 w-32 bg-linear-surface border border-linear-border rounded-lg shadow-lg z-50 py-1">
               {Object.entries(calloutConfig).map(([key, cfg]) => {
                 const CfgIcon = cfg.icon;
                 return (
@@ -237,8 +237,8 @@ function CalloutComponent({ editor, node, updateAttributes }: { editor: any; nod
                       updateAttributes({ type: key });
                       setShowTypeMenu(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 ${
-                      type === key ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-linear-elevated/50 ${
+                      type === key ? 'bg-blue-50 text-blue-700' : 'text-linear-text-secondary'
                     }`}
                   >
                     <CfgIcon className="w-4 h-4" />
@@ -299,7 +299,7 @@ function MathBlockComponent({ node, updateAttributes }: { node: any; updateAttri
   const [formula, setFormula] = useState(node.attrs.formula);
 
   const renderMath = () => {
-    if (!formula) return <span className="text-gray-400 italic">Empty equation</span>;
+    if (!formula) return <span className="text-linear-text-tertiary italic">Empty equation</span>;
     try {
       return (
         <span
@@ -318,19 +318,19 @@ function MathBlockComponent({ node, updateAttributes }: { node: any; updateAttri
 
   if (isEditing) {
     return (
-      <div className="my-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="my-3 p-4 bg-linear-elevated/50 rounded-lg border border-linear-border">
         <textarea
           value={formula}
           onChange={(e) => setFormula(e.target.value)}
           placeholder="Enter LaTeX formula..."
-          className="w-full p-2 border border-gray-300 rounded font-mono text-sm"
+          className="w-full p-2 border border-linear-border rounded font-mono text-sm bg-linear-elevated text-linear-text"
           rows={3}
           autoFocus
         />
         <div className="flex justify-end gap-2 mt-2">
           <button
             onClick={() => setIsEditing(false)}
-            className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded"
+            className="px-3 py-1.5 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded"
           >
             Cancel
           </button>
@@ -339,7 +339,7 @@ function MathBlockComponent({ node, updateAttributes }: { node: any; updateAttri
               updateAttributes({ formula });
               setIsEditing(false);
             }}
-            className="px-3 py-1.5 text-sm bg-primary-500 text-white rounded hover:bg-primary-600"
+            className="px-3 py-1.5 text-sm bg-linear-accent text-white rounded hover:bg-linear-accent/80"
           >
             Save
           </button>
@@ -351,12 +351,12 @@ function MathBlockComponent({ node, updateAttributes }: { node: any; updateAttri
   return (
     <div
       onClick={() => setIsEditing(true)}
-      className="my-3 p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-primary-300 transition-colors group"
+      className="my-3 p-4 bg-linear-elevated/50 rounded-lg border border-linear-border cursor-pointer hover:border-linear-accent/40 transition-colors group"
     >
       <div className="text-center overflow-x-auto">
         {renderMath()}
       </div>
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-center mt-2 text-xs text-gray-400">
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-center mt-2 text-xs text-linear-text-tertiary">
         Click to edit
       </div>
     </div>
@@ -650,7 +650,7 @@ export function RichBlockEditor({
       title={title}
       className={`
         p-2 rounded transition-colors
-        ${isActive ? 'bg-gray-200 text-gray-900' : 'text-gray-600 hover:bg-gray-100'}
+        ${isActive ? 'bg-linear-elevated text-linear-text' : 'text-linear-text-secondary hover:bg-linear-elevated'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
     >
@@ -659,10 +659,10 @@ export function RichBlockEditor({
   );
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="border border-linear-border rounded-lg overflow-hidden bg-linear-surface">
       {/* Toolbar */}
       {editable && (
-        <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 flex-wrap">
+        <div className="flex items-center gap-1 p-2 border-b border-linear-border bg-linear-elevated/50 flex-wrap">
           <div className="flex items-center gap-1">
             <ToolbarButton
               onClick={() => editor.chain().focus().undo().run()}
@@ -680,7 +680,7 @@ export function RichBlockEditor({
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -713,7 +713,7 @@ export function RichBlockEditor({
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -732,7 +732,7 @@ export function RichBlockEditor({
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -758,7 +758,7 @@ export function RichBlockEditor({
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -797,7 +797,7 @@ export function RichBlockEditor({
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -836,11 +836,11 @@ export function RichBlockEditor({
       {slashMenuOpen && editable && (
         <div
           ref={slashMenuRef}
-          className="absolute z-50 w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+          className="absolute z-50 w-72 bg-linear-surface rounded-lg shadow-xl border border-linear-border overflow-hidden"
           style={{ top: '100px', left: '50px' }} // Position should be dynamic
         >
-          <div className="p-2 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Basic blocks</p>
+          <div className="p-2 border-b border-linear-border">
+            <p className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider">Basic blocks</p>
           </div>
           <div className="max-h-80 overflow-y-auto py-1">
             {filteredCommands.map((command, index) => {
@@ -853,22 +853,22 @@ export function RichBlockEditor({
                     setSlashMenuOpen(false);
                     setSlashMenuQuery('');
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors ${
-                    index === selectedCommandIndex ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-linear-elevated/50 transition-colors ${
+                    index === selectedCommandIndex ? 'bg-blue-50 text-blue-700' : 'text-linear-text-secondary'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-gray-600" />
+                  <div className="w-8 h-8 rounded bg-linear-elevated flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-linear-text-secondary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{command.label}</p>
-                    <p className="text-xs text-gray-400">{command.shortcut}</p>
+                    <p className="text-xs text-linear-text-tertiary">{command.shortcut}</p>
                   </div>
                 </button>
               );
             })}
           </div>
-          <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+          <div className="p-2 border-t border-linear-border bg-linear-elevated/50 text-xs text-linear-text-secondary">
             <span className="font-medium">↑↓</span> to navigate, <span className="font-medium">Enter</span> to select
           </div>
         </div>

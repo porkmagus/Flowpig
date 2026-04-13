@@ -194,7 +194,7 @@ export default function DatabaseDetailRoute() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -202,8 +202,8 @@ export default function DatabaseDetailRoute() {
   if (!database) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900">Database not found</h2>
-        <Link to={`/${workspace}/databases`} className="text-primary-500 hover:text-primary-600 mt-4 inline-block">
+        <h2 className="text-xl font-semibold text-linear-text">Database not found</h2>
+        <Link to={`/${workspace}/databases`} className="text-linear-accent hover:text-linear-accent mt-4 inline-block">
           Back to databases
         </Link>
       </div>
@@ -251,7 +251,7 @@ export default function DatabaseDetailRoute() {
                 setEditValue('');
               }
             }}
-            className="w-full px-2 py-1 border border-primary-500 rounded focus:outline-none text-sm"
+            className="w-full px-2 py-1 border border-linear-accent rounded focus:outline-none text-sm"
             autoFocus
           />
           <button
@@ -274,7 +274,7 @@ export default function DatabaseDetailRoute() {
               value: !value,
             })}
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-              value ? 'bg-primary-500 border-primary-500' : 'border-gray-300 hover:border-primary-400'
+              value ? 'bg-linear-accent border-linear-accent' : 'border-linear-border hover:border-linear-accent/60'
             }`}
           >
             {value ? <Check className="w-3 h-3 text-white" /> : null}
@@ -283,13 +283,13 @@ export default function DatabaseDetailRoute() {
 
       case 'STATUS':
         const statusColors: Record<string, string> = {
-          'Not Started': 'bg-gray-100 text-gray-700',
-          'In Progress': 'bg-blue-100 text-blue-700',
-          'Done': 'bg-green-100 text-green-700',
-          'Blocked': 'bg-red-100 text-red-700',
+          'Not Started': 'bg-linear-elevated text-linear-text-secondary',
+          'In Progress': 'bg-sky-500/10 text-sky-400',
+          'Done': 'bg-emerald-500/10 text-emerald-400',
+          'Blocked': 'bg-red-500/10 text-red-400',
         };
         return (
-          <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[String(value)] || 'bg-gray-100'}`}>
+          <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[String(value)] || 'bg-linear-elevated'}`}>
             {String(value || 'Not Started')}
           </span>
         );
@@ -300,7 +300,7 @@ export default function DatabaseDetailRoute() {
         return (
           <div className="flex flex-wrap gap-1">
             {values.map((v, i) => (
-              <span key={i} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs">
+              <span key={i} className="px-2 py-0.5 bg-linear-accent/20 text-linear-accent rounded text-xs">
                 {String(v)}
               </span>
             ))}
@@ -309,7 +309,7 @@ export default function DatabaseDetailRoute() {
 
       case 'DATE':
         return (
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-linear-text-secondary">
             {value ? new Date(String(value)).toLocaleDateString() : '-'}
           </span>
         );
@@ -318,7 +318,7 @@ export default function DatabaseDetailRoute() {
         return (
           <span
             onClick={() => handleCellClick(row.id, property.id, value)}
-            className="text-sm text-gray-900 cursor-pointer hover:text-primary-600"
+            className="text-sm text-linear-text cursor-pointer hover:text-linear-accent"
           >
             {String(value || '')}
           </span>
@@ -332,17 +332,17 @@ export default function DatabaseDetailRoute() {
       <div className="flex items-center gap-4 mb-6">
         <Link
           to={`/${workspace}/databases`}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <div>
           <div className="flex items-center gap-3">
             <span className="text-2xl">{database.emoji || '🗄️'}</span>
-            <h1 className="text-2xl font-bold text-gray-900">{database.name}</h1>
+            <h1 className="text-2xl font-bold text-linear-text">{database.name}</h1>
           </div>
           {database.description && (
-            <p className="text-gray-600 mt-1">{database.description}</p>
+            <p className="text-linear-text-secondary mt-1">{database.description}</p>
           )}
         </div>
       </div>
@@ -355,8 +355,8 @@ export default function DatabaseDetailRoute() {
             onClick={() => setActiveViewId(view.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeView?.id === view.id
-                ? 'bg-gray-900 text-white'
-                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                ? 'bg-linear-bg text-linear-text'
+                : 'bg-linear-surface border border-linear-border text-linear-text-secondary hover:bg-linear-elevated/50'
             }`}
           >
             {view.type === 'TABLE' && <LayoutGrid className="w-4 h-4" />}
@@ -368,35 +368,35 @@ export default function DatabaseDetailRoute() {
         ))}
 
         <div className="relative group">
-          <button className="flex items-center gap-1 px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+          <button className="flex items-center gap-1 px-3 py-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
             <Plus className="w-4 h-4" />
             <ChevronDown className="w-3 h-3" />
           </button>
-          <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 py-1 w-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+          <div className="absolute left-0 top-full mt-1 bg-linear-surface shadow-lg rounded-lg border border-linear-border py-1 w-40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
             <button
               onClick={() => createViewMutation.mutate('TABLE')}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
             >
               <LayoutGrid className="w-4 h-4" />
               Table View
             </button>
             <button
               onClick={() => createViewMutation.mutate('BOARD')}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
             >
               <Kanban className="w-4 h-4" />
               Board View
             </button>
             <button
               onClick={() => createViewMutation.mutate('CALENDAR')}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
             >
               <Calendar className="w-4 h-4" />
               Calendar View
             </button>
             <button
               onClick={() => createViewMutation.mutate('LIST')}
-              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
             >
               <List className="w-4 h-4" />
               List View
@@ -408,20 +408,20 @@ export default function DatabaseDetailRoute() {
       {/* Toolbar */}
       <div className="flex items-center gap-3 mb-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search rows..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+            className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 focus:border-transparent text-sm"
           />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <Filter className="w-4 h-4" />
           Filter
         </button>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <ArrowUpDown className="w-4 h-4" />
           Sort
         </button>
@@ -429,14 +429,14 @@ export default function DatabaseDetailRoute() {
 
       {/* Content based on view type */}
       {activeView?.type === 'TABLE' && (
-        <div className="flex-1 overflow-auto bg-white rounded-xl border border-gray-200">
+        <div className="flex-1 overflow-auto bg-linear-surface rounded-xl border border-linear-border">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-linear-elevated/50 border-b border-linear-border">
               <tr>
                 {database.properties.map((property) => (
                   <th
                     key={property.id}
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-left text-xs font-medium text-linear-text-secondary uppercase tracking-wider"
                   >
                     <div className="flex items-center gap-2">
                       {propertyIcons[property.type]}
@@ -447,16 +447,16 @@ export default function DatabaseDetailRoute() {
                 <th className="px-4 py-3 w-10">
                   <button
                     onClick={() => setShowAddProperty(true)}
-                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    className="p-1 text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-linear-elevated rounded"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-linear-border">
               {filteredRows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr key={row.id} className="hover:bg-linear-elevated/50">
                   {database.properties.map((property) => (
                     <td key={property.id} className="px-4 py-3">
                       {renderCell(row, property)}
@@ -470,7 +470,7 @@ export default function DatabaseDetailRoute() {
                   <button
                     onClick={() => addRowMutation.mutate()}
                     disabled={addRowMutation.isPending}
-                    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm"
+                    className="flex items-center gap-2 text-linear-text-secondary hover:text-linear-text-secondary text-sm"
                   >
                     <Plus className="w-4 h-4" />
                     {addRowMutation.isPending ? 'Adding...' : 'New row'}
@@ -521,27 +521,27 @@ export default function DatabaseDetailRoute() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl"
+              className="bg-linear-surface rounded-xl p-6 w-full max-w-md shadow-xl"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Property</h2>
+              <h2 className="text-xl font-semibold text-linear-text mb-4">Add Property</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Name</label>
                   <input
                     type="text"
                     value={newPropertyName}
                     onChange={(e) => setNewPropertyName(e.target.value)}
                     placeholder="e.g., Priority"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Type</label>
                   <select
                     value={newPropertyType}
                     onChange={(e) => setNewPropertyType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
                   >
                     <option value="TEXT">Text</option>
                     <option value="NUMBER">Number</option>
@@ -555,14 +555,14 @@ export default function DatabaseDetailRoute() {
                 <div className="flex items-center justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowAddProperty(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                    className="px-4 py-2 text-linear-text-secondary hover:text-linear-text"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => addPropertyMutation.mutate()}
                     disabled={!newPropertyName.trim() || addPropertyMutation.isPending}
-                    className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     {addPropertyMutation.isPending ? 'Adding...' : 'Add Property'}
                   </button>
@@ -606,7 +606,7 @@ function DatabaseBoardView({
       {statusValues.map((status) => (
         <div
           key={status}
-          className="flex-shrink-0 w-72 bg-gray-50 rounded-xl p-4"
+          className="flex-shrink-0 w-72 bg-linear-elevated/50 rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -618,12 +618,12 @@ function DatabaseBoardView({
                     ? 'bg-blue-500'
                     : status === 'Blocked'
                     ? 'bg-red-500'
-                    : 'bg-gray-400'
+                    : 'bg-linear-text-tertiary'
                 }`}
               />
-              <span className="font-medium text-gray-900">{status}</span>
+              <span className="font-medium text-linear-text">{status}</span>
             </div>
-            <span className="text-sm text-gray-500 bg-white px-2 py-0.5 rounded-full">
+            <span className="text-sm text-linear-text-secondary bg-linear-surface px-2 py-0.5 rounded-full">
               {(rowsByStatus[status] || []).length}
             </span>
           </div>
@@ -633,12 +633,12 @@ function DatabaseBoardView({
               <motion.div
                 key={row.id}
                 layoutId={row.id}
-                className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-linear-surface p-3 rounded-lg border border-linear-border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
                 {database.properties
                   .filter((p) => p.type === 'TITLE')
                   .map((property) => (
-                    <p key={property.id} className="font-medium text-gray-900 mb-2">
+                    <p key={property.id} className="font-medium text-linear-text mb-2">
                       {String(row.cells[property.id] || 'Untitled')}
                     </p>
                   ))}
@@ -652,7 +652,7 @@ function DatabaseBoardView({
                       return (
                         <span
                           key={property.id}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs"
+                          className="px-2 py-0.5 bg-linear-elevated text-linear-text-secondary rounded text-xs"
                         >
                           {property.name}: {String(value)}
                         </span>
@@ -721,19 +721,19 @@ function DatabaseCalendarView({
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-linear-text">
             {monthNames[month]} {year}
           </h2>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-1 hover:bg-linear-elevated rounded"
             >
               ←
             </button>
             <button
               onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-1 hover:bg-linear-elevated rounded"
             >
               →
             </button>
@@ -741,7 +741,7 @@ function DatabaseCalendarView({
         </div>
         <button
           onClick={() => setCurrentDate(new Date())}
-          className="text-sm text-primary-600 hover:text-primary-700"
+          className="text-sm text-linear-accent hover:text-linear-accent"
         >
           Today
         </button>
@@ -750,7 +750,7 @@ function DatabaseCalendarView({
       {/* Weekday Headers */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+          <div key={day} className="text-center text-sm font-medium text-linear-text-secondary py-2">
             {day}
           </div>
         ))}
@@ -760,7 +760,7 @@ function DatabaseCalendarView({
       <div className="grid grid-cols-7 gap-1 flex-1">
         {days.map((day, index) => {
           if (!day) {
-            return <div key={`empty-${index}`} className="bg-gray-50 rounded-lg" />;
+            return <div key={`empty-${index}`} className="bg-linear-elevated/50 rounded-lg" />;
           }
 
           const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
@@ -770,11 +770,11 @@ function DatabaseCalendarView({
           return (
             <div
               key={key}
-              className={`bg-white rounded-lg border border-gray-200 p-2 min-h-24 ${
+              className={`bg-linear-surface rounded-lg border border-linear-border p-2 min-h-24 ${
                 isToday ? 'ring-2 ring-primary-500' : ''
               }`}
             >
-              <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary-600' : 'text-gray-700'}`}>
+              <div className={`text-sm font-medium mb-1 ${isToday ? 'text-linear-accent' : 'text-linear-text-secondary'}`}>
                 {day.getDate()}
               </div>
               <div className="space-y-1">
@@ -784,14 +784,14 @@ function DatabaseCalendarView({
                   return (
                     <div
                       key={row.id}
-                      className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded truncate"
+                      className="text-xs bg-linear-accent/20 text-linear-accent px-2 py-1 rounded truncate"
                     >
                       {title}
                     </div>
                   );
                 })}
                 {dayRows.length > 3 && (
-                  <div className="text-xs text-gray-500 px-2">
+                  <div className="text-xs text-linear-text-secondary px-2">
                     +{dayRows.length - 3} more
                   </div>
                 )}

@@ -33,10 +33,10 @@ export function Breadcrumbs({ noteId, currentTitle }: BreadcrumbsProps) {
 
   if (isLoading || !data) {
     return (
-      <div className="flex items-center gap-1 text-sm text-gray-400">
-        <div className="h-4 w-16 bg-gray-100 rounded animate-pulse" />
+      <div className="flex items-center gap-1 text-sm text-linear-text-tertiary">
+        <div className="h-4 w-16 bg-linear-elevated rounded animate-pulse" />
         <ChevronRight className="w-4 h-4" />
-        <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+        <div className="h-4 w-24 bg-linear-elevated rounded animate-pulse" />
       </div>
     );
   }
@@ -45,13 +45,13 @@ export function Breadcrumbs({ noteId, currentTitle }: BreadcrumbsProps) {
 
   if (breadcrumbs.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
         <Home className="w-4 h-4" />
         <span>Pages</span>
         {currentTitle && (
           <>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 font-medium">{currentTitle}</span>
+            <span className="text-linear-text font-medium">{currentTitle}</span>
           </>
         )}
       </div>
@@ -62,7 +62,7 @@ export function Breadcrumbs({ noteId, currentTitle }: BreadcrumbsProps) {
     <nav className="flex items-center gap-1 text-sm">
       <Link
         to={`/${workspace}/notes`}
-        className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center gap-1.5 text-linear-text-secondary hover:text-linear-text-secondary transition-colors"
       >
         <Home className="w-4 h-4" />
         <span className="hidden sm:inline">Pages</span>
@@ -70,14 +70,14 @@ export function Breadcrumbs({ noteId, currentTitle }: BreadcrumbsProps) {
 
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.id} className="flex items-center gap-1">
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-linear-text-tertiary" />
           <Link
             to={`/${workspace}/notes/${crumb.slug}`}
             className={`
               flex items-center gap-1.5 transition-colors
               ${index === breadcrumbs.length - 1 && !currentTitle
-                ? 'text-gray-900 font-medium' 
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-linear-text font-medium' 
+                : 'text-linear-text-secondary hover:text-linear-text-secondary'
               }
             `}
             title={crumb.title}
@@ -90,8 +90,8 @@ export function Breadcrumbs({ noteId, currentTitle }: BreadcrumbsProps) {
 
       {currentTitle && (
         <>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <span className="text-gray-900 font-medium flex items-center gap-1.5">
+          <ChevronRight className="w-4 h-4 text-linear-text-tertiary" />
+          <span className="text-linear-text font-medium flex items-center gap-1.5">
             {currentTitle}
           </span>
         </>

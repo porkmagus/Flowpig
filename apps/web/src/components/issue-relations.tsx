@@ -49,8 +49,8 @@ interface Relation {
 const relationConfig = {
   RELATES_TO: { 
     label: 'relates to', 
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-50',
+    color: 'text-linear-text-secondary',
+    bgColor: 'bg-linear-elevated/50',
     icon: Link,
   },
   BLOCKS: { 
@@ -172,10 +172,10 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-gray-900">Relations</h3>
+        <h3 className="font-medium text-linear-text">Relations</h3>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-linear-accent hover:bg-linear-accent/10 rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add relation
@@ -238,7 +238,7 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
       {/* Related Issues */}
       {relates.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-gray-600 font-medium text-sm">
+          <div className="flex items-center gap-2 text-linear-text-secondary font-medium text-sm">
             <Link className="w-4 h-4" />
             <span>Related issues</span>
           </div>
@@ -254,31 +254,31 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
 
       {/* Empty state */}
       {relations.length === 0 && (
-        <div className="text-center py-6 text-gray-500">
-          <GitBranch className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <div className="text-center py-6 text-linear-text-secondary">
+          <GitBranch className="w-8 h-8 mx-auto mb-2 text-linear-text-tertiary" />
           <p className="text-sm">No relations yet</p>
-          <p className="text-xs text-gray-400 mt-1">Link related issues</p>
+          <p className="text-xs text-linear-text-tertiary mt-1">Link related issues</p>
         </div>
       )}
 
       {/* Add Relation Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900">Add relation</h3>
+          <div className="bg-linear-surface rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-linear-border">
+              <h3 className="font-semibold text-linear-text">Add relation</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-linear-text-secondary" />
               </button>
             </div>
 
             <div className="p-4 space-y-4">
               {/* Relation Type */}
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Relation type</label>
+                <label className="text-sm font-medium text-linear-text-secondary mb-2 block">Relation type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(relationConfig).map(([type, config]) => (
                     <button
@@ -286,12 +286,12 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
                       onClick={() => setSelectedType(type as Relation['type'])}
                       className={`flex items-center gap-2 p-3 rounded-lg border text-left transition-colors ${
                         selectedType === type
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-linear-accent bg-linear-accent/10'
+                          : 'border-linear-border hover:border-linear-border-hover'
                       }`}
                     >
                       <config.icon className={`w-4 h-4 ${config.color}`} />
-                      <span className="text-sm text-gray-700">{config.label}</span>
+                      <span className="text-sm text-linear-text-secondary">{config.label}</span>
                     </button>
                   ))}
                 </div>
@@ -299,27 +299,27 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
 
               {/* Search */}
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Search issue</label>
+                <label className="text-sm font-medium text-linear-text-secondary mb-2 block">Search issue</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by title or ID..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
                   />
                 </div>
               </div>
 
               {/* Search Results */}
               {searchResults?.issues && searchResults.issues.length > 0 && (
-                <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                <div className="border border-linear-border rounded-lg divide-y divide-linear-border max-h-48 overflow-y-auto">
                   {searchResults.issues.map((issue) => (
                     <button
                       key={issue.id}
                       onClick={() => addRelationMutation.mutate({ relatedIssueId: issue.id, type: selectedType })}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 text-left transition-colors"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-linear-elevated/50 text-left transition-colors"
                     >
                       <div 
                         className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold"
@@ -329,19 +329,19 @@ export function IssueRelations({ workspace, issueId }: IssueRelationsProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-500">{issue.identifier}</span>
+                          <span className="text-xs font-medium text-linear-text-secondary">{issue.identifier}</span>
                           <IssueStateBadge state={issue.state} />
                         </div>
-                        <p className="text-sm text-gray-900 truncate">{issue.title}</p>
+                        <p className="text-sm text-linear-text truncate">{issue.title}</p>
                       </div>
-                      <Plus className="w-4 h-4 text-gray-400" />
+                      <Plus className="w-4 h-4 text-linear-text-tertiary" />
                     </button>
                   ))}
                 </div>
               )}
 
               {searchQuery.length >= 2 && searchResults?.issues.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-4">No issues found</p>
+                <p className="text-sm text-linear-text-secondary text-center py-4">No issues found</p>
               )}
             </div>
           </div>
@@ -356,7 +356,7 @@ function RelationItem({ relation, onRemove }: { relation: Relation; onRemove: ()
   const Icon = config.icon;
 
   return (
-    <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg group">
+    <div className="flex items-center gap-3 p-2 bg-linear-elevated/50 rounded-lg group">
       <div className={`p-1.5 rounded ${config.bgColor}`}>
         <Icon className={`w-4 h-4 ${config.color}`} />
       </div>
@@ -370,23 +370,23 @@ function RelationItem({ relation, onRemove }: { relation: Relation; onRemove: ()
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{relation.issue.identifier}</span>
+            <span className="text-xs font-medium text-linear-text-secondary">{relation.issue.identifier}</span>
             <span className={`text-xs ${config.color}`}>{config.label}</span>
           </div>
-          <p className="text-sm text-gray-900 truncate">{relation.issue.title}</p>
+          <p className="text-sm text-linear-text truncate">{relation.issue.title}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <PriorityBadge priority={relation.issue.priority} />
         {relation.issue.assignee && (
-          <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs">
+          <div className="w-6 h-6 rounded-full bg-linear-elevated flex items-center justify-center text-xs">
             {relation.issue.assignee.name?.[0] || '?'}
           </div>
         )}
         <button
           onClick={onRemove}
-          className="p-1 hover:bg-red-100 rounded text-gray-400 hover:text-red-600 transition-colors"
+          className="p-1 hover:bg-red-100 rounded text-linear-text-tertiary hover:text-red-600 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

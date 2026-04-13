@@ -48,7 +48,7 @@ export function PriorityBadge({ priority, showLabel = true, size = 'sm' }: Prior
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: config.color }} />
         )}
         {priority === 'NO_PRIORITY' && (
-          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+          <span className="w-1.5 h-1.5 rounded-full bg-linear-elevated" />
         )}
       </span>
       {showLabel && config.label}

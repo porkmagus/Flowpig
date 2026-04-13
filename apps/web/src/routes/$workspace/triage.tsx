@@ -57,7 +57,7 @@ const priorityConfig = {
   HIGH: { color: 'bg-orange-500', label: 'High', icon: AlertCircle },
   MEDIUM: { color: 'bg-yellow-500', label: 'Medium', icon: AlertCircle },
   LOW: { color: 'bg-blue-500', label: 'Low', icon: AlertCircle },
-  NO_PRIORITY: { color: 'bg-gray-300', label: 'No Priority', icon: AlertCircle },
+  NO_PRIORITY: { color: 'bg-linear-elevated', label: 'No Priority', icon: AlertCircle },
 };
 
 export default function TriagePage() {
@@ -180,11 +180,11 @@ export default function TriagePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Inbox className="w-6 h-6 text-primary-500" />
+          <h1 className="text-2xl font-bold text-linear-text flex items-center gap-2">
+            <Inbox className="w-6 h-6 text-linear-accent" />
             Triage
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-linear-text-secondary mt-1">
             Review and organize unassigned issues
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function TriagePage() {
           <button
             onClick={() => setShowStats(!showStats)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              showStats ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100'
+              showStats ? 'bg-linear-accent/10 text-linear-accent' : 'text-linear-text-secondary hover:bg-linear-elevated'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -203,7 +203,7 @@ export default function TriagePage() {
 
       {/* Team Selector */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-linear-text-secondary mb-2">
           Select Team
         </label>
         <div className="flex gap-2 flex-wrap">
@@ -213,8 +213,8 @@ export default function TriagePage() {
               onClick={() => setSelectedTeamId(team.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedTeamId === team.id
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-linear-accent text-white'
+                  : 'bg-linear-surface border border-linear-border text-linear-text-secondary hover:bg-linear-elevated'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -235,36 +235,36 @@ export default function TriagePage() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="mb-6 bg-white rounded-xl border border-gray-200 p-6"
+          className="mb-6 bg-linear-surface rounded-xl border border-linear-border p-6"
         >
           <div className="grid grid-cols-4 gap-6">
             <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalTriage}</p>
-              <p className="text-sm text-gray-500">Issues in Triage</p>
+              <p className="text-3xl font-bold text-linear-text">{stats.totalTriage}</p>
+              <p className="text-sm text-linear-text-secondary">Issues in Triage</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-orange-500">{stats.byPriority.URGENT + stats.byPriority.HIGH}</p>
-              <p className="text-sm text-gray-500">High Priority</p>
+              <p className="text-sm text-linear-text-secondary">High Priority</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-700">{stats.totalTeamIssues}</p>
-              <p className="text-sm text-gray-500">Total Team Issues</p>
+              <p className="text-3xl font-bold text-linear-text">{stats.totalTeamIssues}</p>
+              <p className="text-sm text-linear-text-secondary">Total Team Issues</p>
             </div>
             {stats.oldestIssue && (
               <div>
                 <p className="text-3xl font-bold text-red-500">{stats.oldestIssue.daysOld}</p>
-                <p className="text-sm text-gray-500">Days Oldest</p>
-                <p className="text-xs text-gray-400">{stats.oldestIssue.identifier}</p>
+                <p className="text-sm text-linear-text-secondary">Days Oldest</p>
+                <p className="text-xs text-linear-text-tertiary">{stats.oldestIssue.identifier}</p>
               </div>
             )}
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm font-medium text-gray-700 mb-2">By Priority</p>
+          <div className="mt-4 pt-4 border-t border-linear-border">
+            <p className="text-sm font-medium text-linear-text mb-2">By Priority</p>
             <div className="flex gap-4">
               {Object.entries(stats.byPriority).map(([priority, count]) => (
                 <div key={priority} className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${priorityConfig[priority as keyof typeof priorityConfig].color}`} />
-                  <span className="text-sm text-gray-600">{priorityConfig[priority as keyof typeof priorityConfig].label}: {count}</span>
+                  <span className="text-sm text-linear-text-secondary">{priorityConfig[priority as keyof typeof priorityConfig].label}: {count}</span>
                 </div>
               ))}
             </div>
@@ -275,43 +275,43 @@ export default function TriagePage() {
       {/* Issues List */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-linear-accent" />
         </div>
       ) : !selectedTeamId ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Select a team to view triage inbox</p>
+        <div className="text-center py-16 bg-linear-surface rounded-xl border border-linear-border">
+          <Inbox className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
+          <p className="text-linear-text-secondary">Select a team to view triage inbox</p>
         </div>
       ) : issues.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-900">Triage Inbox Empty</p>
-          <p className="text-gray-500 mt-1">All issues have been assigned!</p>
+        <div className="text-center py-16 bg-linear-surface rounded-xl border border-linear-border">
+          <CheckCircle className="w-12 h-12 text-linear-success mx-auto mb-4" />
+          <p className="text-lg font-medium text-linear-text">Triage Inbox Empty</p>
+          <p className="text-linear-text-secondary mt-1">All issues have been assigned!</p>
         </div>
       ) : (
         <AnimatedList className="space-y-3">
           {issues.map((issue) => (
             <AnimatedItem key={issue.id}>
-              <AnimatedCard className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
+              <AnimatedCard className="bg-linear-surface rounded-xl border border-linear-border p-4 hover:border-linear-border-hover transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-linear-text-secondary">
                         {issue.identifier}
                       </span>
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConfig[issue.priority].color} text-white`}>
                         {priorityConfig[issue.priority].label}
                       </span>
                       {issue.commentCount ? (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-linear-text-tertiary">
                           {issue.commentCount} comments
                         </span>
                       ) : null}
                     </div>
-                    <h3 className="text-base font-medium text-gray-900 truncate">
+                    <h3 className="text-base font-medium text-linear-text truncate">
                       {issue.title}
                     </h3>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-linear-text-secondary">
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3" />
                         Created by {issue.creator?.name || 'Unknown'}
@@ -325,7 +325,7 @@ export default function TriagePage() {
                     <button
                       onClick={() => assignMutation.mutate({ issueId: issue.id })}
                       disabled={assignMutation.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-linear-accent text-white rounded-lg text-sm font-medium hover:bg-linear-accent/80 transition-colors disabled:opacity-50"
                     >
                       <CheckCircle className="w-4 h-4" />
                       Assign to me
@@ -333,7 +333,7 @@ export default function TriagePage() {
                     <button
                       onClick={() => snoozeMutation.mutate(issue.id)}
                       disabled={snoozeMutation.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-linear-elevated text-linear-text-secondary rounded-lg text-sm font-medium hover:bg-linear-border transition-colors disabled:opacity-50"
                       title="Snooze for 7 days"
                     >
                       <Clock className="w-4 h-4" />
@@ -341,7 +341,7 @@ export default function TriagePage() {
                     <button
                       onClick={() => declineMutation.mutate(issue.id)}
                       disabled={declineMutation.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-linear-elevated text-linear-text-secondary rounded-lg text-sm font-medium hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-50"
                       title="Decline/close"
                     >
                       <XCircle className="w-4 h-4" />

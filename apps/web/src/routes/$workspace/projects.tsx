@@ -52,7 +52,7 @@ interface Project {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  'PLANNED': { label: 'Planned', color: 'text-gray-600', bg: 'bg-gray-100' },
+  'PLANNED': { label: 'Planned', color: 'text-linear-text-secondary', bg: 'bg-linear-elevated' },
   'IN_PROGRESS': { label: 'In Progress', color: 'text-blue-600', bg: 'bg-blue-100' },
   'PAUSED': { label: 'Paused', color: 'text-yellow-600', bg: 'bg-yellow-100' },
   'COMPLETED': { label: 'Completed', color: 'text-green-600', bg: 'bg-green-100' },
@@ -131,14 +131,14 @@ export default function ProjectsListRoute() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-linear-text">Projects</h1>
+          <p className="text-linear-text-secondary mt-1">
             {projects.length} {projects.length === 1 ? 'project' : 'projects'}
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Project
@@ -148,19 +148,19 @@ export default function ProjectsListRoute() {
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 focus:border-transparent"
           />
         </div>
         <select
           value={statusFilter || ''}
           onChange={(e) => setStatusFilter(e.target.value || null)}
-          className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+          className="px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
         >
           <option value="">All Status</option>
           <option value="PLANNED">Planned</option>
@@ -169,11 +169,11 @@ export default function ProjectsListRoute() {
           <option value="COMPLETED">Completed</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <Filter className="w-4 h-4" />
           Filter
         </button>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
           <ArrowUpDown className="w-4 h-4" />
           Sort
         </button>
@@ -194,42 +194,42 @@ export default function ProjectsListRoute() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl"
+              className="bg-linear-surface rounded-xl p-6 w-full max-w-md shadow-xl"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Create Project</h2>
+              <h2 className="text-xl font-semibold text-linear-text mb-4">Create Project</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Name</label>
                   <input
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="e.g., Q1 Product Launch"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                  <label className="block text-sm font-medium text-linear-text-secondary mb-1">Description (optional)</label>
                   <textarea
                     value={newProjectDescription}
                     onChange={(e) => setNewProjectDescription(e.target.value)}
                     placeholder="What is this project about?"
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 resize-none"
                   />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-4">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                    className="px-4 py-2 text-linear-text-secondary hover:text-linear-text"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newProjectName.trim() || createMutation.isPending}
-                    className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     {createMutation.isPending ? 'Creating...' : 'Create'}
                   </button>
@@ -243,16 +243,16 @@ export default function ProjectsListRoute() {
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <FolderKanban className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-          <p className="text-gray-500 mb-4">Create your first project to organize your work</p>
+        <div className="text-center py-16 bg-linear-surface rounded-xl border border-linear-border">
+          <FolderKanban className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-linear-text mb-2">No projects yet</h3>
+          <p className="text-linear-text-secondary mb-4">Create your first project to organize your work</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="text-primary-500 hover:text-primary-600 font-medium"
+            className="text-linear-accent hover:text-linear-accent font-medium"
           >
             Create project
           </button>
@@ -264,7 +264,7 @@ export default function ProjectsListRoute() {
             return (
               <AnimatedItem key={project.id}>
                 <Link to={`/${workspace}/projects/${project.slug}`}>
-                  <AnimatedCard className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-all h-full group">
+                  <AnimatedCard className="bg-linear-surface p-5 rounded-xl border border-linear-border hover:shadow-md transition-all h-full group">
                     {/* Emoji/Icon & Team */}
                     <div className="flex items-start justify-between mb-4">
                       <span className="text-3xl">{project.emoji || '📁'}</span>
@@ -282,19 +282,19 @@ export default function ProjectsListRoute() {
                             e.preventDefault();
                             e.stopPropagation();
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-all"
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-linear-elevated rounded transition-all"
                         >
-                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                          <MoreHorizontal className="w-4 h-4 text-linear-text-tertiary" />
                         </button>
                       </div>
                     </div>
 
                     {/* Name */}
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{project.name}</h3>
+                    <h3 className="font-semibold text-linear-text mb-2 line-clamp-1">{project.name}</h3>
 
                     {/* Description */}
                     {project.description && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+                      <p className="text-sm text-linear-text-secondary mb-3 line-clamp-2">{project.description}</p>
                     )}
 
                     {/* Status & Progress */}
@@ -302,19 +302,19 @@ export default function ProjectsListRoute() {
                       <span className={`px-2 py-1 rounded text-xs font-medium ${status.bg} ${status.color}`}>
                         {status.label}
                       </span>
-                      <span className="text-sm text-gray-500">{project.progress}%</span>
+                      <span className="text-sm text-linear-text-secondary">{project.progress}%</span>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+                    <div className="w-full bg-linear-elevated rounded-full h-1.5 mb-4">
                       <div
-                        className="bg-primary-500 h-1.5 rounded-full transition-all"
+                        className="bg-linear-accent h-1.5 rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
                       />
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                    <div className="flex items-center gap-4 text-sm text-linear-text-secondary mb-3">
                       <span className="flex items-center gap-1">
                         <Layers className="w-3 h-3" />
                         {project._count?.issues || 0} issues
@@ -326,23 +326,23 @@ export default function ProjectsListRoute() {
                     </div>
 
                     {/* Lead & Date */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-3 border-t border-linear-border">
                       <div className="flex items-center gap-2">
                         {project.lead ? (
                           <>
-                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                            <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                               {(project.lead.name || '?').charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-linear-text-secondary">
                               {project.lead.name || 'Unassigned'}
                             </span>
                           </>
                         ) : (
-                          <span className="text-sm text-gray-400">No lead</span>
+                          <span className="text-sm text-linear-text-tertiary">No lead</span>
                         )}
                       </div>
                       {project.targetDate && (
-                        <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1 text-xs text-linear-text-secondary">
                           <Clock className="w-3 h-3" />
                           Due {new Date(project.targetDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </span>

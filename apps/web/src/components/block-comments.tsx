@@ -130,31 +130,31 @@ export function BlockCommentThread({
     return (
       <button
         onClick={onActivate}
-        className="absolute -right-10 top-0 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded"
+        className="absolute -right-10 top-0 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-linear-elevated rounded"
       >
-        <MessageSquare className="w-4 h-4 text-gray-400" />
+        <MessageSquare className="w-4 h-4 text-linear-text-tertiary" />
       </button>
     );
   }
 
   return (
     <div className={`
-      absolute -right-80 top-0 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50
+      absolute -right-80 top-0 w-72 bg-linear-surface rounded-xl shadow-2xl border border-linear-border z-50
       ${isActive ? 'block' : 'hidden group-hover:block'}
     `}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-100">
+      <div className="flex items-center justify-between p-3 border-b border-linear-border">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-gray-500" />
-          <span className="font-medium text-sm text-gray-900">
+          <MessageSquare className="w-4 h-4 text-linear-text-secondary" />
+          <span className="font-medium text-sm text-linear-text">
             {comments.length} comment{comments.length !== 1 ? 's' : ''}
           </span>
         </div>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-linear-elevated rounded"
         >
-          <X className="w-4 h-4 text-gray-400" />
+          <X className="w-4 h-4 text-linear-text-tertiary" />
         </button>
       </div>
 
@@ -162,10 +162,10 @@ export function BlockCommentThread({
       <div className="max-h-80 overflow-y-auto p-3 space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-4">
-            <div className="w-5 h-5 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="text-center text-sm text-gray-500 py-4">
+          <p className="text-center text-sm text-linear-text-secondary py-4">
             No comments yet. Start a discussion!
           </p>
         ) : (
@@ -182,9 +182,9 @@ export function BlockCommentThread({
 
       {/* Input */}
       {isActive && (
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-linear-border">
           {replyTo && (
-            <div className="flex items-center justify-between mb-2 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+            <div className="flex items-center justify-between mb-2 text-xs text-linear-text-secondary bg-linear-elevated/50 px-2 py-1 rounded">
               <span>Replying to comment</span>
               <button onClick={() => setReplyTo(null)}>
                 <X className="w-3 h-3" />
@@ -197,7 +197,7 @@ export function BlockCommentThread({
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
-              className="flex-1 min-h-[60px] p-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="flex-1 min-h-[60px] p-2 text-sm border border-linear-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                   if (newComment.trim()) {
@@ -208,7 +208,7 @@ export function BlockCommentThread({
             />
           </div>
           <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-gray-400">Cmd+Enter to send</span>
+            <span className="text-xs text-linear-text-tertiary">Cmd+Enter to send</span>
             <button
               onClick={() => {
                 if (newComment.trim()) {
@@ -216,7 +216,7 @@ export function BlockCommentThread({
                 }
               }}
               disabled={!newComment.trim() || createCommentMutation.isPending}
-              className="flex items-center gap-1 px-3 py-1.5 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-linear-accent text-white text-sm rounded-lg hover:bg-linear-accent/80 disabled:opacity-50 transition-colors"
             >
               <Send className="w-3.5 h-3.5" />
               Comment
@@ -249,7 +249,7 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
               className="w-7 h-7 rounded-full"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
+            <div className="w-7 h-7 rounded-full bg-linear-elevated flex items-center justify-center text-xs font-medium">
               {comment.creator.name?.[0] || '?'}
             </div>
           )}
@@ -257,19 +257,19 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-sm text-gray-900">
+            <span className="font-medium text-sm text-linear-text">
               {comment.creator.name || 'Unknown'}
             </span>
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-1 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100"
+                className="p-1 hover:bg-linear-elevated rounded opacity-0 group-hover:opacity-100"
               >
-                <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                <MoreHorizontal className="w-4 h-4 text-linear-text-tertiary" />
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+                <div className="absolute right-0 top-full mt-1 w-32 bg-linear-surface border border-linear-border rounded-lg shadow-lg z-10 py-1">
                   <button
                     onClick={() => {
                       onDelete();
@@ -285,15 +285,15 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
             </div>
           </div>
 
-          <p className="text-sm text-gray-700 mt-0.5">{comment.content}</p>
+          <p className="text-sm text-linear-text-secondary mt-0.5">{comment.content}</p>
 
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-linear-text-tertiary">
               {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
             </span>
             <button
               onClick={onReply}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-xs text-linear-text-secondary hover:text-linear-text-secondary"
             >
               Reply
             </button>
@@ -305,14 +305,14 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
               {comment.reactions.map((reaction) => (
                 <button
                   key={reaction.id}
-                  className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                  className="flex items-center gap-1 px-2 py-0.5 bg-linear-elevated hover:bg-linear-elevated rounded-full text-sm"
                   title={reaction.user.name || 'Unknown'}
                 >
                   {reaction.emoji}
                 </button>
               ))}
-              <button className="p-1 hover:bg-gray-100 rounded-full">
-                <Smile className="w-3.5 h-3.5 text-gray-400" />
+              <button className="p-1 hover:bg-linear-elevated rounded-full">
+                <Smile className="w-3.5 h-3.5 text-linear-text-tertiary" />
               </button>
             </div>
           )}
@@ -324,7 +324,7 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
         <div className="ml-9">
           <button
             onClick={() => setShowReplies(!showReplies)}
-            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 mb-2"
+            className="flex items-center gap-1 text-xs text-linear-text-secondary hover:text-linear-text-secondary mb-2"
           >
             {showReplies ? (
               <ChevronDown className="w-3.5 h-3.5" />
@@ -352,17 +352,17 @@ function CommentItem({ comment, onReply, onDelete }: CommentItemProps) {
                           className="w-6 h-6 rounded-full"
                         />
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+                        <div className="w-6 h-6 rounded-full bg-linear-elevated flex items-center justify-center text-xs">
                           {reply.creator.name?.[0] || '?'}
                         </div>
                       )}
                     </div>
                     <div className="flex-1">
-                      <span className="font-medium text-sm text-gray-900">
+                      <span className="font-medium text-sm text-linear-text">
                         {reply.creator.name || 'Unknown'}
                       </span>
-                      <p className="text-sm text-gray-700">{reply.content}</p>
-                      <span className="text-xs text-gray-400">
+                      <p className="text-sm text-linear-text-secondary">{reply.content}</p>
+                      <span className="text-xs text-linear-text-tertiary">
                         {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                       </span>
                     </div>

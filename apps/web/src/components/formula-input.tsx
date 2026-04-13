@@ -81,7 +81,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
       {/* Formula Input */}
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2">
-          <FunctionSquare className="w-4 h-4 text-gray-400" />
+          <FunctionSquare className="w-4 h-4 text-linear-text-tertiary" />
         </div>
         <input
           type="text"
@@ -90,8 +90,8 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
           placeholder={placeholder}
           className={`
             w-full pl-10 pr-10 py-2.5 border rounded-lg text-sm font-mono
-            focus:outline-none focus:ring-2 focus:ring-primary-500
-            ${validation?.valid === false ? 'border-red-300 bg-red-50' : 'border-gray-200'}
+            focus:outline-none focus:ring-2 focus:ring-linear-accent/40
+            ${validation?.valid === false ? 'border-red-300 bg-red-50' : 'border-linear-border'}
           `}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -115,9 +115,9 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
 
       {/* Preview */}
       {validation?.valid && previewValue !== null && previewValue !== undefined && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
-          <span className="text-gray-400">Preview:</span>
-          <span className="font-medium text-gray-900">
+        <div className="flex items-center gap-2 text-sm text-linear-text-secondary bg-linear-elevated/50 p-2 rounded-lg">
+          <span className="text-linear-text-tertiary">Preview:</span>
+          <span className="font-medium text-linear-text">
             {typeof previewValue === 'boolean' ? (previewValue ? 'true' : 'false') : String(previewValue)}
           </span>
         </div>
@@ -126,7 +126,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
       {/* Referenced Properties */}
       {referencedProps.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-gray-500">References:</span>
+          <span className="text-xs text-linear-text-secondary">References:</span>
           {referencedProps.map((prop) => (
             <span
               key={prop}
@@ -141,7 +141,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
       {/* Help Toggle */}
       <button
         onClick={() => setShowHelp(!showHelp)}
-        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+        className="flex items-center gap-1 text-sm text-linear-accent hover:text-linear-accent"
       >
         <HelpCircle className="w-4 h-4" />
         {showHelp ? 'Hide formula help' : 'Show formula help'}
@@ -149,10 +149,10 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
 
       {/* Help Panel */}
       {showHelp && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-linear-border rounded-lg overflow-hidden">
           {/* Properties */}
-          <div className="p-3 border-b border-gray-100">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          <div className="p-3 border-b border-linear-border">
+            <h4 className="text-xs font-semibold text-linear-text-secondary uppercase tracking-wider mb-2">
               Available Properties
             </h4>
             <div className="flex flex-wrap gap-1">
@@ -160,7 +160,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
                 <button
                   key={prop.id}
                   onClick={() => insertProperty(prop.name)}
-                  className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700 transition-colors"
+                  className="px-2 py-1 bg-linear-elevated hover:bg-linear-elevated rounded text-xs text-linear-text-secondary transition-colors"
                 >
                   {'{'}{prop.name}{'}'}
                 </button>
@@ -170,7 +170,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
 
           {/* Functions */}
           <div className="p-3">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            <h4 className="text-xs font-semibold text-linear-text-secondary uppercase tracking-wider mb-2">
               Functions
             </h4>
             <div className="grid gap-2 max-h-48 overflow-y-auto">
@@ -178,11 +178,11 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
                 <button
                   key={func.name}
                   onClick={() => insertFunction(func.name)}
-                  className="text-left p-2 hover:bg-gray-50 rounded transition-colors"
+                  className="text-left p-2 hover:bg-linear-elevated/50 rounded transition-colors"
                 >
-                  <div className="font-medium text-sm text-gray-900">{func.name}</div>
-                  <div className="text-xs text-gray-500">{func.description}</div>
-                  <code className="text-xs text-primary-600 bg-primary-50 px-1 rounded mt-1 inline-block">
+                  <div className="font-medium text-sm text-linear-text">{func.name}</div>
+                  <div className="text-xs text-linear-text-secondary">{func.description}</div>
+                  <code className="text-xs text-linear-accent bg-linear-accent/10 px-1 rounded mt-1 inline-block">
                     {func.example}
                   </code>
                 </button>
@@ -191,8 +191,8 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
           </div>
 
           {/* Operators */}
-          <div className="p-3 border-t border-gray-100">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          <div className="p-3 border-t border-linear-border">
+            <h4 className="text-xs font-semibold text-linear-text-secondary uppercase tracking-wider mb-2">
               Operators
             </h4>
             <div className="flex flex-wrap gap-1">
@@ -200,7 +200,7 @@ export function FormulaInput({ value, onChange, properties, placeholder = "Enter
                 <button
                   key={op}
                   onClick={() => onChange(value + op)}
-                  className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs text-gray-700 font-mono transition-colors"
+                  className="px-2 py-1 bg-linear-elevated hover:bg-linear-elevated rounded text-xs text-linear-text-secondary font-mono transition-colors"
                 >
                   {op}
                 </button>

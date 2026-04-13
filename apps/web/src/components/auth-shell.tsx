@@ -40,7 +40,7 @@ export function AuthShell({
       </div>
 
       <div className="relative mx-auto grid min-h-screen max-w-7xl gap-10 px-5 py-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-8 lg:py-8">
-        <aside className="hidden overflow-hidden rounded-4xl border border-white/10 bg-white/4 p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between">
+        <aside className="hidden overflow-hidden rounded-4xl border border-white/6 bg-linear-surface/3 p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between">
           <div>
             <Link to="/" className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
@@ -66,7 +66,7 @@ export function AuthShell({
               {benefits.map(({ icon: Icon, title: benefitTitle, description }) => (
                 <div
                   key={benefitTitle}
-                  className="rounded-3xl border border-white/10 bg-black/20 p-5"
+                  className="rounded-3xl border border-white/6 bg-black/15 p-5"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
                     <Icon className="h-4 w-4 text-cyan-200" />
@@ -87,7 +87,7 @@ export function AuthShell({
         </aside>
 
         <section className="flex min-h-[calc(100vh-3rem)] items-center">
-            <div className="w-full rounded-4xl border border-white/10 bg-[#0b1016]/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
+            <div className="w-full rounded-4xl border border-white/6 bg-[#0b1016]/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
             <Link
               to="/"
               className="inline-flex items-center gap-2 text-sm text-white/48 transition hover:text-white/78"

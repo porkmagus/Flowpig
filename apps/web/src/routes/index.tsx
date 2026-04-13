@@ -142,7 +142,7 @@ export default function IndexRoute() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[88px_88px] opacity-[0.06]" />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/8 bg-[#05070b]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#05070b]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
@@ -236,9 +236,9 @@ export default function IndexRoute() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-cyan-400/10 via-transparent to-emerald-300/10 blur-2xl" />
-            <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/4 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-5">
-              <div className="rounded-3xl border border-white/10 bg-[#0b1016]/95 p-4 sm:p-5">
+            <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-cyan-400/8 via-transparent to-emerald-300/8 blur-2xl" />
+            <div className="relative overflow-hidden rounded-4xl border border-white/6 bg-white/3 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-5">
+              <div className="rounded-3xl border border-white/5 bg-[#0b1016]/95 p-4 sm:p-5">
                 <div className="flex items-center justify-between border-b border-white/8 pb-4">
                   <div>
                     <div className="text-sm font-medium text-white/90">Workspace pulse</div>
@@ -253,7 +253,7 @@ export default function IndexRoute() {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/8 bg-white/3 p-4">
+                    <div className="rounded-[1.25rem] border border-white/5 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm font-medium text-white/86">
@@ -298,7 +298,7 @@ export default function IndexRoute() {
                       ].map(([value, label]) => (
                         <div
                           key={label}
-                          className="rounded-[1.15rem] border border-white/8 bg-white/3 p-4"
+                          className="rounded-[1.15rem] border border-white/5 bg-white/3 p-4"
                         >
                           <div className="text-2xl font-semibold tracking-tight text-white">
                             {value}
@@ -310,7 +310,7 @@ export default function IndexRoute() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/8 bg-white/3 p-4">
+                    <div className="rounded-[1.25rem] border border-white/5 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium text-white/88">Team inbox</div>
                         <Inbox className="h-4 w-4 text-cyan-300" />
@@ -331,7 +331,7 @@ export default function IndexRoute() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.25rem] border border-white/8 bg-linear-to-br from-cyan-300/12 via-white/3 to-emerald-300/10 p-4">
+                    <div className="rounded-[1.25rem] border border-white/5 bg-linear-to-br from-cyan-300/8 via-white/2 to-emerald-300/8 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-white/90">
                         <Bot className="h-4 w-4 text-emerald-200" />
                         AI assistant
@@ -361,7 +361,7 @@ export default function IndexRoute() {
               key={card.title}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: index * 0.06 }}
-              className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/3 p-6"
+              className="relative overflow-hidden rounded-[1.75rem] border border-white/6 bg-white/2 p-6"
             >
               <div
                 className={`absolute inset-x-0 top-0 h-24 bg-linear-to-br ${card.accent} blur-2xl`}
@@ -402,7 +402,7 @@ export default function IndexRoute() {
                 key={title}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: index * 0.05 }}
-                className="group rounded-[1.75rem] border border-white/10 bg-white/3 p-7 transition hover:border-white/16 hover:bg-white/5"
+                className="group rounded-[1.75rem] border border-white/6 bg-white/2 p-7 transition hover:border-white/10 hover:bg-white/4"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
                   <Icon className="h-5 w-5 text-cyan-200" />
@@ -420,7 +420,7 @@ export default function IndexRoute() {
           </div>
         </section>
 
-          <section id="workflow" className="border-y border-white/8 bg-white/2">
+          <section id="workflow" className="border-y border-white/5 bg-white/2">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
             <motion.div {...fadeUp} className="max-w-3xl">
               <div className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-200/72">
@@ -463,7 +463,7 @@ export default function IndexRoute() {
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <motion.div
             {...fadeUp}
-            className="overflow-hidden rounded-4xl border border-white/10 bg-linear-to-br from-cyan-300/14 via-white/5 to-emerald-300/10 p-8 sm:p-10"
+            className="overflow-hidden rounded-4xl border border-white/6 bg-linear-to-br from-cyan-300/10 via-white/3 to-emerald-300/8 p-8 sm:p-10"
           >
             <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
@@ -499,7 +499,7 @@ export default function IndexRoute() {
 
                 <Link
                   to="/login"
-                  className="rounded-3xl border border-white/10 bg-black/20 px-6 py-6 text-white transition hover:border-white/18 hover:bg-black/28"
+                  className="rounded-3xl border border-white/6 bg-black/15 px-6 py-6 text-white transition hover:border-white/12 hover:bg-black/22"
                 >
                   <div className="text-sm font-medium uppercase tracking-[0.22em] text-white/45">
                     Existing team

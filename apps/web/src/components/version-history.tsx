@@ -114,12 +114,12 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
       {/* Trigger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
       >
         <History className="w-4 h-4" />
         <span>History</span>
         {versions.length > 0 && (
-          <span className="text-xs text-gray-400">({versions.length})</span>
+          <span className="text-xs text-linear-text-tertiary">({versions.length})</span>
         )}
       </button>
 
@@ -138,30 +138,30 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
               initial={{ opacity: 0, x: 300 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 300 }}
-              className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col"
+              className="fixed right-0 top-0 h-full w-full max-w-lg bg-linear-surface shadow-2xl z-50 flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between p-4 border-b border-linear-border">
                 <div className="flex items-center gap-3">
-                  <History className="w-5 h-5 text-gray-500" />
-                  <h2 className="font-semibold text-gray-900">Version History</h2>
+                  <History className="w-5 h-5 text-linear-text-secondary" />
+                  <h2 className="font-semibold text-linear-text">Version History</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCompareMode(!compareMode)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                       compareMode 
-                        ? 'bg-primary-100 text-primary-700' 
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-linear-accent/20 text-linear-accent' 
+                        : 'text-linear-text-secondary hover:bg-linear-elevated'
                     }`}
                   >
                     {compareMode ? 'Done' : 'Compare'}
                   </button>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-500" />
+                    <X className="w-5 h-5 text-linear-text-secondary" />
                   </button>
                 </div>
               </div>
@@ -172,13 +172,13 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                 <div className="w-full flex flex-col">
                   {isLoading ? (
                     <div className="flex-1 flex items-center justify-center">
-                      <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+                      <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
                     </div>
                   ) : allVersions.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-8">
-                      <GitCommit className="w-12 h-12 mb-3 text-gray-300" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-linear-text-secondary p-8">
+                      <GitCommit className="w-12 h-12 mb-3 text-linear-text-tertiary" />
                       <p>No version history yet</p>
-                      <p className="text-sm text-gray-400 mt-1">
+                      <p className="text-sm text-linear-text-tertiary mt-1">
                         Changes are tracked automatically when you edit
                       </p>
                     </div>
@@ -209,7 +209,7 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                       {/* Previous versions */}
                       <div className="relative">
                         {/* Timeline line */}
-                        <div className="absolute left-6 top-0 bottom-0 w-px bg-gray-200" />
+                        <div className="absolute left-6 top-0 bottom-0 w-px bg-linear-elevated" />
                         
                         {versions.map((version, index) => (
                           <VersionItem
@@ -238,7 +238,7 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
 
                   {/* Compare actions */}
                   {compareMode && compareFrom && compareTo && (
-                    <div className="p-4 border-t border-gray-200 bg-gray-50">
+                    <div className="p-4 border-t border-linear-border bg-linear-elevated/50">
                       <button
                         onClick={() => {
                           // Navigate to compare view
@@ -247,7 +247,7 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                             '_blank'
                           );
                         }}
-                        className="w-full py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                        className="w-full py-2 bg-linear-accent text-white rounded-lg font-medium hover:bg-linear-accent/80 transition-colors"
                       >
                         Compare versions
                       </button>
@@ -260,26 +260,26 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="w-80 border-l border-gray-200 bg-gray-50 p-4"
+                    className="w-80 border-l border-linear-border bg-linear-elevated/50 p-4"
                   >
-                    <h3 className="font-medium text-gray-900 mb-4">Version Details</h3>
+                    <h3 className="font-medium text-linear-text mb-4">Version Details</h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="text-xs text-gray-500 uppercase tracking-wider">Title</label>
-                        <p className="text-sm text-gray-900 mt-1">{selectedVersion.title}</p>
+                        <label className="text-xs text-linear-text-secondary uppercase tracking-wider">Title</label>
+                        <p className="text-sm text-linear-text mt-1">{selectedVersion.title}</p>
                       </div>
 
                       <div>
-                        <label className="text-xs text-gray-500 uppercase tracking-wider">Saved</label>
-                        <p className="text-sm text-gray-900 mt-1">
+                        <label className="text-xs text-linear-text-secondary uppercase tracking-wider">Saved</label>
+                        <p className="text-sm text-linear-text mt-1">
                           {formatDistanceToNow(new Date(selectedVersion.createdAt), { addSuffix: true })}
                         </p>
                       </div>
 
                       {selectedVersion.editedBy && (
                         <div>
-                          <label className="text-xs text-gray-500 uppercase tracking-wider">By</label>
+                          <label className="text-xs text-linear-text-secondary uppercase tracking-wider">By</label>
                           <div className="flex items-center gap-2 mt-1">
                             {selectedVersion.editedBy.image ? (
                               <img 
@@ -288,11 +288,11 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                                 className="w-6 h-6 rounded-full"
                               />
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+                              <div className="w-6 h-6 rounded-full bg-linear-elevated flex items-center justify-center text-xs">
                                 {selectedVersion.editedBy.name?.[0] || '?'}
                               </div>
                             )}
-                            <span className="text-sm text-gray-900">
+                            <span className="text-sm text-linear-text">
                               {selectedVersion.editedBy.name || 'Unknown'}
                             </span>
                           </div>
@@ -301,8 +301,8 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
 
                       {selectedVersion.editReason && (
                         <div>
-                          <label className="text-xs text-gray-500 uppercase tracking-wider">Reason</label>
-                          <p className="text-sm text-gray-900 mt-1">{selectedVersion.editReason}</p>
+                          <label className="text-xs text-linear-text-secondary uppercase tracking-wider">Reason</label>
+                          <p className="text-sm text-linear-text mt-1">{selectedVersion.editReason}</p>
                         </div>
                       )}
 
@@ -310,7 +310,7 @@ export function VersionHistory({ workspace, noteId, currentContent, onRestore }:
                         <button
                           onClick={() => restoreMutation.mutate(selectedVersion.id)}
                           disabled={restoreMutation.isPending}
-                          className="w-full flex items-center justify-center gap-2 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 transition-colors"
+                          className="w-full flex items-center justify-center gap-2 py-2 bg-linear-accent text-white rounded-lg font-medium hover:bg-linear-accent/80 disabled:opacity-50 transition-colors"
                         >
                           <RotateCcw className="w-4 h-4" />
                           Restore this version
@@ -354,13 +354,13 @@ function VersionItem({
       onClick={onSelect}
       className={`
         w-full flex items-start gap-3 p-4 text-left transition-colors relative
-        ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}
-        ${isCurrent ? 'border-b border-gray-100' : ''}
+        ${isSelected ? 'bg-blue-50' : 'hover:bg-linear-elevated/50'}
+        ${isCurrent ? 'border-b border-linear-border' : ''}
       `}
     >
       {/* Timeline dot */}
       {!isCurrent && (
-        <div className="absolute left-6 top-5 w-2 h-2 rounded-full bg-gray-300 ring-4 ring-white" />
+        <div className="absolute left-6 top-5 w-2 h-2 rounded-full bg-linear-elevated ring-4 ring-white" />
       )}
 
       {/* Compare mode indicators */}
@@ -369,7 +369,7 @@ function VersionItem({
           flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center
           ${isCompareFrom ? 'border-blue-500 bg-blue-500 text-white' : ''}
           ${isCompareTo ? 'border-green-500 bg-green-500 text-white' : ''}
-          ${!isCompareFrom && !isCompareTo ? 'border-gray-300' : ''}
+          ${!isCompareFrom && !isCompareTo ? 'border-linear-border' : ''}
         `}>
           {isCompareFrom && <span className="text-xs font-bold">A</span>}
           {isCompareTo && <span className="text-xs font-bold">B</span>}
@@ -389,12 +389,12 @@ function VersionItem({
           ) : null}
         </div>
 
-        <p className="font-medium text-gray-900 mt-1 truncate">
+        <p className="font-medium text-linear-text mt-1 truncate">
           {version.emoji && <span className="mr-1">{version.emoji}</span>}
           {version.title}
         </p>
 
-        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-2 mt-1 text-xs text-linear-text-secondary">
           <Clock className="w-3 h-3" />
           <span>{formatDistanceToNow(new Date(version.createdAt), { addSuffix: true })}</span>
           {version.editedBy && (

@@ -163,17 +163,17 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-gray-900 flex items-center gap-2">
+        <h3 className="font-medium text-linear-text flex items-center gap-2">
           <Paperclip className="w-4 h-4" />
           Attachments
           {attachments.length > 0 && (
-            <span className="text-sm text-gray-500">({attachments.length})</span>
+            <span className="text-sm text-linear-text-secondary">({attachments.length})</span>
           )}
         </h3>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploadMutation.isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-linear-accent hover:bg-linear-accent/10 rounded-lg transition-colors disabled:opacity-50"
         >
           {uploadMutation.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -203,16 +203,16 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
             ${isDragging 
-              ? 'border-primary-500 bg-primary-50' 
-              : 'border-gray-300 hover:border-gray-400'
+              ? 'border-linear-accent bg-linear-accent/10' 
+              : 'border-linear-border hover:border-linear-border-hover'
             }
           `}
         >
-          <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-sm text-gray-600">
+          <Paperclip className="w-8 h-8 mx-auto mb-2 text-linear-text-tertiary" />
+          <p className="text-sm text-linear-text-secondary">
             Drop files here or click to upload
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-linear-text-tertiary mt-1">
             Max file size: 10MB
           </p>
         </div>
@@ -225,7 +225,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
             <div key={filename} className="flex items-center gap-3 p-2 bg-blue-50 rounded-lg">
               <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
               <div className="flex-1">
-                <p className="text-sm text-gray-700 truncate">{filename}</p>
+                <p className="text-sm text-linear-text-secondary truncate">{filename}</p>
                 <div className="h-1.5 bg-blue-200 rounded-full mt-1">
                   <div 
                     className="h-full bg-blue-600 rounded-full transition-all"
@@ -247,7 +247,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
           onDragLeave={handleDragLeave}
           className={`
             space-y-2 p-2 rounded-lg transition-colors
-            ${isDragging ? 'bg-primary-50 border-2 border-dashed border-primary-300' : ''}
+            ${isDragging ? 'bg-linear-accent/10 border-2 border-dashed border-linear-accent/40' : ''}
           `}
         >
           {attachments.map((attachment) => {
@@ -257,7 +257,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
             return (
               <div
                 key={attachment.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-3 p-3 bg-linear-elevated/50 rounded-lg group hover:bg-linear-elevated transition-colors"
               >
                 {/* Thumbnail or Icon */}
                 {isImage ? (
@@ -278,11 +278,11 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
                     href={attachment.upload.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-gray-900 hover:text-primary-600 truncate block"
+                    className="text-sm font-medium text-linear-text hover:text-linear-accent truncate block"
                   >
                     {attachment.upload.originalName}
                   </a>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-linear-text-secondary">
                     <span>{formatFileSize(attachment.upload.size)}</span>
                     <span>•</span>
                     <span>{new Date(attachment.createdAt).toLocaleDateString()}</span>
@@ -300,7 +300,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
                   <a
                     href={attachment.upload.url}
                     download={attachment.upload.originalName}
-                    className="p-1.5 hover:bg-gray-200 rounded text-gray-500 hover:text-gray-700"
+                    className="p-1.5 hover:bg-linear-elevated rounded text-linear-text-secondary hover:text-linear-text-secondary"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
@@ -308,7 +308,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
                   <button
                     onClick={() => deleteMutation.mutate(attachment.id)}
                     disabled={deleteMutation.isPending}
-                    className="p-1.5 hover:bg-red-100 rounded text-gray-500 hover:text-red-600"
+                    className="p-1.5 hover:bg-red-100 rounded text-linear-text-secondary hover:text-red-600"
                     title="Remove"
                   >
                     <X className="w-4 h-4" />
@@ -320,7 +320,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
 
           {/* Drop hint when dragging */}
           {isDragging && (
-            <div className="text-center py-4 text-primary-600 text-sm">
+            <div className="text-center py-4 text-linear-accent text-sm">
               Drop files to upload
             </div>
           )}

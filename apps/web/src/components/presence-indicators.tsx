@@ -63,7 +63,7 @@ export function PresenceIndicators({
 
         {/* Users count */}
         {users.length > 0 && (
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-linear-elevated rounded-full text-xs text-linear-text-secondary">
             <Users className="w-3.5 h-3.5" />
             <span>{users.length + 1} viewing</span>
           </div>
@@ -96,7 +96,7 @@ export function PresenceIndicators({
             </motion.div>
           ))}
           {users.length > 3 && (
-            <div className="w-7 h-7 rounded-full border-2 border-white bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600">
+            <div className="w-7 h-7 rounded-full border-2 border-white bg-linear-elevated flex items-center justify-center text-xs font-medium text-linear-text-secondary">
               +{users.length - 3}
             </div>
           )}
@@ -110,23 +110,23 @@ export function PresenceIndicators({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="flex items-center gap-2 text-xs text-gray-500 mt-2"
+            className="flex items-center gap-2 text-xs text-linear-text-secondary mt-2"
           >
             <div className="flex gap-0.5">
               <motion.div
                 animate={{ y: [0, -3, 0] }}
                 transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
-                className="w-1 h-1 bg-gray-400 rounded-full"
+                className="w-1 h-1 bg-linear-text-tertiary rounded-full"
               />
               <motion.div
                 animate={{ y: [0, -3, 0] }}
                 transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
-                className="w-1 h-1 bg-gray-400 rounded-full"
+                className="w-1 h-1 bg-linear-text-tertiary rounded-full"
               />
               <motion.div
                 animate={{ y: [0, -3, 0] }}
                 transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
-                className="w-1 h-1 bg-gray-400 rounded-full"
+                className="w-1 h-1 bg-linear-text-tertiary rounded-full"
               />
             </div>
             <span>

@@ -104,7 +104,7 @@ export function NotificationBadge() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
       >
         <Bell className="w-5 h-5" />
         
@@ -130,15 +130,15 @@ export function NotificationBadge() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+              className="absolute right-0 top-full mt-2 w-96 bg-linear-surface rounded-xl shadow-xl border border-linear-border z-50 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900">Notifications</h3>
+              <div className="flex items-center justify-between p-4 border-b border-linear-border">
+                <h3 className="font-semibold text-linear-text">Notifications</h3>
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllAsReadMutation.mutate()}
-                    className="text-sm text-primary-500 hover:text-primary-600"
+                    className="text-sm text-linear-accent hover:text-linear-accent"
                   >
                     Mark all read
                   </button>
@@ -148,8 +148,8 @@ export function NotificationBadge() {
               {/* List */}
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">
-                    <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <div className="p-8 text-center text-linear-text-secondary">
+                    <Bell className="w-8 h-8 mx-auto mb-2 text-linear-text-tertiary" />
                     <p>No notifications yet</p>
                   </div>
                 ) : (
@@ -159,7 +159,7 @@ export function NotificationBadge() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className={`
-                        p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer
+                        p-4 border-b border-linear-border hover:bg-linear-elevated/50 transition-colors cursor-pointer
                         ${!notification.isRead ? 'bg-blue-50/50' : ''}
                       `}
                       onClick={() => {
@@ -177,19 +177,19 @@ export function NotificationBadge() {
                       <div className="flex items-start gap-3">
                         <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-linear-text">
                             {notification.title}
                           </p>
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-linear-text-secondary mt-1">
                             {notification.content}
                           </p>
-                          <p className="text-xs text-gray-400 mt-2">
+                          <p className="text-xs text-linear-text-tertiary mt-2">
                             {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0 mt-2" />
+                          <span className="w-2 h-2 bg-linear-accent rounded-full flex-shrink-0 mt-2" />
                         )}
                       </div>
                     </motion.div>

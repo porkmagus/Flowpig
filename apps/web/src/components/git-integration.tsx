@@ -156,8 +156,8 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
     return (
       <div className="p-4">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-1/2" />
-          <div className="h-8 bg-gray-200 rounded" />
+          <div className="h-4 bg-linear-elevated rounded w-1/2" />
+          <div className="h-8 bg-linear-elevated rounded" />
         </div>
       </div>
     );
@@ -168,25 +168,25 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
   return (
     <div className="space-y-4">
       {/* Branch suggestion */}
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-linear-elevated/50 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
-          <GitBranch className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Suggested branch</span>
+          <GitBranch className="w-4 h-4 text-linear-text-secondary" />
+          <span className="text-sm font-medium text-linear-text-secondary">Suggested branch</span>
         </div>
         
         <div className="flex items-center gap-2">
-          <code className="flex-1 px-3 py-2 bg-white rounded border border-gray-200 text-sm font-mono text-gray-700 truncate">
+          <code className="flex-1 px-3 py-2 bg-linear-surface rounded border border-linear-border text-sm font-mono text-linear-text-secondary truncate">
             {suggestedBranch}
           </code>
           <button
             onClick={() => copyToClipboard(`git checkout -b ${suggestedBranch}`)}
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
             title="Copy checkout command"
           >
             {copiedCommand ? (
               <Check className="w-4 h-4 text-green-600" />
             ) : (
-              <Copy className="w-4 h-4 text-gray-500" />
+              <Copy className="w-4 h-4 text-linear-text-secondary" />
             )}
           </button>
         </div>
@@ -196,14 +196,14 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
           <button
             onClick={() => linkBranchMutation.mutate(suggestedBranch)}
             disabled={linkBranchMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-linear-surface border border-linear-border rounded-lg text-sm text-linear-text-secondary hover:bg-linear-elevated/50 transition-colors disabled:opacity-50"
           >
             <Link className="w-3.5 h-3.5" />
             Link this branch
           </button>
           <button
             onClick={() => setShowBranchInput(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-linear-surface border border-linear-border rounded-lg text-sm text-linear-text-secondary hover:bg-linear-elevated/50 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
             Link custom branch
@@ -218,13 +218,13 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
               placeholder="Enter branch name..."
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              className="flex-1 px-3 py-2 border border-linear-border rounded-lg text-sm"
               autoFocus
             />
             <button
               onClick={() => branchName && linkBranchMutation.mutate(branchName)}
               disabled={!branchName || linkBranchMutation.isPending}
-              className="px-3 py-2 bg-primary-500 text-white rounded-lg text-sm hover:bg-primary-600 transition-colors disabled:opacity-50"
+              className="px-3 py-2 bg-linear-accent text-white rounded-lg text-sm hover:bg-linear-accent/80 transition-colors disabled:opacity-50"
             >
               Link
             </button>
@@ -233,7 +233,7 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
                 setShowBranchInput(false);
                 setBranchName('');
               }}
-              className="px-3 py-2 text-gray-500 hover:text-gray-700"
+              className="px-3 py-2 text-linear-text-secondary hover:text-linear-text-secondary"
             >
               <X className="w-4 h-4" />
             </button>
@@ -245,17 +245,17 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
       {gitLinks?.summary && (
         <div className="flex items-center gap-4 px-2">
           <div className="flex items-center gap-1.5">
-            <GitPullRequest className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">
+            <GitPullRequest className="w-4 h-4 text-linear-text-tertiary" />
+            <span className="text-sm text-linear-text-secondary">
               {gitLinks.summary.openPRs} open
               {gitLinks.summary.mergedPRs > 0 && (
-                <span className="text-gray-400"> • {gitLinks.summary.mergedPRs} merged</span>
+                <span className="text-linear-text-tertiary"> • {gitLinks.summary.mergedPRs} merged</span>
               )}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <GitCommit className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-600">
+            <GitCommit className="w-4 h-4 text-linear-text-tertiary" />
+            <span className="text-sm text-linear-text-secondary">
               {gitLinks.summary.totalCommits} commits
             </span>
           </div>
@@ -265,22 +265,22 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
       {/* Linked branches */}
       {gitLinks?.branches && gitLinks.branches.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Linked branches</h4>
+          <h4 className="text-sm font-medium text-linear-text-secondary mb-2">Linked branches</h4>
           <div className="space-y-1">
             {gitLinks.branches.map((branch) => (
               <div
                 key={branch}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg"
+                className="flex items-center gap-2 px-3 py-2 bg-linear-elevated/50 rounded-lg"
               >
-                <GitBranch className="w-4 h-4 text-gray-400" />
-                <code className="flex-1 text-sm font-mono text-gray-700 truncate">
+                <GitBranch className="w-4 h-4 text-linear-text-tertiary" />
+                <code className="flex-1 text-sm font-mono text-linear-text-secondary truncate">
                   {branch}
                 </code>
                 <button
                   onClick={() => copyToClipboard(branch)}
-                  className="p-1 hover:bg-gray-200 rounded opacity-0 hover:opacity-100 transition-opacity"
+                  className="p-1 hover:bg-linear-elevated rounded opacity-0 hover:opacity-100 transition-opacity"
                 >
-                  <Copy className="w-3.5 h-3.5 text-gray-400" />
+                  <Copy className="w-3.5 h-3.5 text-linear-text-tertiary" />
                 </button>
               </div>
             ))}
@@ -291,7 +291,7 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
       {/* Pull Requests */}
       {gitLinks?.pullRequests && gitLinks.pullRequests.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Pull requests</h4>
+          <h4 className="text-sm font-medium text-linear-text-secondary mb-2">Pull requests</h4>
           <div className="space-y-2">
             {gitLinks.pullRequests.map((pr) => {
               const StateIcon = stateIcons[pr.state];
@@ -301,28 +301,28 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
                   href={pr.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                  className="flex items-start gap-3 p-3 bg-linear-elevated/50 hover:bg-linear-elevated rounded-lg transition-colors group"
                 >
                   <div className={`p-1.5 rounded ${stateColors[pr.state]}`}>
                     <StateIcon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-linear-text-secondary">
                         #{pr.number}
                       </span>
                       {pr.draft && (
-                        <span className="px-1.5 py-0.5 bg-gray-200 text-gray-600 text-xs rounded">
+                        <span className="px-1.5 py-0.5 bg-linear-elevated text-linear-text-secondary text-xs rounded">
                           Draft
                         </span>
                       )}
                       {pr.repository && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-linear-text-tertiary">
                           {pr.repository.fullName}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-medium text-gray-900 mt-0.5 truncate">
+                    <p className="text-sm font-medium text-linear-text mt-0.5 truncate">
                       {pr.title}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -333,20 +333,20 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
                           className="w-4 h-4 rounded-full"
                         />
                       ) : (
-                        <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center text-xs">
+                        <div className="w-4 h-4 rounded-full bg-linear-elevated flex items-center justify-center text-xs">
                           {pr.author.name?.[0] || '?'}
                         </div>
                       )}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-linear-text-secondary">
                         {pr.author.name}
                       </span>
-                      <span className="text-gray-300">•</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-linear-text-tertiary">•</span>
+                      <span className="text-xs text-linear-text-secondary">
                         {new Date(pr.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="w-4 h-4 text-linear-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
               );
             })}
@@ -357,7 +357,7 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
       {/* Commits */}
       {gitLinks?.commits && gitLinks.commits.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Recent commits</h4>
+          <h4 className="text-sm font-medium text-linear-text-secondary mb-2">Recent commits</h4>
           <div className="space-y-2">
             {gitLinks.commits.slice(0, 5).map((commit) => (
               <a
@@ -365,29 +365,29 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
                 href={commit.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                className="flex items-start gap-3 p-3 bg-linear-elevated/50 hover:bg-linear-elevated rounded-lg transition-colors group"
               >
-                <div className="p-1.5 rounded bg-gray-200 text-gray-600">
+                <div className="p-1.5 rounded bg-linear-elevated text-linear-text-secondary">
                   <GitCommit className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 line-clamp-2">
+                  <p className="text-sm text-linear-text line-clamp-2">
                     {commit.message.split('\n')[0]}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">
+                    <code className="text-xs text-linear-text-secondary bg-linear-elevated px-1.5 py-0.5 rounded">
                       {commit.sha}
                     </code>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-linear-text-secondary">
                       {commit.author.name}
                     </span>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-linear-text-tertiary">•</span>
+                    <span className="text-xs text-linear-text-secondary">
                       {new Date(commit.authorDate).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ExternalLink className="w-4 h-4 text-linear-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
             ))}
           </div>
@@ -397,11 +397,11 @@ export function GitIntegrationPanel({ workspace, issueId, teamKey, issueNumber, 
       {/* Empty state */}
       {!gitLinks?.pullRequests?.length && !gitLinks?.commits?.length && !gitLinks?.branches?.length && (
         <div className="text-center py-6">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
-            <GitBranch className="w-6 h-6 text-gray-400" />
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-linear-elevated flex items-center justify-center">
+            <GitBranch className="w-6 h-6 text-linear-text-tertiary" />
           </div>
-          <p className="text-sm text-gray-500">No linked Git activity</p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-sm text-linear-text-secondary">No linked Git activity</p>
+          <p className="text-xs text-linear-text-tertiary mt-1">
             Create a branch with the suggested name to auto-link
           </p>
         </div>

@@ -81,31 +81,31 @@ interface InboxData {
 }
 
 const notificationIcons: Record<string, React.ReactNode> = {
-  ISSUE_ASSIGNED: <UserPlus className="w-4 h-4 text-blue-500" />,
-  ISSUE_UPDATED: <AlertCircle className="w-4 h-4 text-orange-500" />,
-  ISSUE_COMMENTED: <MessageSquare className="w-4 h-4 text-purple-500" />,
-  ISSUE_COMPLETED: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-  NOTE_SHARED: <FileText className="w-4 h-4 text-blue-500" />,
-  NOTE_COMMENTED: <MessageSquare className="w-4 h-4 text-purple-500" />,
-  CYCLE_STARTED: <RotateCcw className="w-4 h-4 text-blue-500" />,
-  CYCLE_ENDING: <AlertCircle className="w-4 h-4 text-orange-500" />,
-  MENTION: <Bell className="w-4 h-4 text-red-500" />,
-  WORKSPACE_INVITE: <UserPlus className="w-4 h-4 text-green-500" />,
-  BILLING: <Folder className="w-4 h-4 text-yellow-500" />,
+  ISSUE_ASSIGNED: <UserPlus className="w-4 h-4 text-sky-400" />,
+  ISSUE_UPDATED: <AlertCircle className="w-4 h-4 text-amber-400" />,
+  ISSUE_COMMENTED: <MessageSquare className="w-4 h-4 text-violet-400" />,
+  ISSUE_COMPLETED: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+  NOTE_SHARED: <FileText className="w-4 h-4 text-sky-400" />,
+  NOTE_COMMENTED: <MessageSquare className="w-4 h-4 text-violet-400" />,
+  CYCLE_STARTED: <RotateCcw className="w-4 h-4 text-sky-400" />,
+  CYCLE_ENDING: <AlertCircle className="w-4 h-4 text-amber-400" />,
+  MENTION: <Bell className="w-4 h-4 text-red-400" />,
+  WORKSPACE_INVITE: <UserPlus className="w-4 h-4 text-emerald-400" />,
+  BILLING: <Folder className="w-4 h-4 text-amber-400" />,
 };
 
 const notificationColors: Record<string, string> = {
-  ISSUE_ASSIGNED: 'bg-blue-50 text-blue-700 border-blue-200',
-  ISSUE_UPDATED: 'bg-orange-50 text-orange-700 border-orange-200',
-  ISSUE_COMMENTED: 'bg-purple-50 text-purple-700 border-purple-200',
-  ISSUE_COMPLETED: 'bg-green-50 text-green-700 border-green-200',
-  NOTE_SHARED: 'bg-blue-50 text-blue-700 border-blue-200',
-  NOTE_COMMENTED: 'bg-purple-50 text-purple-700 border-purple-200',
-  CYCLE_STARTED: 'bg-blue-50 text-blue-700 border-blue-200',
-  CYCLE_ENDING: 'bg-orange-50 text-orange-700 border-orange-200',
-  MENTION: 'bg-red-50 text-red-700 border-red-200',
-  WORKSPACE_INVITE: 'bg-green-50 text-green-700 border-green-200',
-  BILLING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  ISSUE_ASSIGNED: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
+  ISSUE_UPDATED: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  ISSUE_COMMENTED: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+  ISSUE_COMPLETED: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  NOTE_SHARED: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
+  NOTE_COMMENTED: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+  CYCLE_STARTED: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
+  CYCLE_ENDING: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  MENTION: 'bg-red-500/10 text-red-300 border-red-500/20',
+  WORKSPACE_INVITE: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  BILLING: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
 };
 
 function NotificationItem({ 
@@ -133,20 +133,20 @@ function NotificationItem({
     return `/${workspace}`;
   };
 
-  const icon = notificationIcons[notification.type] || <Bell className="w-4 h-4 text-gray-500" />;
-  const colorClass = notificationColors[notification.type] || 'bg-gray-50 text-gray-700 border-gray-200';
+  const icon = notificationIcons[notification.type] || <Bell className="w-4 h-4 text-linear-text-secondary" />;
+  const colorClass = notificationColors[notification.type] || 'bg-linear-elevated/50 text-linear-text-secondary border-linear-border';
 
   return (
     <div
-      className={`group relative flex gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-        !notification.isRead ? 'bg-blue-50/30' : ''
+      className={`group relative flex gap-4 px-4 py-4 hover:bg-linear-elevated transition-colors border-b border-linear-border last:border-b-0 ${
+        !notification.isRead ? 'bg-linear-accent/5' : ''
       }`}
       onMouseEnter={() => onHover(notification.id)}
       onMouseLeave={() => onHover(null)}
     >
       {/* Unread indicator */}
       {!notification.isRead && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-full bg-linear-accent" />
       )}
 
       {/* Icon */}
@@ -162,10 +162,10 @@ function NotificationItem({
             className="flex-1 min-w-0"
             onClick={() => !notification.isRead && onMarkRead(notification.id)}
           >
-            <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+            <p className={`text-sm ${!notification.isRead ? 'font-semibold text-linear-text' : 'text-linear-text-secondary'}`}>
               {notification.title}
             </p>
-            <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">
+            <p className="text-sm text-linear-text-secondary mt-0.5 line-clamp-2">
               {notification.content}
             </p>
             
@@ -173,13 +173,13 @@ function NotificationItem({
             {(notification.issue || notification.note) && (
               <div className="flex items-center gap-2 mt-2">
                 {notification.issue && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-linear-elevated text-linear-text-secondary text-xs rounded">
                     {notification.issue.identifier}
                     <ExternalLink className="w-3 h-3" />
                   </span>
                 )}
                 {notification.note && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-linear-elevated text-linear-text-secondary text-xs rounded">
                     {notification.note.title}
                     <ExternalLink className="w-3 h-3" />
                   </span>
@@ -190,7 +190,7 @@ function NotificationItem({
 
           {/* Time and actions */}
           <div className="flex-shrink-0 flex flex-col items-end gap-2">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-linear-text-tertiary">
               {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
             </span>
             
@@ -203,7 +203,7 @@ function NotificationItem({
                       e.stopPropagation();
                       onMarkRead(notification.id);
                     }}
-                    className="p-1.5 hover:bg-blue-100 rounded text-blue-600"
+                    className="p-1.5 hover:bg-linear-accent/15 rounded text-linear-accent"
                     title="Mark as read"
                   >
                     <Check className="w-4 h-4" />
@@ -215,7 +215,7 @@ function NotificationItem({
                       e.stopPropagation();
                       onArchive(notification.id);
                     }}
-                    className="p-1.5 hover:bg-gray-200 rounded text-gray-500"
+                    className="p-1.5 hover:bg-linear-elevated rounded text-linear-text-secondary"
                     title="Archive"
                   >
                     <Archive className="w-4 h-4" />
@@ -229,14 +229,14 @@ function NotificationItem({
         {/* Actor info */}
         {notification.actor && (
           <div className="flex items-center gap-2 mt-2">
-            <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+            <div className="w-5 h-5 rounded-full bg-linear-elevated flex items-center justify-center text-xs text-linear-text-secondary">
               {notification.actor.name?.[0] || notification.actor.image || '?'}
             </div>
-            <span className="text-xs text-gray-500">{notification.actor.name || 'Unknown'}</span>
+            <span className="text-xs text-linear-text-secondary">{notification.actor.name || 'Unknown'}</span>
             {notification.workspace && (
               <>
-                <span className="text-gray-300">•</span>
-                <span className="text-xs text-gray-500">{notification.workspace.name}</span>
+                <span className="text-linear-border">•</span>
+                <span className="text-xs text-linear-text-secondary">{notification.workspace.name}</span>
               </>
             )}
           </div>
@@ -262,19 +262,19 @@ function NotificationGroupSection({
   onHover: (id: string | null) => void;
 }) {
   return (
-    <AnimatedCard className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
+    <AnimatedCard className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden mb-4">
       {/* Group header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50/50 border-b border-gray-100">
-        <span className="font-semibold text-sm text-gray-700">
+      <div className="flex items-center gap-3 px-4 py-3 bg-linear-elevated/50 border-b border-linear-border">
+        <span className="font-semibold text-sm text-linear-text">
           {group.title}
         </span>
-        <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full font-medium">
+        <span className="px-2 py-0.5 bg-linear-elevated text-linear-text-secondary text-xs rounded-full font-medium border border-linear-border">
           {group.count}
         </span>
       </div>
 
       {/* Notifications list */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-linear-border">
         {group.notifications.map((notification) => (
           <NotificationItem
             key={notification.id}
@@ -382,7 +382,7 @@ export default function InboxPage() {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-linear-accent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -393,21 +393,21 @@ export default function InboxPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Inbox className="w-8 h-8 text-primary-500" />
+          <h1 className="text-3xl font-bold text-linear-text flex items-center gap-3">
+            <Inbox className="w-8 h-8 text-linear-accent" />
             Inbox
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-linear-text-secondary">
             Stay updated with your workspace activity
           </p>
         </div>
 
         {/* Stats pills */}
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+          <div className="px-3 py-1.5 bg-linear-accent/10 text-linear-accent rounded-full text-sm font-medium border border-linear-accent/20">
             {data?.stats.unread || 0} unread
           </div>
-          <div className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+          <div className="px-3 py-1.5 bg-linear-elevated text-linear-text-secondary rounded-full text-sm font-medium border border-linear-border">
             {data?.stats.total || 0} total
           </div>
         </div>
@@ -420,15 +420,15 @@ export default function InboxPage() {
           <div className="relative">
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm text-linear-text-secondary hover:bg-linear-elevated transition-colors"
             >
-              <Filter className="w-4 h-4 text-gray-500" />
+              <Filter className="w-4 h-4 text-linear-text-tertiary" />
               <span>{filterOptions.find(o => o.value === filter)?.label}</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-linear-text-tertiary" />
             </button>
 
             {showFilterDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+              <div className="absolute top-full left-0 mt-1 w-48 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/20 z-10 py-1">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -436,8 +436,8 @@ export default function InboxPage() {
                       setFilter(option.value);
                       setShowFilterDropdown(false);
                     }}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                      filter === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-linear-surface ${
+                      filter === option.value ? 'bg-linear-accent/10 text-linear-accent' : 'text-linear-text-secondary'
                     }`}
                   >
                     {option.label}
@@ -454,7 +454,7 @@ export default function InboxPage() {
             <button
               onClick={handleMarkAllRead}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-linear-accent hover:bg-linear-accent/10 rounded-lg transition-colors disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
               Mark all as read
@@ -481,16 +481,16 @@ export default function InboxPage() {
       {/* Empty state */}
       {data?.groups.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-linear-elevated flex items-center justify-center border border-linear-border">
             {filter === 'archive' ? (
-              <Archive className="w-8 h-8 text-gray-400" />
+              <Archive className="w-8 h-8 text-linear-text-tertiary" />
             ) : filter === 'unread' ? (
-              <Check className="w-8 h-8 text-gray-400" />
+              <Check className="w-8 h-8 text-linear-text-tertiary" />
             ) : (
-              <Inbox className="w-8 h-8 text-gray-400" />
+              <Inbox className="w-8 h-8 text-linear-text-tertiary" />
             )}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
+          <h3 className="text-lg font-medium text-linear-text mb-1">
             {filter === 'archive' 
               ? 'No archived notifications'
               : filter === 'unread'
@@ -498,7 +498,7 @@ export default function InboxPage() {
               : 'Your inbox is empty'
             }
           </h3>
-          <p className="text-gray-500">
+          <p className="text-linear-text-secondary">
             {filter === 'archive'
               ? 'Notifications you archive will appear here'
               : filter === 'unread'

@@ -7,6 +7,19 @@ echo.
 echo Starting services...
 echo.
 
+REM Kill any process occupying port 3001 (API)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":3001 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+
+REM Kill any process occupying port 5173 (Web)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5173 "') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+
+echo Ports 3001 and 5173 cleared.
+echo.
+
 REM Check if Docker containers are running
 docker ps | findstr flowpig-postgres-dev >nul
 if %ERRORLEVEL% NEQ 0 (

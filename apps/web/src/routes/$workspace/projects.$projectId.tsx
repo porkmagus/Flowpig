@@ -77,7 +77,7 @@ interface Issue {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  'PLANNED': { label: 'Planned', color: 'text-gray-600', bg: 'bg-gray-100' },
+  'PLANNED': { label: 'Planned', color: 'text-linear-text-secondary', bg: 'bg-linear-elevated' },
   'IN_PROGRESS': { label: 'In Progress', color: 'text-blue-600', bg: 'bg-blue-100' },
   'PAUSED': { label: 'Paused', color: 'text-yellow-600', bg: 'bg-yellow-100' },
   'COMPLETED': { label: 'Completed', color: 'text-green-600', bg: 'bg-green-100' },
@@ -141,7 +141,7 @@ export default function ProjectDetailRoute() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -149,8 +149,8 @@ export default function ProjectDetailRoute() {
   if (!project) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900">Project not found</h2>
-        <Link to={`/${workspace}/projects`} className="text-primary-500 hover:text-primary-600 mt-4 inline-block">
+        <h2 className="text-xl font-semibold text-linear-text">Project not found</h2>
+        <Link to={`/${workspace}/projects`} className="text-linear-accent hover:text-linear-accent mt-4 inline-block">
           Back to projects
         </Link>
       </div>
@@ -164,12 +164,12 @@ export default function ProjectDetailRoute() {
   return (
     <AnimatedPage className="max-w-6xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link to={`/${workspace}/projects`} className="hover:text-gray-700">
+      <div className="flex items-center gap-2 text-sm text-linear-text-secondary mb-6">
+        <Link to={`/${workspace}/projects`} className="hover:text-linear-text-secondary">
           Projects
         </Link>
         <ChevronLeft className="w-4 h-4 rotate-180" />
-        <span className="text-gray-900 font-medium">{project.name}</span>
+        <span className="text-linear-text font-medium">{project.name}</span>
       </div>
 
       {/* Header */}
@@ -181,13 +181,13 @@ export default function ProjectDetailRoute() {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="text-3xl font-bold border-b-2 border-gray-200 focus:border-primary-500 outline-none bg-transparent w-full"
+                className="text-3xl font-bold border-b-2 border-linear-border focus:border-linear-accent outline-none bg-transparent w-full"
                 placeholder="Project name"
               />
               <textarea
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 resize-none"
                 rows={2}
                 placeholder="Description (optional)"
               />
@@ -195,7 +195,7 @@ export default function ProjectDetailRoute() {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  className="px-3 py-2 border border-linear-border rounded-lg text-sm"
                 >
                   <option value="PLANNED">Planned</option>
                   <option value="IN_PROGRESS">In Progress</option>
@@ -210,7 +210,7 @@ export default function ProjectDetailRoute() {
                     status: editStatus as any,
                   })}
                   disabled={updateMutation.isPending}
-                  className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                  className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Save'}
                 </button>
@@ -221,7 +221,7 @@ export default function ProjectDetailRoute() {
                     setEditDescription(project.description || '');
                     setEditStatus(project.status);
                   }}
-                  className="text-gray-600 hover:text-gray-900 px-4 py-2"
+                  className="text-linear-text-secondary hover:text-linear-text px-4 py-2"
                 >
                   Cancel
                 </button>
@@ -233,7 +233,7 @@ export default function ProjectDetailRoute() {
                 <span className="text-4xl">{project.emoji || '📁'}</span>
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+                    <h1 className="text-3xl font-bold text-linear-text">{project.name}</h1>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${status.bg} ${status.color}`}>
                       {status.label}
                     </span>
@@ -247,9 +247,9 @@ export default function ProjectDetailRoute() {
                     )}
                   </div>
                   {project.description && (
-                    <p className="text-gray-600 max-w-2xl">{project.description}</p>
+                    <p className="text-linear-text-secondary max-w-2xl">{project.description}</p>
                   )}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                  <div className="flex items-center gap-4 mt-3 text-sm text-linear-text-secondary">
                     {project.startDate && (
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -273,7 +273,7 @@ export default function ProjectDetailRoute() {
               </div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
               >
                 <Edit3 className="w-5 h-5" />
               </button>
@@ -282,18 +282,18 @@ export default function ProjectDetailRoute() {
         </div>
 
         {/* Progress */}
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4">
+        <div className="mt-6 bg-linear-surface rounded-xl border border-linear-border p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm font-bold text-gray-900">{project.progress}%</span>
+            <span className="text-sm font-medium text-linear-text-secondary">Progress</span>
+            <span className="text-sm font-bold text-linear-text">{project.progress}%</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2">
+          <div className="w-full bg-linear-elevated rounded-full h-2">
             <div
-              className="bg-primary-500 h-2 rounded-full transition-all"
+              className="bg-linear-accent h-2 rounded-full transition-all"
               style={{ width: `${project.progress}%` }}
             />
           </div>
-          <div className="flex items-center gap-6 mt-3 text-sm text-gray-500">
+          <div className="flex items-center gap-6 mt-3 text-sm text-linear-text-secondary">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4 text-green-500" />
               {completedIssues} completed
@@ -311,13 +311,13 @@ export default function ProjectDetailRoute() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg mb-6">
+      <div className="flex items-center gap-1 bg-linear-elevated p-1 rounded-lg mb-6">
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'overview'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-linear-surface text-linear-text shadow-sm'
+              : 'text-linear-text-secondary hover:text-linear-text'
           }`}
         >
           <FolderKanban className="w-4 h-4" />
@@ -327,8 +327,8 @@ export default function ProjectDetailRoute() {
           onClick={() => setActiveTab('issues')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'issues'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-linear-surface text-linear-text shadow-sm'
+              : 'text-linear-text-secondary hover:text-linear-text'
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -338,8 +338,8 @@ export default function ProjectDetailRoute() {
           onClick={() => setActiveTab('initiatives')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'initiatives'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-linear-surface text-linear-text shadow-sm'
+              : 'text-linear-text-secondary hover:text-linear-text'
           }`}
         >
           <Target className="w-4 h-4" />
@@ -351,33 +351,33 @@ export default function ProjectDetailRoute() {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Initiatives Section */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Initiatives</h3>
+              <h3 className="font-semibold text-linear-text">Initiatives</h3>
               <button
                 onClick={() => setShowAddInitiative(true)}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                className="p-1 text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-linear-elevated rounded"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
             {project.initiatives?.length === 0 ? (
-              <p className="text-gray-400 text-sm">No initiatives yet</p>
+              <p className="text-linear-text-tertiary text-sm">No initiatives yet</p>
             ) : (
               <div className="space-y-3">
                 {project.initiatives?.map((initiative) => (
                   <Link
                     key={initiative.id}
                     to={`/${workspace}/initiatives/${initiative.slug}`}
-                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="block p-3 bg-linear-elevated/50 rounded-lg hover:bg-linear-elevated transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-gray-900">{initiative.name}</span>
-                      <span className="text-sm text-gray-500">{initiative.progress}%</span>
+                      <span className="font-medium text-linear-text">{initiative.name}</span>
+                      <span className="text-sm text-linear-text-secondary">{initiative.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
+                    <div className="w-full bg-linear-elevated rounded-full h-1">
                       <div
-                        className="bg-primary-500 h-1 rounded-full"
+                        className="bg-linear-accent h-1 rounded-full"
                         style={{ width: `${initiative.progress}%` }}
                       />
                     </div>
@@ -388,33 +388,33 @@ export default function ProjectDetailRoute() {
           </div>
 
           {/* Recent Issues */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Recent Issues</h3>
+              <h3 className="font-semibold text-linear-text">Recent Issues</h3>
               <Link
                 to={`/${workspace}/issues?projectId=${project.id}`}
-                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                className="text-sm text-linear-accent hover:text-linear-accent flex items-center gap-1"
               >
                 View all
                 <ArrowUpRight className="w-3 h-3" />
               </Link>
             </div>
             {project.issues?.length === 0 ? (
-              <p className="text-gray-400 text-sm">No issues yet</p>
+              <p className="text-linear-text-tertiary text-sm">No issues yet</p>
             ) : (
               <div className="space-y-2">
                 {project.issues?.slice(0, 5).map((issue) => (
                   <Link
                     key={issue.id}
                     to={`/${workspace}/issues/${issue.identifier}`}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-center gap-3 p-2 hover:bg-linear-elevated/50 rounded-lg transition-colors"
                   >
-                    <span className="text-sm text-gray-500">{issue.identifier}</span>
-                    <span className="flex-1 text-sm text-gray-900 truncate">{issue.title}</span>
+                    <span className="text-sm text-linear-text-secondary">{issue.identifier}</span>
+                    <span className="flex-1 text-sm text-linear-text truncate">{issue.title}</span>
                     <span className={`px-2 py-0.5 rounded text-xs ${
-                      issue.state === 'DONE' ? 'bg-green-100 text-green-700' :
-                      issue.state === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-700'
+                      issue.state === 'DONE' ? 'bg-emerald-500/10 text-emerald-400' :
+                      issue.state === 'IN_PROGRESS' ? 'bg-sky-500/10 text-sky-400' :
+                      'bg-linear-elevated text-linear-text-secondary'
                     }`}>
                       {issue.state}
                     </span>
@@ -427,34 +427,34 @@ export default function ProjectDetailRoute() {
       )}
 
       {activeTab === 'issues' && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="divide-y divide-gray-200">
+        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden">
+          <div className="divide-y divide-linear-border">
             {project.issues?.length === 0 ? (
               <div className="p-8 text-center">
-                <Layers className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No issues in this project yet</p>
+                <Layers className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
+                <p className="text-linear-text-secondary">No issues in this project yet</p>
               </div>
             ) : (
               project.issues?.map((issue) => (
                 <Link
                   key={issue.id}
                   to={`/${workspace}/issues/${issue.identifier}`}
-                  className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 p-4 hover:bg-linear-elevated/50 transition-colors"
                 >
-                  <span className="text-sm text-gray-500 w-20">{issue.identifier}</span>
-                  <span className="flex-1 font-medium text-gray-900">{issue.title}</span>
+                  <span className="text-sm text-linear-text-secondary w-20">{issue.identifier}</span>
+                  <span className="flex-1 font-medium text-linear-text">{issue.title}</span>
                   <span className={`px-2 py-1 rounded text-xs ${
-                    issue.priority === 'URGENT' ? 'bg-red-100 text-red-700' :
-                    issue.priority === 'HIGH' ? 'bg-orange-100 text-orange-700' :
-                    issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                    issue.priority === 'LOW' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
+                    issue.priority === 'URGENT' ? 'bg-red-500/10 text-red-400' :
+                    issue.priority === 'HIGH' ? 'bg-orange-500/10 text-orange-400' :
+                    issue.priority === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+                    issue.priority === 'LOW' ? 'bg-sky-500/10 text-sky-400' :
+                    'bg-linear-elevated text-linear-text-secondary'
                   }`}>
                     {issue.priority}
                   </span>
                   {issue.assignee && (
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                      <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                         {(issue.assignee.name || '?').charAt(0).toUpperCase()}
                       </div>
                     </div>
@@ -467,36 +467,36 @@ export default function ProjectDetailRoute() {
       )}
 
       {activeTab === 'initiatives' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-gray-900">Initiatives</h3>
-            <button className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+            <h3 className="font-semibold text-linear-text">Initiatives</h3>
+            <button className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
               <Plus className="w-4 h-4" />
               Add Initiative
             </button>
           </div>
           {project.initiatives?.length === 0 ? (
             <div className="text-center py-12">
-              <Target className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No initiatives for this project yet</p>
-              <button className="text-primary-500 hover:text-primary-600 font-medium">
+              <Target className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
+              <p className="text-linear-text-secondary mb-4">No initiatives for this project yet</p>
+              <button className="text-linear-accent hover:text-linear-accent font-medium">
                 Create first initiative
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {project.initiatives?.map((initiative) => (
-                <div key={initiative.id} className="border border-gray-200 rounded-xl p-4">
+                <div key={initiative.id} className="border border-linear-border rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-gray-900">{initiative.name}</h4>
-                    <span className="text-sm font-medium text-gray-600">{initiative.progress}%</span>
+                    <h4 className="font-medium text-linear-text">{initiative.name}</h4>
+                    <span className="text-sm font-medium text-linear-text-secondary">{initiative.progress}%</span>
                   </div>
                   {initiative.description && (
-                    <p className="text-sm text-gray-600 mb-3">{initiative.description}</p>
+                    <p className="text-sm text-linear-text-secondary mb-3">{initiative.description}</p>
                   )}
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="w-full bg-linear-elevated rounded-full h-2">
                     <div
-                      className="bg-primary-500 h-2 rounded-full"
+                      className="bg-linear-accent h-2 rounded-full"
                       style={{ width: `${initiative.progress}%` }}
                     />
                   </div>

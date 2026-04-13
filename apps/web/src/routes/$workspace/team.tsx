@@ -101,20 +101,20 @@ export default function TeamRoute() {
       case 'ADMIN':
         return <Shield className="w-4 h-4 text-blue-500" />;
       default:
-        return <Users className="w-4 h-4 text-gray-400" />;
+        return <Users className="w-4 h-4 text-linear-text-tertiary" />;
     }
   };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'OWNER':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-amber-500/10 text-amber-300';
       case 'ADMIN':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-sky-500/10 text-sky-300';
       case 'GUEST':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-linear-elevated text-linear-text-secondary';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-linear-elevated text-linear-text-secondary';
     }
   };
 
@@ -123,14 +123,14 @@ export default function TeamRoute() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Team</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-linear-text">Team</h1>
+          <p className="text-linear-text-secondary mt-1">
             {members.length} member{members.length !== 1 ? 's' : ''} in this workspace
           </p>
         </div>
         <button 
           onClick={() => setShowInviteModal(true)}
-          className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
           Invite member
@@ -139,46 +139,46 @@ export default function TeamRoute() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <div className="text-3xl font-bold text-gray-900">
+        <div className="bg-linear-surface p-4 rounded-xl border border-linear-border">
+          <div className="text-3xl font-bold text-linear-text">
             {members.filter(m => m.role === 'OWNER' || m.role === 'ADMIN').length}
           </div>
-          <div className="text-sm text-gray-500">Admins</div>
+          <div className="text-sm text-linear-text-secondary">Admins</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <div className="text-3xl font-bold text-gray-900">
+        <div className="bg-linear-surface p-4 rounded-xl border border-linear-border">
+          <div className="text-3xl font-bold text-linear-text">
             {members.filter(m => m.role === 'MEMBER').length}
           </div>
-          <div className="text-sm text-gray-500">Members</div>
+          <div className="text-sm text-linear-text-secondary">Members</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <div className="text-3xl font-bold text-gray-900">
+        <div className="bg-linear-surface p-4 rounded-xl border border-linear-border">
+          <div className="text-3xl font-bold text-linear-text">
             {members.filter(m => m.role === 'GUEST').length}
           </div>
-          <div className="text-sm text-gray-500">Guests</div>
+          <div className="text-sm text-linear-text-secondary">Guests</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200">
-          <div className="text-3xl font-bold text-gray-900">{teams.length}</div>
-          <div className="text-sm text-gray-500">Teams</div>
+        <div className="bg-linear-surface p-4 rounded-xl border border-linear-border">
+          <div className="text-3xl font-bold text-linear-text">{teams.length}</div>
+          <div className="text-sm text-linear-text-secondary">Teams</div>
         </div>
       </div>
 
       {/* Members List */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-linear-accent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="font-semibold text-gray-900">Workspace Members</h2>
+        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden">
+          <div className="p-4 border-b border-linear-border bg-linear-elevated/40">
+            <h2 className="font-semibold text-linear-text">Workspace Members</h2>
           </div>
           <AnimatedList>
             {members.map((member) => (
               <AnimatedItem key={member.id}>
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between p-4 border-b border-linear-border hover:bg-linear-elevated transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-linear-elevated rounded-full flex items-center justify-center border border-linear-border">
                       {member.user.image ? (
                         <img 
                           src={member.user.image} 
@@ -186,27 +186,27 @@ export default function TeamRoute() {
                           className="w-10 h-10 rounded-full"
                         />
                       ) : (
-                        <span className="text-lg font-medium">
+                        <span className="text-lg font-medium text-linear-text">
                           {(member.user.name || member.user.email).charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">
+                          <span className="font-medium text-linear-text">
                           {member.user.name || member.user.email}
                         </span>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${getRoleBadgeColor(member.role)}`}>
                           {member.role}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-linear-text-secondary">
                         {member.user.email}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-linear-text-tertiary">
                       Joined {new Date(member.joinedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -219,11 +219,11 @@ export default function TeamRoute() {
 
       {/* Teams Section */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Teams</h2>
+        <h2 className="text-xl font-bold text-linear-text mb-4">Teams</h2>
         <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {teams.map((team: any) => (
             <AnimatedItem key={team.id}>
-              <AnimatedCard className="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all">
+              <AnimatedCard className="bg-linear-surface p-4 rounded-xl border border-linear-border hover:border-linear-border-hover transition-colors">
                 <div className="flex items-start gap-3">
                   <div 
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
@@ -232,9 +232,9 @@ export default function TeamRoute() {
                     {team.key}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{team.name}</h3>
-                    <p className="text-sm text-gray-500">{team.issueCount} issues</p>
-                    <p className="text-sm text-gray-500">{team.members?.length || 0} members</p>
+                    <h3 className="font-semibold text-linear-text">{team.name}</h3>
+                    <p className="text-sm text-linear-text-secondary">{team.issueCount} issues</p>
+                    <p className="text-sm text-linear-text-secondary">{team.members?.length || 0} members</p>
                   </div>
                 </div>
               </AnimatedCard>
@@ -249,12 +249,12 @@ export default function TeamRoute() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 w-full max-w-md"
+            className="bg-linear-surface rounded-xl p-6 w-full max-w-md border border-linear-border shadow-2xl shadow-black/30"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Invite Member</h2>
+              <h2 className="text-xl font-bold text-linear-text">Invite Member</h2>
               <button onClick={() => setShowInviteModal(false)}>
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-5 h-5 text-linear-text-tertiary" />
               </button>
             </div>
             <form onSubmit={(e) => {
@@ -262,26 +262,26 @@ export default function TeamRoute() {
               inviteMutation.mutate({ email: inviteEmail, role: inviteRole });
             }}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">
                   Email Address
                 </label>
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text placeholder:text-linear-text-tertiary focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
                   placeholder="colleague@company.com"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">
                   Role
                 </label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
                 >
                   <option value="MEMBER">Member</option>
                   <option value="ADMIN">Admin</option>
@@ -292,14 +292,14 @@ export default function TeamRoute() {
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={inviteMutation.isPending}
-                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-linear-accent text-white rounded-lg hover:bg-linear-accent/80 transition-colors disabled:opacity-50"
                 >
                   {inviteMutation.isPending ? 'Sending...' : 'Send Invite'}
                 </button>

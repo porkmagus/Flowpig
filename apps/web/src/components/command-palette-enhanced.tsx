@@ -170,7 +170,7 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
       case 'note': return <FileText className="w-4 h-4 text-blue-500" />;
       case 'cycle': return <RotateCcw className="w-4 h-4 text-purple-500" />;
       case 'project': return <FolderKanban className="w-4 h-4 text-green-500" />;
-      default: return <Hash className="w-4 h-4 text-gray-500" />;
+      default: return <Hash className="w-4 h-4 text-linear-text-tertiary" />;
     }
   };
 
@@ -179,11 +179,11 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
       {/* Command Palette Trigger */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-600 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 bg-linear-elevated hover:bg-linear-border rounded-lg text-sm text-linear-text-secondary transition-colors"
       >
         <Search className="w-4 h-4" />
         <span className="hidden sm:inline">Search...</span>
-        <kbd className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs text-gray-500">
+        <kbd className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 bg-linear-surface border border-linear-border rounded text-xs text-linear-text-tertiary">
           <CommandIcon className="w-3 h-3" />
           K
         </kbd>
@@ -208,133 +208,133 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
             >
               <Command
                 label="Command Palette"
-                className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+                className="bg-linear-surface rounded-xl shadow-2xl shadow-black/40 border border-linear-border overflow-hidden"
               >
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-                  <Search className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-linear-border">
+                  <Search className="w-5 h-5 text-linear-text-tertiary" />
                   <Command.Input
                     ref={inputRef}
                     value={search}
                     onValueChange={setSearch}
                     placeholder="Search or jump to..."
-                    className="flex-1 bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
+                    className="flex-1 bg-transparent outline-none text-linear-text placeholder:text-linear-text-tertiary"
                   />
-                  <kbd className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-500">
+                  <kbd className="px-2 py-1 bg-linear-elevated rounded text-xs text-linear-text-tertiary">
                     ESC to close
                   </kbd>
                 </div>
 
-                <Command.List className="max-h-[400px] overflow-y-auto p-2">
+                <Command.List className="max-h-100 overflow-y-auto p-2">
                   {!search && (
                     <>
-                      <Command.Group heading="Navigation" className="text-xs text-gray-400 font-medium px-2 py-2">
+                      <Command.Group heading="Navigation" className="text-xs text-linear-text-tertiary font-medium px-2 py-2">
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <Layout className="w-4 h-4" />
                           <span>Home</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/my-issues`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <User className="w-4 h-4" />
                           <span>My Issues</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/inbox`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <Inbox className="w-4 h-4" />
                           <span>Inbox</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/issues`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <CircleDot className="w-4 h-4" />
                           <span>Issues</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/cycles`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <RotateCcw className="w-4 h-4" />
                           <span>Cycles</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/notes`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <FileText className="w-4 h-4" />
                           <span>Pages</span>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/analytics`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <BarChart3 className="w-4 h-4" />
                           <span>Analytics</span>
                         </Command.Item>
                       </Command.Group>
 
-                      <Command.Group heading="Create New" className="text-xs text-gray-400 font-medium px-2 py-2">
+                      <Command.Group heading="Create New" className="text-xs text-linear-text-tertiary font-medium px-2 py-2">
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/issues`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <Plus className="w-4 h-4" />
                           <span>Create Issue</span>
-                          <kbd className="ml-auto px-1.5 py-0.5 bg-gray-100 rounded text-xs">C I</kbd>
+                          <kbd className="ml-auto px-1.5 py-0.5 bg-linear-elevated rounded text-xs text-linear-text-secondary">C I</kbd>
                         </Command.Item>
                         <Command.Item
                           onSelect={() => navigateTo(`/${workspaceSlug}/notes`)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <Plus className="w-4 h-4" />
                           <span>Create Page</span>
-                          <kbd className="ml-auto px-1.5 py-0.5 bg-gray-100 rounded text-xs">C P</kbd>
+                          <kbd className="ml-auto px-1.5 py-0.5 bg-linear-elevated rounded text-xs text-linear-text-secondary">C P</kbd>
                         </Command.Item>
                       </Command.Group>
 
-                      <Command.Group heading="Help" className="text-xs text-gray-400 font-medium px-2 py-2">
+                      <Command.Group heading="Help" className="text-xs text-linear-text-tertiary font-medium px-2 py-2">
                         <Command.Item
                           onSelect={() => {
                             setOpen(false);
                             setShowShortcuts(true);
                           }}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                         >
                           <Keyboard className="w-4 h-4" />
                           <span>Keyboard Shortcuts</span>
-                          <kbd className="ml-auto px-1.5 py-0.5 bg-gray-100 rounded text-xs">?</kbd>
+                          <kbd className="ml-auto px-1.5 py-0.5 bg-linear-elevated rounded text-xs text-linear-text-secondary">?</kbd>
                         </Command.Item>
                       </Command.Group>
                     </>
                   )}
 
                   {search.length >= 2 && (
-                    <Command.Group heading="Search Results" className="text-xs text-gray-400 font-medium px-2 py-2">
+                    <Command.Group heading="Search Results" className="text-xs text-linear-text-tertiary font-medium px-2 py-2">
                       {isLoading ? (
-                        <div className="py-4 text-center text-gray-400">Searching...</div>
+                        <div className="py-4 text-center text-linear-text-secondary">Searching...</div>
                       ) : searchResults?.length === 0 ? (
-                        <div className="py-4 text-center text-gray-400">No results found</div>
+                        <div className="py-4 text-center text-linear-text-secondary">No results found</div>
                       ) : (
                         searchResults?.map((result) => (
                           <Command.Item
                             key={result.id}
                             onSelect={() => navigateTo(result.url)}
-                            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer text-gray-700"
+                            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-linear-elevated cursor-pointer text-linear-text"
                           >
                             <Icon type={result.type} />
                             <div className="flex-1 min-w-0">
                               <div className="font-medium truncate">{result.title}</div>
                               {result.subtitle && (
-                                <div className="text-xs text-gray-400 truncate">{result.subtitle}</div>
+                                <div className="text-xs text-linear-text-tertiary truncate">{result.subtitle}</div>
                               )}
                             </div>
-                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                            <ChevronRight className="w-4 h-4 text-linear-text-tertiary" />
                           </Command.Item>
                         ))
                       )}
@@ -342,13 +342,13 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
                   )}
                 </Command.List>
 
-                <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
+                <div className="flex items-center gap-4 px-4 py-2 bg-linear-elevated/40 border-t border-linear-border text-xs text-linear-text-tertiary">
                   <div className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded">↑↓</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-linear-surface border border-linear-border rounded">↑↓</kbd>
                     <span>to navigate</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded">↵</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-linear-surface border border-linear-border rounded">↵</kbd>
                     <span>to select</span>
                   </div>
                 </div>
@@ -373,18 +373,18 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 m-auto w-full max-w-2xl h-fit max-h-[80vh] bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
+              className="fixed inset-0 m-auto w-full max-w-2xl h-fit max-h-[80vh] bg-linear-surface rounded-xl shadow-2xl shadow-black/40 border border-linear-border z-50 overflow-hidden"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-linear-border">
                 <div className="flex items-center gap-3">
-                  <Keyboard className="w-5 h-5 text-gray-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Keyboard Shortcuts</h2>
+                  <Keyboard className="w-5 h-5 text-linear-text-secondary" />
+                  <h2 className="text-lg font-semibold text-linear-text">Keyboard Shortcuts</h2>
                 </div>
                 <button
                   onClick={() => setShowShortcuts(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
                 >
-                  <span className="text-gray-400">×</span>
+                  <span className="text-linear-text-tertiary">×</span>
                 </button>
               </div>
 
@@ -392,7 +392,7 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
                 {/* Group shortcuts by category */}
                 {['Navigation', 'Actions', 'Issue'].map((category) => (
                   <div key={category} className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                    <h3 className="text-sm font-semibold text-linear-text uppercase tracking-wider mb-3">
                       {category}
                     </h3>
                     <div className="space-y-2">
@@ -401,10 +401,10 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
                         .map(([key, shortcut]) => (
                           <div
                             key={key}
-                            className="flex items-center justify-between py-2 border-b border-gray-50 last:border-b-0"
+                            className="flex items-center justify-between py-2 border-b border-linear-border/50 last:border-b-0"
                           >
-                            <span className="text-gray-700">{shortcut.label}</span>
-                            <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-sm font-mono text-gray-600">
+                            <span className="text-linear-text">{shortcut.label}</span>
+                            <kbd className="px-2 py-1 bg-linear-elevated border border-linear-border rounded text-sm font-mono text-linear-text-secondary">
                               {shortcut.key.replace('cmd', '⌘').replace('shift', '⇧')}
                             </kbd>
                           </div>
@@ -414,9 +414,9 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
                 ))}
               </div>
 
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
-                  Press <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-xs">?</kbd> anywhere to show this help
+              <div className="px-6 py-4 bg-linear-elevated/40 border-t border-linear-border">
+                <p className="text-sm text-linear-text-secondary">
+                  Press <kbd className="px-1.5 py-0.5 bg-linear-surface border border-linear-border rounded text-xs">?</kbd> anywhere to show this help
                 </p>
               </div>
             </motion.div>

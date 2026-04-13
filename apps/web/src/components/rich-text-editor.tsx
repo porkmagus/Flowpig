@@ -83,7 +83,7 @@ export function RichTextEditor({
       disabled={disabled}
       className={`
         p-2 rounded transition-colors
-        ${isActive ? 'bg-gray-200 text-gray-900' : 'text-gray-600 hover:bg-gray-100'}
+        ${isActive ? 'bg-linear-elevated text-linear-text' : 'text-linear-text-secondary hover:bg-linear-elevated'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
     >
@@ -92,10 +92,10 @@ export function RichTextEditor({
   );
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-linear-border rounded-lg overflow-hidden">
       {/* Toolbar */}
       {editable && (
-        <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-1 p-2 border-b border-linear-border bg-linear-elevated/50">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
@@ -117,7 +117,7 @@ export function RichTextEditor({
             <Strikethrough className="w-4 h-4" />
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -133,7 +133,7 @@ export function RichTextEditor({
             <Heading2 className="w-4 h-4" />
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -156,7 +156,7 @@ export function RichTextEditor({
             <CheckSquare className="w-4 h-4" />
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -172,7 +172,7 @@ export function RichTextEditor({
             <Code className="w-4 h-4" />
           </ToolbarButton>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <div className="w-px h-6 bg-linear-elevated mx-1" />
 
           <ToolbarButton
             onClick={() => {

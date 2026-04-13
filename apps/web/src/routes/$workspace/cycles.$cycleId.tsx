@@ -138,7 +138,7 @@ export default function CycleDetailRoute() {
   if (cycleLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -150,8 +150,8 @@ export default function CycleDetailRoute() {
   if (!cycle) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900">Cycle not found</h2>
-        <Link to={`/${workspace}/cycles`} className="text-primary-500 hover:text-primary-600 mt-4 inline-block">
+        <h2 className="text-xl font-semibold text-linear-text">Cycle not found</h2>
+        <Link to={`/${workspace}/cycles`} className="text-linear-accent hover:text-linear-accent mt-4 inline-block">
           Back to cycles
         </Link>
       </div>
@@ -175,12 +175,12 @@ export default function CycleDetailRoute() {
   return (
     <AnimatedPage className="max-w-7xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link to={`/${workspace}/cycles`} className="hover:text-gray-700">
+      <div className="flex items-center gap-2 text-sm text-linear-text-secondary mb-6">
+        <Link to={`/${workspace}/cycles`} className="hover:text-linear-text-secondary">
           Cycles
         </Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-gray-900 font-medium">{cycle.name}</span>
+        <span className="text-linear-text font-medium">{cycle.name}</span>
       </div>
 
       {/* Header */}
@@ -189,7 +189,7 @@ export default function CycleDetailRoute() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className={`px-2 py-1 rounded text-xs font-medium ${
-                isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-linear-elevated text-linear-text-secondary'
               }`}>
                 {isActive ? 'Active' : cycle.status}
               </span>
@@ -200,9 +200,9 @@ export default function CycleDetailRoute() {
                 {cycle.team.key}
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{cycle.name}</h1>
+            <h1 className="text-3xl font-bold text-linear-text mb-2">{cycle.name}</h1>
             {cycle.goal && (
-              <p className="text-gray-600">{cycle.goal}</p>
+              <p className="text-linear-text-secondary">{cycle.goal}</p>
             )}
           </div>
 
@@ -215,11 +215,11 @@ export default function CycleDetailRoute() {
                   }
                 }}
                 disabled={completeCycleMutation.isPending}
-                className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 Complete Cycle
               </button>
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+              <button className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg">
                 <MoreHorizontal className="w-5 h-5" />
               </button>
             </div>
@@ -228,80 +228,80 @@ export default function CycleDetailRoute() {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <Calendar className="w-4 h-4" />
               <span>Duration</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-linear-text">
               {Math.ceil((new Date(cycle.endDate).getTime() - new Date(cycle.startDate).getTime()) / (1000 * 60 * 60 * 24))}
             </p>
-            <p className="text-xs text-gray-500">days</p>
+            <p className="text-xs text-linear-text-secondary">days</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <Clock className="w-4 h-4" />
               <span>Remaining</span>
             </div>
-            <p className={`text-2xl font-bold ${daysRemaining > 3 ? 'text-gray-900' : 'text-orange-600'}`}>
+            <p className={`text-2xl font-bold ${daysRemaining > 3 ? 'text-linear-text' : 'text-orange-600'}`}>
               {Math.max(0, daysRemaining)}
             </p>
-            <p className="text-xs text-gray-500">days</p>
+            <p className="text-xs text-linear-text-secondary">days</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <Target className="w-4 h-4" />
               <span>Progress</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{Math.round(progress)}%</p>
-            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+            <p className="text-2xl font-bold text-linear-text">{Math.round(progress)}%</p>
+            <div className="w-full bg-linear-elevated rounded-full h-1.5 mt-2">
               <div
-                className="bg-primary-500 h-1.5 rounded-full transition-all"
+                className="bg-linear-accent h-1.5 rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <CheckCircle2 className="w-4 h-4" />
               <span>Completed</span>
             </div>
             <p className="text-2xl font-bold text-green-600">{cycle.stats.completedIssues}</p>
-            <p className="text-xs text-gray-500">of {cycle.stats.totalIssues} issues</p>
+            <p className="text-xs text-linear-text-secondary">of {cycle.stats.totalIssues} issues</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <TrendingUp className="w-4 h-4" />
               <span>Velocity</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{cycle.stats.velocity || 0}</p>
-            <p className="text-xs text-gray-500">points/cycle</p>
+            <p className="text-2xl font-bold text-linear-text">{cycle.stats.velocity || 0}</p>
+            <p className="text-xs text-linear-text-secondary">points/cycle</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <div className="flex items-center gap-2 text-linear-text-secondary text-sm mb-1">
               <AlertCircle className="w-4 h-4" />
               <span>In Progress</span>
             </div>
             <p className="text-2xl font-bold text-blue-600">{cycle.stats.inProgressIssues}</p>
-            <p className="text-xs text-gray-500">issues</p>
+            <p className="text-xs text-linear-text-secondary">issues</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+        <div className="flex items-center gap-1 bg-linear-elevated p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('board')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'board'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-linear-surface text-linear-text shadow-sm'
+                : 'text-linear-text-secondary hover:text-linear-text'
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
@@ -311,8 +311,8 @@ export default function CycleDetailRoute() {
             onClick={() => setActiveTab('list')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'list'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-linear-surface text-linear-text shadow-sm'
+                : 'text-linear-text-secondary hover:text-linear-text'
             }`}
           >
             <List className="w-4 h-4" />
@@ -322,8 +322,8 @@ export default function CycleDetailRoute() {
             onClick={() => setActiveTab('burndown')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'burndown'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-linear-surface text-linear-text shadow-sm'
+                : 'text-linear-text-secondary hover:text-linear-text'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -333,20 +333,20 @@ export default function CycleDetailRoute() {
 
         {activeTab !== 'burndown' && (
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <button className="flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors">
               <Filter className="w-4 h-4" />
               Filter
             </button>
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-linear-elevated rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
+                className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-linear-surface shadow-sm' : ''}`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
+                className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-linear-surface shadow-sm' : ''}`}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -361,10 +361,10 @@ export default function CycleDetailRoute() {
           {workflowStates.map((state) => {
             const stateIssues = issuesByState[state] || [];
             return (
-              <div key={state} className="bg-gray-50 rounded-xl p-4">
+              <div key={state} className="bg-linear-elevated/50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">{state.replace('_', ' ')}</span>
-                  <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">
+                  <span className="text-sm font-medium text-linear-text-secondary">{state.replace('_', ' ')}</span>
+                  <span className="text-xs text-linear-text-secondary bg-linear-surface px-2 py-0.5 rounded-full">
                     {stateIssues.length}
                   </span>
                 </div>
@@ -373,18 +373,18 @@ export default function CycleDetailRoute() {
                     <Link
                       key={issue.id}
                       to={`/${workspace}/issues/${issue.identifier}`}
-                      className="block bg-white p-3 rounded-lg border border-gray-200 hover:shadow-md transition-all"
+                      className="block bg-linear-surface p-3 rounded-lg border border-linear-border hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-gray-500">{issue.identifier}</span>
+                        <span className="text-xs text-linear-text-secondary">{issue.identifier}</span>
                       </div>
-                      <p className="text-sm text-gray-900 font-medium line-clamp-2">{issue.title}</p>
+                      <p className="text-sm text-linear-text font-medium line-clamp-2">{issue.title}</p>
                       {issue.assignee && (
                         <div className="flex items-center gap-2 mt-2">
-                          <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                          <div className="w-5 h-5 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                             {(issue.assignee.name || '?').charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-xs text-gray-500">{issue.assignee.name || 'Unassigned'}</span>
+                          <span className="text-xs text-linear-text-secondary">{issue.assignee.name || 'Unassigned'}</span>
                         </div>
                       )}
                     </Link>
@@ -397,28 +397,28 @@ export default function CycleDetailRoute() {
       )}
 
       {activeTab === 'list' && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="divide-y divide-gray-200">
+        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden">
+          <div className="divide-y divide-linear-border">
             {issues.map((issue) => (
               <Link
                 key={issue.id}
                 to={`/${workspace}/issues/${issue.identifier}`}
-                className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 p-4 hover:bg-linear-elevated/50 transition-colors"
               >
-                <span className="text-sm text-gray-500 w-20">{issue.identifier}</span>
-                <span className="flex-1 font-medium text-gray-900">{issue.title}</span>
+                <span className="text-sm text-linear-text-secondary w-20">{issue.identifier}</span>
+                <span className="flex-1 font-medium text-linear-text">{issue.title}</span>
                 <span className={`px-2 py-1 rounded text-xs ${
-                  issue.priority === 'URGENT' ? 'bg-red-100 text-red-700' :
-                  issue.priority === 'HIGH' ? 'bg-orange-100 text-orange-700' :
-                  issue.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                  issue.priority === 'LOW' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-700'
+                  issue.priority === 'URGENT' ? 'bg-red-500/10 text-red-400' :
+                  issue.priority === 'HIGH' ? 'bg-orange-500/10 text-orange-400' :
+                  issue.priority === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
+                  issue.priority === 'LOW' ? 'bg-sky-500/10 text-sky-400' :
+                  'bg-linear-elevated text-linear-text-secondary'
                 }`}>
                   {issue.priority}
                 </span>
                 {issue.assignee && (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                    <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
                       {(issue.assignee.name || '?').charAt(0).toUpperCase()}
                     </div>
                   </div>
@@ -430,8 +430,8 @@ export default function CycleDetailRoute() {
       )}
 
       {activeTab === 'burndown' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Burndown Chart</h3>
+        <div className="bg-linear-surface rounded-xl border border-linear-border p-6">
+          <h3 className="text-lg font-semibold text-linear-text mb-4">Burndown Chart</h3>
           {burndown.length > 0 ? (
             <div className="h-80">
               <svg viewBox="0 0 800 300" className="w-full h-full">
@@ -443,14 +443,14 @@ export default function CycleDetailRoute() {
                     y1={y}
                     x2="750"
                     y2={y}
-                    stroke="#e5e7eb"
+                    stroke="#1e2a38"
                     strokeDasharray="4"
                   />
                 ))}
 
                 {/* Axes */}
-                <line x1="50" y1="300" x2="750" y2="300" stroke="#374151" strokeWidth="2" />
-                <line x1="50" y1="0" x2="50" y2="300" stroke="#374151" strokeWidth="2" />
+                <line x1="50" y1="300" x2="750" y2="300" stroke="#2a3f55" strokeWidth="2" />
+                <line x1="50" y1="0" x2="50" y2="300" stroke="#2a3f55" strokeWidth="2" />
 
                 {/* Ideal line */}
                 <polyline
@@ -494,18 +494,18 @@ export default function CycleDetailRoute() {
               </svg>
               <div className="flex items-center justify-center gap-6 mt-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-gray-400 border-dashed" />
-                  <span className="text-sm text-gray-600">Ideal</span>
+                  <div className="w-4 h-0.5 bg-linear-text-tertiary border-dashed" />
+                  <span className="text-sm text-linear-text-secondary">Ideal</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-1 bg-violet-500" />
-                  <span className="text-sm text-gray-600">Actual</span>
+                  <span className="text-sm text-linear-text-secondary">Actual</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-12 text-linear-text-secondary">
+              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-linear-text-tertiary" />
               <p>Burndown data will be available once the cycle starts</p>
             </div>
           )}

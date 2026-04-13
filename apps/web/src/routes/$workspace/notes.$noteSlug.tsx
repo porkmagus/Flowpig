@@ -267,7 +267,7 @@ export default function NoteDetailRoute() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -275,8 +275,8 @@ export default function NoteDetailRoute() {
   if (error || !note) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900">Note not found</h2>
-        <Link to={`/${workspace}/notes`} className="text-primary-500 hover:text-primary-600 mt-4 inline-block">
+        <h2 className="text-xl font-semibold text-linear-text">Note not found</h2>
+        <Link to={`/${workspace}/notes`} className="text-linear-accent hover:text-linear-accent mt-4 inline-block">
           Back to notes
         </Link>
       </div>
@@ -286,25 +286,25 @@ export default function NoteDetailRoute() {
   return (
     <AnimatedPage className="max-w-5xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link to={`/${workspace}/notes`} className="hover:text-gray-700">
+      <div className="flex items-center gap-2 text-sm text-linear-text-secondary mb-6">
+        <Link to={`/${workspace}/notes`} className="hover:text-linear-text-secondary">
           Notes
         </Link>
         {note.parent && (
           <>
             <ChevronRight className="w-4 h-4" />
-            <Link to={`/${workspace}/notes/${note.parent.slug}`} className="hover:text-gray-700">
+            <Link to={`/${workspace}/notes/${note.parent.slug}`} className="hover:text-linear-text-secondary">
               {note.parent.title}
             </Link>
           </>
         )}
         <ChevronRight className="w-4 h-4" />
-        <span className="text-gray-900 font-medium truncate">{note.title}</span>
+        <span className="text-linear-text font-medium truncate">{note.title}</span>
       </div>
 
       {/* Cover Image */}
       {note.coverImage && (
-        <div className="mb-8 rounded-xl overflow-hidden h-64 bg-gray-100">
+        <div className="mb-8 rounded-xl overflow-hidden h-64 bg-linear-elevated">
           <img src={note.coverImage} alt="" className="w-full h-full object-cover" />
         </div>
       )}
@@ -321,7 +321,7 @@ export default function NoteDetailRoute() {
                   const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
                   setEditEmoji(nextEmoji);
                 }}
-                className="text-4xl hover:scale-110 transition-transform p-2 rounded-lg hover:bg-gray-100"
+                className="text-4xl hover:scale-110 transition-transform p-2 rounded-lg hover:bg-linear-elevated"
               >
                 {editEmoji || '📄'}
               </button>
@@ -329,7 +329,7 @@ export default function NoteDetailRoute() {
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="flex-1 text-3xl font-bold border-b-2 border-gray-200 focus:border-primary-500 outline-none py-2 bg-transparent"
+                className="flex-1 text-3xl font-bold border-b-2 border-linear-border focus:border-linear-accent outline-none py-2 bg-transparent"
                 placeholder="Note title"
               />
             </div>
@@ -337,7 +337,7 @@ export default function NoteDetailRoute() {
               <button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
-                className="bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 {updateMutation.isPending ? 'Saving...' : 'Save'}
               </button>
@@ -348,7 +348,7 @@ export default function NoteDetailRoute() {
                   setEditContent(note.content);
                   setEditEmoji(note.emoji);
                 }}
-                className="text-gray-600 hover:text-gray-900 px-4 py-2"
+                className="text-linear-text-secondary hover:text-linear-text px-4 py-2"
               >
                 Cancel
               </button>
@@ -359,8 +359,8 @@ export default function NoteDetailRoute() {
             <div className="flex items-start gap-4">
               <span className="text-4xl">{note.emoji || '📄'}</span>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{note.title}</h1>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <h1 className="text-3xl font-bold text-linear-text mb-2">{note.title}</h1>
+                <div className="flex items-center gap-4 text-sm text-linear-text-secondary">
                   <span>Created by {note.creator.name || note.creator.email}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
@@ -384,14 +384,14 @@ export default function NoteDetailRoute() {
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
                 >
                   <Edit3 className="w-5 h-5" />
                 </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowActions(!showActions)}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
                   >
                     <MoreHorizontal className="w-5 h-5" />
                   </button>
@@ -401,14 +401,14 @@ export default function NoteDetailRoute() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute right-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 py-1 w-48 z-10"
+                        className="absolute right-0 top-full mt-1 bg-linear-surface shadow-lg rounded-lg border border-linear-border py-1 w-48 z-10"
                       >
                         <button
                           onClick={() => {
                             handleArchive();
                             setShowActions(false);
                           }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
                         >
                           <Archive className="w-4 h-4" />
                           {note.isArchived ? 'Unarchive' : 'Archive'}
@@ -418,7 +418,7 @@ export default function NoteDetailRoute() {
                             setShowHistory(true);
                             setShowActions(false);
                           }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
                         >
                           <History className="w-4 h-4" />
                           Version History
@@ -428,12 +428,12 @@ export default function NoteDetailRoute() {
                             setShowActions(false);
                             // Share functionality
                           }}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
                         >
                           <Share2 className="w-4 h-4" />
                           Share
                         </button>
-                        <div className="border-t border-gray-100 my-1" />
+                        <div className="border-t border-linear-border my-1" />
                         <button
                           onClick={() => {
                             handleDelete();
@@ -459,7 +459,7 @@ export default function NoteDetailRoute() {
         {/* Left column - Content & Comments */}
         <div className="lg:col-span-2 space-y-6">
           {/* Content */}
-          <div className="bg-white rounded-xl border border-gray-200">
+          <div className="bg-linear-surface rounded-xl border border-linear-border">
             {isEditing ? (
               <div className="p-6">
                 <RichTextEditor
@@ -482,7 +482,7 @@ export default function NoteDetailRoute() {
                 ) : (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-gray-400 hover:text-gray-600 italic"
+                    className="text-linear-text-tertiary hover:text-linear-text-secondary italic"
                   >
                     Click to add content...
                   </button>
@@ -492,8 +492,8 @@ export default function NoteDetailRoute() {
           </div>
 
           {/* Comments */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-6">
+            <h3 className="font-semibold text-linear-text mb-4 flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Comments ({note.comments.length})
             </h3>
@@ -509,7 +509,7 @@ export default function NoteDetailRoute() {
                     exit={{ opacity: 0 }}
                     className="flex gap-3"
                   >
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-linear-elevated rounded-full flex items-center justify-center flex-shrink-0">
                       {comment.creator.image ? (
                         <img
                           src={comment.creator.image}
@@ -523,14 +523,14 @@ export default function NoteDetailRoute() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-linear-elevated/50 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-sm">{comment.creator.name || 'Unknown'}</span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-linear-text-tertiary">
                             {new Date(comment.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                        <p className="text-linear-text-secondary text-sm">{comment.content}</p>
                       </div>
 
                       {/* Reactions */}
@@ -538,7 +538,7 @@ export default function NoteDetailRoute() {
                         {comment.reactions.map((reaction) => (
                           <button
                             key={reaction.id}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm transition-colors"
+                            className="flex items-center gap-1 px-2 py-0.5 bg-linear-elevated hover:bg-linear-elevated rounded-full text-sm transition-colors"
                             title={reaction.user.name}
                           >
                             <span>{reaction.emoji}</span>
@@ -548,9 +548,9 @@ export default function NoteDetailRoute() {
                         <div className="relative">
                           <button
                             onClick={() => setShowEmojiPicker(showEmojiPicker === comment.id ? null : comment.id)}
-                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            className="p-1 hover:bg-linear-elevated rounded transition-colors"
                           >
-                            <Smile className="w-4 h-4 text-gray-400" />
+                            <Smile className="w-4 h-4 text-linear-text-tertiary" />
                           </button>
 
                           <AnimatePresence>
@@ -559,14 +559,14 @@ export default function NoteDetailRoute() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 p-2 z-10"
+                                className="absolute left-0 top-full mt-1 bg-linear-surface shadow-lg rounded-lg border border-linear-border p-2 z-10"
                               >
                                 <div className="flex gap-1">
                                   {['👍', '👎', '😄', '🎉', '😕', '❤️', '🚀', '👀'].map((emoji) => (
                                     <button
                                       key={emoji}
                                       onClick={() => addReactionMutation.mutate({ commentId: comment.id, emoji })}
-                                      className="p-1 hover:bg-gray-100 rounded text-lg"
+                                      className="p-1 hover:bg-linear-elevated rounded text-lg"
                                     >
                                       {emoji}
                                     </button>
@@ -585,7 +585,7 @@ export default function NoteDetailRoute() {
 
             {/* Add comment */}
             <form onSubmit={handleAddComment} className="flex gap-3">
-              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-medium">
+              <div className="w-8 h-8 bg-linear-accent rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-medium">
                 {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
@@ -593,14 +593,14 @@ export default function NoteDetailRoute() {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Add a comment..."
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 focus:border-transparent resize-none"
                   rows={3}
                 />
                 <div className="flex justify-end mt-2">
                   <button
                     type="submit"
                     disabled={!commentText.trim() || addCommentMutation.isPending}
-                    className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     {addCommentMutation.isPending ? (
                       'Sending...'
@@ -620,14 +620,14 @@ export default function NoteDetailRoute() {
         {/* Right column - Sidebar */}
         <div className="space-y-4">
           {/* Subpages */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Subpages</h4>
+              <h4 className="text-sm font-medium text-linear-text-secondary uppercase tracking-wider">Subpages</h4>
               <button
                 onClick={() => setShowNewSubpage(true)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-linear-elevated rounded transition-colors"
               >
-                <Plus className="w-4 h-4 text-gray-500" />
+                <Plus className="w-4 h-4 text-linear-text-secondary" />
               </button>
             </div>
 
@@ -652,14 +652,14 @@ export default function NoteDetailRoute() {
                       }
                     }}
                     placeholder="New subpage title..."
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-linear-border rounded-lg text-sm focus:ring-2 focus:ring-linear-accent/40"
                     autoFocus
                   />
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={() => createSubpageMutation.mutate(newSubpageTitle)}
                       disabled={!newSubpageTitle.trim() || createSubpageMutation.isPending}
-                      className="text-xs bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white px-3 py-1 rounded transition-colors"
+                      className="text-xs bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-3 py-1 rounded transition-colors"
                     >
                       Create
                     </button>
@@ -668,7 +668,7 @@ export default function NoteDetailRoute() {
                         setShowNewSubpage(false);
                         setNewSubpageTitle('');
                       }}
-                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                      className="text-xs text-linear-text-secondary hover:text-linear-text-secondary px-2 py-1"
                     >
                       Cancel
                     </button>
@@ -683,7 +683,7 @@ export default function NoteDetailRoute() {
                   <Link
                     key={child.id}
                     to={`/${workspace}/notes/${child.slug}`}
-                    className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+                    className="flex items-center gap-2 p-2 hover:bg-linear-elevated/50 rounded-lg transition-colors text-sm"
                   >
                     <span>{child.emoji || '📄'}</span>
                     <span className="flex-1 truncate">{child.title}</span>
@@ -691,19 +691,19 @@ export default function NoteDetailRoute() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No subpages yet</p>
+              <p className="text-sm text-linear-text-tertiary">No subpages yet</p>
             )}
           </div>
 
           {/* Subscribe */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Notifications</h4>
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <h4 className="text-sm font-medium text-linear-text-secondary uppercase tracking-wider mb-3">Notifications</h4>
             <button
               onClick={() => updateMutation.mutate({ isSubscribed: !note.isSubscribed })}
               className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
                 note.isSubscribed
-                  ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-linear-accent/20 text-linear-accent hover:bg-linear-accent/30'
+                  : 'bg-linear-elevated text-linear-text-secondary hover:bg-linear-elevated'
               }`}
             >
               {note.isSubscribed ? 'Subscribed' : 'Subscribe'}
@@ -711,8 +711,8 @@ export default function NoteDetailRoute() {
           </div>
 
           {/* File Uploads */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Attachments</h4>
+          <div className="bg-linear-surface rounded-xl border border-linear-border p-4">
+            <h4 className="text-sm font-medium text-linear-text-secondary uppercase tracking-wider mb-3">Attachments</h4>
             <FileUploader
               workspaceId={workspace!}
               onUploadComplete={() => {

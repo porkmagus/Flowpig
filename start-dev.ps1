@@ -5,6 +5,20 @@ Write-Host "FlowPig Dev Environment Quick Start" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
+# Kill any process occupying port 3001 (API) or 5173 (Web)
+foreach ($port in @(3001, 5173)) {
+    $pids = netstat -aon | Select-String ":$port " | ForEach-Object {
+        ($_ -split '\s+')[-1]
+    } | Sort-Object -Unique
+    foreach ($pid in $pids) {
+        if ($pid -match '^\d+$' -and $pid -ne '0') {
+            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+Write-Host "Ports 3001 and 5173 cleared." -ForegroundColor DarkGray
+Write-Host ""
+
 # Check if Docker containers are running
 $postgresRunning = docker ps | Select-String "flowpig-postgres-dev"
 if (-not $postgresRunning) {

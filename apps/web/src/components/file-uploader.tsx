@@ -136,7 +136,7 @@ export function FileUploader({
     if (file.type.startsWith('image/')) {
       return <ImageIcon className="w-5 h-5 text-blue-500" />;
     }
-    return <File className="w-5 h-5 text-gray-500" />;
+    return <File className="w-5 h-5 text-linear-text-secondary" />;
   };
 
   return (
@@ -151,14 +151,14 @@ export function FileUploader({
         whileTap={{ scale: 0.99 }}
         className={`
           border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
-          ${isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}
+          ${isDragging ? 'border-linear-accent bg-linear-accent/10' : 'border-linear-border hover:border-linear-border-hover'}
         `}
       >
-        <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-600 font-medium">
+        <Upload className="w-10 h-10 text-linear-text-tertiary mx-auto mb-3" />
+        <p className="text-linear-text-secondary font-medium">
           Drop files here or click to upload
         </p>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-linear-text-tertiary mt-1">
           Max {maxSize}MB per file
         </p>
         <input
@@ -186,23 +186,23 @@ export function FileUploader({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-linear-elevated/50 rounded-lg"
               >
                 {getFileIcon(fileUpload.file)}
                 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-linear-text truncate">
                     {fileUpload.file.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-linear-text-secondary">
                     {(fileUpload.file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                   
                   {/* Progress bar */}
                   {fileUpload.status === 'uploading' && (
-                    <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="mt-1 h-1 bg-linear-elevated rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-primary-500"
+                        className="h-full bg-linear-accent"
                         initial={{ width: 0 }}
                         animate={{ width: `${fileUpload.progress}%` }}
                       />
@@ -220,9 +220,9 @@ export function FileUploader({
 
                 <button
                   onClick={() => removeFile(fileUpload.id)}
-                  className="p-1 hover:bg-gray-200 rounded transition-colors"
+                  className="p-1 hover:bg-linear-elevated rounded transition-colors"
                 >
-                  <X className="w-4 h-4 text-gray-400" />
+                  <X className="w-4 h-4 text-linear-text-tertiary" />
                 </button>
               </motion.div>
             ))}

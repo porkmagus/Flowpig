@@ -105,19 +105,19 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 overflow-hidden flex flex-col"
+            className="fixed right-0 top-0 h-full w-96 bg-linear-surface shadow-2xl z-50 overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <History className="w-5 h-5 text-gray-500" />
+            <div className="flex items-center justify-between p-4 border-b border-linear-border">
+              <h2 className="font-semibold text-linear-text flex items-center gap-2">
+                <History className="w-5 h-5 text-linear-text-secondary" />
                 Version History
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-linear-text-secondary" />
               </button>
             </div>
 
@@ -125,12 +125,12 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
             <div className="flex-1 overflow-y-auto p-4">
               {isLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" />
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-linear-accent" />
                 </div>
               ) : versions.length === 0 ? (
                 <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No history available</p>
+                  <FileText className="w-12 h-12 text-linear-text-tertiary mx-auto mb-3" />
+                  <p className="text-linear-text-secondary">No history available</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -142,8 +142,8 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
                       transition={{ delay: index * 0.05 }}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                         selectedVersion === version.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-linear-accent bg-linear-accent/10'
+                          : 'border-linear-border hover:border-linear-border-hover hover:bg-linear-elevated/50'
                       }`}
                       onClick={() => setSelectedVersion(
                         selectedVersion === version.id ? null : version.id
@@ -157,22 +157,22 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
                                 Current
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                              <span className="px-2 py-0.5 bg-linear-elevated text-linear-text-secondary rounded text-xs font-medium">
                                 v{version.version}
                               </span>
                             )}
                             {version.changeDescription && (
-                              <span className="text-xs text-gray-500 truncate">
+                              <span className="text-xs text-linear-text-secondary truncate">
                                 {version.changeDescription}
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
                             <Clock className="w-3 h-3" />
                             {formatDate(version.createdAt)}
                           </div>
                           {version.createdBy && (
-                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 mt-2 text-sm text-linear-text-secondary">
                               <User className="w-3 h-3" />
                               <span>{version.createdBy.name || 'Unknown'}</span>
                             </div>
@@ -187,7 +187,7 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
                               restoreMutation.mutate(version.id);
                             }}
                             disabled={restoreMutation.isPending}
-                            className="ml-2 px-3 py-1.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                            className="ml-2 px-3 py-1.5 bg-linear-accent text-white rounded-lg text-sm font-medium hover:bg-linear-accent/80 transition-colors disabled:opacity-50 flex items-center gap-1"
                           >
                             <RotateCcw className="w-3 h-3" />
                             Restore
@@ -200,13 +200,13 @@ export function NoteHistory({ workspaceId, noteId, isOpen, onClose }: NoteHistor
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
-                          className="mt-3 pt-3 border-t border-gray-200"
+                          className="mt-3 pt-3 border-t border-linear-border"
                         >
-                          <div className="bg-gray-50 rounded p-3">
-                            <p className="text-sm font-medium text-gray-900">
+                          <div className="bg-linear-elevated/50 rounded p-3">
+                            <p className="text-sm font-medium text-linear-text">
                               {version.snapshot.emoji} {version.snapshot.title}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-linear-text-secondary mt-1">
                               Content snapshot available
                             </p>
                           </div>

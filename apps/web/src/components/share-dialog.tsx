@@ -165,11 +165,11 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl p-6 w-full max-w-lg">
+        <div className="bg-linear-surface rounded-xl p-6 w-full max-w-lg">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/3" />
-            <div className="h-8 bg-gray-200 rounded" />
-            <div className="h-8 bg-gray-200 rounded" />
+            <div className="h-4 bg-linear-elevated rounded w-1/3" />
+            <div className="h-8 bg-linear-elevated rounded" />
+            <div className="h-8 bg-linear-elevated rounded" />
           </div>
         </div>
       </div>
@@ -178,23 +178,23 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
+      <div className="bg-linear-surface rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-linear-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Share2 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Share</h2>
-              <p className="text-sm text-gray-500">{data?.note.title}</p>
+              <h2 className="font-semibold text-linear-text">Share</h2>
+              <p className="text-sm text-linear-text-secondary">{data?.note.title}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-linear-elevated rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-linear-text-secondary" />
           </button>
         </div>
 
@@ -202,7 +202,7 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
         <div className="overflow-y-auto max-h-[60vh]">
           {/* Public Access Selector */}
           <div className="p-4 space-y-3">
-            <label className="text-sm font-medium text-gray-700">Who can access</label>
+            <label className="text-sm font-medium text-linear-text-secondary">Who can access</label>
             <div className="space-y-2">
               {accessLevels.map((level) => {
                 const Icon = level.icon;
@@ -213,23 +213,23 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
                     disabled={updatePublicAccess.isPending}
                     className={`w-full flex items-start gap-3 p-3 rounded-lg border transition-all ${
                       data?.note.publicAccess === level.value
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-linear-accent bg-linear-accent/10'
+                        : 'border-linear-border hover:border-linear-border-hover'
                     }`}
                   >
                     <Icon className={`w-5 h-5 mt-0.5 ${
-                      data?.note.publicAccess === level.value ? 'text-primary-600' : 'text-gray-500'
+                      data?.note.publicAccess === level.value ? 'text-linear-accent' : 'text-linear-text-secondary'
                     }`} />
                     <div className="text-left">
                       <div className={`font-medium ${
-                        data?.note.publicAccess === level.value ? 'text-primary-900' : 'text-gray-900'
+                        data?.note.publicAccess === level.value ? 'text-linear-accent' : 'text-linear-text'
                       }`}>
                         {level.label}
                       </div>
-                      <div className="text-sm text-gray-500">{level.description}</div>
+                      <div className="text-sm text-linear-text-secondary">{level.description}</div>
                     </div>
                     {data?.note.publicAccess === level.value && (
-                      <Check className="w-5 h-5 text-primary-600 ml-auto" />
+                      <Check className="w-5 h-5 text-linear-accent ml-auto" />
                     )}
                   </button>
                 );
@@ -240,20 +240,20 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
           {/* Share Link */}
           {data?.note.publicAccess !== 'PRIVATE' && data?.note.publicUrl && (
             <div className="px-4 pb-4">
-              <label className="text-sm font-medium text-gray-700">Share link</label>
+              <label className="text-sm font-medium text-linear-text-secondary">Share link</label>
               <div className="flex items-center gap-2 mt-2">
-                <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                  <Link className="w-4 h-4 text-gray-400" />
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-linear-elevated/50 border border-linear-border rounded-lg">
+                  <Link className="w-4 h-4 text-linear-text-tertiary" />
                   <input
                     type="text"
                     value={data.note.publicUrl}
                     readOnly
-                    className="flex-1 bg-transparent text-sm text-gray-600 outline-none"
+                    className="flex-1 bg-transparent text-sm text-linear-text-secondary outline-none"
                   />
                 </div>
                 <button
                   onClick={copyLink}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-linear-accent text-white rounded-lg hover:bg-linear-accent/80 transition-colors"
                 >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
@@ -263,24 +263,24 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
           )}
 
           {/* Invite People */}
-          <div className="border-t border-gray-200 p-4">
-            <label className="text-sm font-medium text-gray-700">Invite people</label>
+          <div className="border-t border-linear-border p-4">
+            <label className="text-sm font-medium text-linear-text-secondary">Invite people</label>
             <form onSubmit={handleInvite} className="mt-2 space-y-2">
               <div className="flex gap-2">
                 <div className="flex-1 relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
                   <input
                     type="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     placeholder="Enter email address..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
                   />
                 </div>
                 <select
                   value={selectedPermission}
                   onChange={(e) => setSelectedPermission(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="px-3 py-2 border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
                 >
                   {permissions.map((p) => (
                     <option key={p.value} value={p.value}>{p.label}</option>
@@ -289,7 +289,7 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
                 <button
                   type="submit"
                   disabled={!emailInput.trim() || inviteMutation.isPending}
-                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-linear-accent text-white rounded-lg hover:bg-linear-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <UserPlus className="w-4 h-4" />
                 </button>
@@ -299,17 +299,17 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
             {/* Shared With List */}
             {data?.shares && data.shares.length > 0 && (
               <div className="mt-4 space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-linear-text-secondary">
                   Shared with {data.shares.length} people
                 </label>
                 <div className="space-y-1">
                   {data.shares.map((share) => (
                     <div
                       key={share.id}
-                      className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-2 hover:bg-linear-elevated/50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-linear-elevated rounded-full flex items-center justify-center">
                           {share.user?.image ? (
                             <img
                               src={share.user.image}
@@ -323,10 +323,10 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-linear-text">
                             {share.user?.name || share.email}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-linear-text-secondary">
                             {permissions.find(p => p.value === share.permission)?.label}
                             {!share.user && <span className="ml-2">(pending)</span>}
                           </div>
@@ -335,7 +335,7 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
                       <button
                         onClick={() => removeShareMutation.mutate(share.id)}
                         disabled={removeShareMutation.isPending}
-                        className="p-2 hover:bg-red-100 rounded-lg text-gray-400 hover:text-red-600 transition-colors"
+                        className="p-2 hover:bg-red-100 rounded-lg text-linear-text-tertiary hover:text-red-600 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
