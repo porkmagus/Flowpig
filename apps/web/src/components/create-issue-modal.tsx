@@ -350,7 +350,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                     onClick={() => applyTemplate(template.id)}
                     className="flex items-start gap-3 p-4 rounded-lg border border-linear-border hover:border-linear-accent hover:bg-linear-accent-light/50 transition-all text-left"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-linear-accent-light flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-linear-accent-light flex items-center justify-center shrink-0">
                       <template.icon className="w-5 h-5 text-linear-accent" />
                     </div>
                     <div>
