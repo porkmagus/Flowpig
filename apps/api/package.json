@@ -22,11 +22,11 @@
     "fastify-plugin": "5.1.0",
     "openai": "6.34.0",
     "stripe": "^16.0.0",
+    "tsx": "4.21.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "22.19.17",
-    "tsx": "4.21.0",
     "typescript": "5.9.3"
   }
 }
