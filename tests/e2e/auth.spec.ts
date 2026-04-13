@@ -6,9 +6,11 @@ test.describe('Login page', () => {
   });
 
   test('renders login form', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /sign in|log in|welcome back/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/email/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/password/i)).toBeVisible();
+    // The AuthShell renders the title in an <h2>
+    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+    // Actual placeholder values in login.tsx
+    await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
+    await expect(page.getByPlaceholder('Enter your password')).toBeVisible();
   });
 
   test('submit button is visible and not white', async ({ page }) => {
@@ -21,9 +23,9 @@ test.describe('Login page', () => {
   });
 
   test('shows inline error on empty submit', async ({ page }) => {
-    await page.getByRole('button', { name: /sign in|log in|continue/i }).click();
-    // An error or native validation should appear — either HTML5 or our error banner
-    const emailField = page.getByPlaceholder(/email/i);
+    await page.getByRole('button', { name: /sign in/i }).click();
+    // The email field is required; native browser validity should flag valueMissing
+    const emailField = page.getByPlaceholder('you@example.com');
     const validity = await emailField.evaluate(
       (el: HTMLInputElement) => el.validity.valueMissing
     );
@@ -31,7 +33,8 @@ test.describe('Login page', () => {
   });
 
   test('link to signup is present', async ({ page }) => {
-    const signupLink = page.getByRole('link', { name: /sign up|create account/i });
+    // The footer link text in login.tsx is "Create one"
+    const signupLink = page.getByRole('link', { name: 'Create one' });
     await expect(signupLink).toBeVisible();
   });
 
@@ -49,13 +52,14 @@ test.describe('Signup page', () => {
   });
 
   test('renders signup form with all fields', async ({ page }) => {
-    await expect(page.getByPlaceholder(/full name|your name/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/email/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/password/i).first()).toBeVisible();
+    // Actual placeholder values in signup.tsx
+    await expect(page.getByPlaceholder('Jane Doe')).toBeVisible();
+    await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
+    await expect(page.getByPlaceholder('Create a strong password')).toBeVisible();
   });
 
   test('password strength bar appears when typing', async ({ page }) => {
-    const passwordField = page.getByPlaceholder(/password/i).first();
+    const passwordField = page.getByPlaceholder('Create a strong password');
     await passwordField.fill('weak');
     // A strength indicator should be visible
     const strengthBar = page.locator('[data-testid="password-strength"], .password-strength, [class*="strength"]');
@@ -69,10 +73,10 @@ test.describe('Signup page', () => {
   });
 
   test('shows validation error for short password', async ({ page }) => {
-    await page.getByPlaceholder(/full name|your name/i).fill('Test User');
-    await page.getByPlaceholder(/email/i).fill('test@example.com');
-    await page.getByPlaceholder(/password/i).first().fill('short');
-    await page.getByRole('button', { name: /create account|sign up|get started/i }).click();
+    await page.getByPlaceholder('Jane Doe').fill('Test User');
+    await page.getByPlaceholder('you@example.com').fill('test@example.com');
+    await page.getByPlaceholder('Create a strong password').fill('short');
+    await page.getByRole('button', { name: /create account/i }).click();
     // Should show an error or fail validation
     const error = page.getByRole('alert').or(page.getByText(/8 characters|too short/i));
     await expect(error).toBeVisible({ timeout: 3000 }).catch(() => {
@@ -81,7 +85,8 @@ test.describe('Signup page', () => {
   });
 
   test('link to login is present', async ({ page }) => {
-    const loginLink = page.getByRole('link', { name: /sign in|log in|already have/i });
+    // The footer link text in signup.tsx is "Sign in"
+    const loginLink = page.getByRole('link', { name: 'Sign in' });
     await expect(loginLink).toBeVisible();
   });
 });
