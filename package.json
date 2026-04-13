@@ -31,6 +31,7 @@
     "prod:ps": "docker compose -f compose.prod.yml ps"
   },
   "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.52.4",
     "typescript": "5.9.3",
     "vite": "^7.3.2"
   },

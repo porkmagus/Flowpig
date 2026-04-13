@@ -123,29 +123,39 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.AccountScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  accountId: 'accountId',
+  providerId: 'providerId',
   type: 'type',
-  provider: 'provider',
-  providerAccountId: 'providerAccountId',
-  refresh_token: 'refresh_token',
-  access_token: 'access_token',
-  expires_at: 'expires_at',
-  token_type: 'token_type',
+  refreshToken: 'refreshToken',
+  accessToken: 'accessToken',
+  accessTokenExpiresAt: 'accessTokenExpiresAt',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  tokenType: 'tokenType',
   scope: 'scope',
-  id_token: 'id_token',
-  session_state: 'session_state'
+  idToken: 'idToken',
+  sessionState: 'sessionState',
+  password: 'password',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SessionScalarFieldEnum = {
   id: 'id',
-  sessionToken: 'sessionToken',
+  token: 'token',
   userId: 'userId',
-  expires: 'expires'
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent'
 };
 
 exports.Prisma.VerificationTokenScalarFieldEnum = {
   identifier: 'identifier',
-  token: 'token',
-  expires: 'expires'
+  value: 'value',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.WorkspaceScalarFieldEnum = {
@@ -777,7 +787,6 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  password: 'password',
   notificationPreferences: 'notificationPreferences'
 };
 

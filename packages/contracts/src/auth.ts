@@ -30,7 +30,7 @@ export interface AuthUser {
   email: string;
   name: string | null;
   image: string | null;
-  emailVerified: Date | null;
+  emailVerified: boolean;
 }
 
 export interface AuthSession {

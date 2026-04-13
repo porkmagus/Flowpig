@@ -18,15 +18,16 @@ interface Workspace {
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#0D0D0D',
+    background: 'radial-gradient(circle at top left, rgba(94,106,210,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(13,155,106,0.1), transparent 28%), linear-gradient(180deg, #111318 0%, #090B0F 100%)',
     padding: '3rem 1rem',
   },
   card: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(18, 20, 24, 0.9)',
     borderRadius: '1rem',
     padding: '2.5rem',
     border: '1px solid #2A2A2A',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
+    backdropFilter: 'blur(18px)',
   },
   header: {
     textAlign: 'center' as const,

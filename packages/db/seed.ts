@@ -8,14 +8,14 @@ config({ path: resolve(__dirname, '../../.env.dev') });
 
 // Now import prisma after env vars are loaded
 const { prisma } = await import('./src/client.js');
-import { hash } from 'bcryptjs';
+import { hashPassword } from '@better-auth/utils/password';
 import type { IssueState, Priority } from './prisma/generated/prisma/index.js';
 
 async function main() {
   console.log('🌱 Seeding database...');
 
   // Create test user
-  const passwordHash = await hash('testpassword123', 12);
+  const passwordHash = await hashPassword('testpassword123');
   
   const user = await prisma.user.upsert({
     where: { email: 'test@flowpig.dev' },
@@ -24,12 +24,31 @@ async function main() {
       id: 'usr_test_admin_001',
       email: 'test@flowpig.dev',
       name: 'Test User',
-      password: passwordHash,
-      emailVerified: new Date(),
+      emailVerified: true,
     },
   });
 
   console.log('✅ Created test user:', user.email);
+
+  await prisma.account.upsert({
+    where: {
+      providerId_accountId: {
+        providerId: 'credential',
+        accountId: user.id,
+      },
+    },
+    update: {
+      password: passwordHash,
+    },
+    create: {
+      userId: user.id,
+      providerId: 'credential',
+      accountId: user.id,
+      password: passwordHash,
+    },
+  });
+
+  console.log('✅ Created credential account for test user');
 
   // Create sample workspace
   const workspace = await prisma.workspace.upsert({

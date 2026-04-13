@@ -14,17 +14,17 @@
     "migrate": "prisma migrate dev",
     "deploy": "prisma migrate deploy",
     "studio": "prisma studio",
-    "seed": "tsx seed.ts",
+    "seed": "node --import tsx seed.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/utils": "^0.4.0",
     "@prisma/client": "^7.7.0",
-    "bcryptjs": "^3.0.3"
+    "pg": "^8.20.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.20.0",
-    "prisma": "^6.19.3",
+    "prisma": "^7.7.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

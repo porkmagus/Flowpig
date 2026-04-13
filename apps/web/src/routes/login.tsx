@@ -31,7 +31,7 @@ export default function LoginRoute() {
     container: {
       minHeight: '100vh',
       display: 'flex',
-      backgroundColor: '#0D0D0D',
+      background: 'radial-gradient(circle at top left, rgba(94,106,210,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(13,155,106,0.1), transparent 28%), linear-gradient(180deg, #111318 0%, #090B0F 100%)',
     },
     leftPanel: {
       flex: 1,
@@ -52,6 +52,9 @@ export default function LoginRoute() {
       padding: '4rem',
       maxWidth: '440px',
       margin: '0 auto',
+      backgroundColor: 'rgba(255,255,255,0.02)',
+      borderLeft: '1px solid rgba(255,255,255,0.04)',
+      backdropFilter: 'blur(14px)',
     },
     logo: {
       display: 'flex',
@@ -102,11 +105,12 @@ export default function LoginRoute() {
       padding: '0.875rem 1rem',
       borderRadius: '0.5rem',
       border: '1px solid #2A2A2A',
-      backgroundColor: '#1A1A1A',
+      backgroundColor: 'rgba(255,255,255,0.03)',
       color: '#FFFFFF',
       fontSize: '0.9375rem',
       outline: 'none',
       transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
     },
     passwordWrapper: {
       position: 'relative' as const,

@@ -14,7 +14,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // This plugin is mounted at `/auth`, so match the remaining path only once.
   fastify.all('/*', async (request: FastifyRequest, reply: FastifyReply) => {
     const auth = fastify.auth;
-    const baseURL = process.env.BETTER_AUTH_URL ?? 'http://127.0.0.1:3001';
+    const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001';
     const url = new URL(request.url, baseURL);
 
     const headers = new Headers(request.headers as Record<string, string>);
