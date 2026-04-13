@@ -1,0 +1,24 @@
+{
+  "name": "flowpigdev",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @flowpigdev/web run dev",
+    "dev:api": "npm --workspace @flowpigdev/api run dev",
+    "dev:infra": "docker compose -f ops/docker/compose.dev.yml --env-file .env.dev up -d",
+    "dev:infra:down": "docker compose -f ops/docker/compose.dev.yml --env-file .env.dev down",
+    "db:generate": "npm --workspace @flowpigdev/db run generate",
+    "db:migrate": "npm --workspace @flowpigdev/db run migrate",
+    "db:deploy": "npm --workspace @flowpigdev/db run deploy",
+    "db:seed": "npm --workspace @flowpigdev/db run seed",
+    "db:studio": "npm --workspace @flowpigdev/db run studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}
