@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../scripts/check-native-deps.cjs",
     "dev": "react-router dev",
+    "prebuild": "node ../../scripts/check-native-deps.cjs",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc --noEmit"
