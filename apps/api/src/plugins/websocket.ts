@@ -64,7 +64,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
           case 'auth':
             // Authenticate client with session token
             try {
-              const response = await fetch(`${process.env.BETTER_AUTH_URL}/auth/session`, {
+              const response = await fetch(`${process.env.BETTER_AUTH_URL}/auth/get-session`, {
                 headers: {
                   'Cookie': `better-auth.session_token=${message.token}`,
                 },

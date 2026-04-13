@@ -24,6 +24,7 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
     database: prismaAdapter(prisma, { provider: 'postgresql' }),
     secret: process.env.BETTER_AUTH_SECRET!,
     baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+    basePath: '/auth',
     trustedOrigins: process.env.NODE_ENV === 'development'
       ? ['http://localhost:5173', 'http://127.0.0.1:5173']
       : [process.env.APP_URL!].filter(Boolean),

@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from 'react-router';
 
 const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  basePath: '/auth',
   fetchOptions: {
     credentials: 'include',
     headers: {

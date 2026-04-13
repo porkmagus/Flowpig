@@ -31,7 +31,8 @@
     "prod:ps": "docker compose -f compose.prod.yml ps"
   },
   "devDependencies": {
-    "typescript": "6.0.0"
+    "typescript": "5.9.3",
+    "vite": "^7.3.2"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",

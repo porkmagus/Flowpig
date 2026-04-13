@@ -4,8 +4,8 @@ import { resolve } from 'path';
 // Load environment variables
 config({ path: resolve(process.cwd(), '../../.env.dev') });
 
-import Fastify from 'fastify';
-import { app } from './app.js';
+const { default: Fastify } = await import('fastify');
+const { app } = await import('./app.js');
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -22,7 +22,7 @@ async function start() {
 
     await server.listen({ port: PORT, host: HOST });
 
-    console.log(`🚀 API server running on https://${HOST}:${PORT}`);
+    console.log(`API server running on http://${HOST}:${PORT}`);
   } catch (err) {
     console.error('❌ Failed to start server:', err);
     process.exit(1);

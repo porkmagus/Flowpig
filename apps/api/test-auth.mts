@@ -41,8 +41,8 @@ async function waitAndTest() {
   }
 
   // Test auth session (no auth)
-  const session = await fetchUrl('/auth/session');
-  console.log('GET /auth/session:', session.status, session.body.substring(0, 200));
+  const session = await fetchUrl('/auth/get-session');
+  console.log('GET /auth/get-session:', session.status, session.body.substring(0, 200));
 
   // Test sign-in
   const signin = await fetchUrl('/auth/sign-in/email', 'POST', { email: 'test@flowpig.dev', password: 'testpassword123' });

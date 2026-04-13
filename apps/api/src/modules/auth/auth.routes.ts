@@ -1,27 +1,21 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 function addContentTypeParser(fastify: FastifyInstance) {
-  // Remove any existing parser
+  // Better Auth expects access to the raw request body for its own parsing.
   fastify.removeAllContentTypeParsers();
-  
-  // Add raw body parser for everything
-  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, async (_req, body) => {
+  fastify.addContentTypeParser('*', { parseAs: 'buffer' }, async (_req: FastifyRequest, body: Buffer) => {
     return body;
   });
 }
 
 export default async function authRoutes(fastify: FastifyInstance) {
-  // Add a body parser that preserves raw body
   addContentTypeParser(fastify);
 
-  // Catch-all route for the auth paths
-  fastify.all('/auth/*', async (request: FastifyRequest, reply: FastifyReply) => {
+  // This plugin is mounted at `/auth`, so match the remaining path only once.
+  fastify.all('/*', async (request: FastifyRequest, reply: FastifyReply) => {
     const auth = fastify.auth;
-    const baseURL = process.env.BETTER_AUTH_URL ?? `http://127.0.0.1:3001`;
-    
-    // Reconstruct full request URL
-    const path = request.url.replace('/auth', '');
-    const url = new URL(path, baseURL);
+    const baseURL = process.env.BETTER_AUTH_URL ?? 'http://127.0.0.1:3001';
+    const url = new URL(request.url, baseURL);
 
     const headers = new Headers(request.headers as Record<string, string>);
     const rawBody = request.body as Buffer | undefined;
@@ -36,7 +30,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
       const req = new Request(url, init);
       const response = await auth.handler(req);
       
-      // Forward headers
       for (const [key, value] of response.headers.entries()) {
         if (key === 'set-cookie') {
           const cookies = Array.isArray(value) ? value : [value];
