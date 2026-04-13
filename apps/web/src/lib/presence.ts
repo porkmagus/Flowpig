@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '~/lib/auth-client';
+import { WS_URL } from './runtime-config';
 
 interface PresenceUser {
   userId: string;
@@ -32,7 +33,7 @@ export function usePresence(workspaceId: string, pageType: 'issue' | 'note', pag
     if (!user || !pageId) return;
 
     const connectWebSocket = () => {
-      const ws = new WebSocket(`${process.env.API_URL?.replace('http', 'ws') || 'ws://localhost:3001'}/ws`);
+      const ws = new WebSocket(WS_URL);
       wsRef.current = ws;
 
       ws.onopen = () => {

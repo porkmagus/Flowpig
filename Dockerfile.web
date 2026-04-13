@@ -29,7 +29,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/ui/package.json ./packages/ui/
 
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY apps/web ./apps/web
 COPY packages/contracts ./packages/contracts

@@ -326,7 +326,7 @@ export default function OnboardingRoute() {
                 </button>
               </div>
               <p style={styles.urlPreview}>
-                Your workspace URL will be: flowpig.dev/{newWorkspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'your-workspace'}
+                Your workspace URL will be: app.flowpig.dev/{newWorkspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'your-workspace'}
               </p>
             </form>
           )}
