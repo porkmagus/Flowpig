@@ -11,7 +11,7 @@ export const UpdateWorkspaceSchema = z.object({
   description: z.string().max(500).optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   icon: z.string().optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.any().optional(),
 });
 
 export type CreateWorkspaceInput = z.infer<typeof CreateWorkspaceSchema>;

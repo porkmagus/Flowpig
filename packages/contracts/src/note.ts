@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 export const CreateNoteSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
-  content: z.record(z.any()).default({ type: 'doc', content: [] }),
+  content: z.record(z.string(), z.any()).default({ type: 'doc', content: [] }),
   emoji: z.string().optional(),
   parentId: z.string().optional(),
 });
 
 export const UpdateNoteSchema = z.object({
   title: z.string().min(1).max(200).optional(),
-  content: z.record(z.any()).optional(),
+  content: z.record(z.string(), z.any()).optional(),
   emoji: z.string().optional(),
   coverImage: z.string().optional(),
   isArchived: z.boolean().optional(),

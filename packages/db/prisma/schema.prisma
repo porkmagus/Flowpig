@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Better Auth Tables
@@ -243,6 +242,7 @@ model Team {
   description        String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
   autoCloseDays      Int?                @map("auto_close_days")
   autoCloseStateId   String?             @map("auto_close_state_id")
   autoArchiveDays    Int?                @map("auto_archive_days")
@@ -459,6 +459,7 @@ model Cycle {
   completedAt DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
   sprintGoal  String?
   capacity    Int?
   team        Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -862,10 +863,12 @@ model Notification {
   isRead      Boolean          @default(false)
   readAt      DateTime?
   createdAt   DateTime         @default(now())
+  deletedAt   DateTime?
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("notifications")
 }
 

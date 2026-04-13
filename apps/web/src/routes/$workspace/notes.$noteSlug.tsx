@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Clock,
   Edit3,
+  History,
 } from 'lucide-react';
+import { NoteHistory } from '~/components/note-history';
 
 interface Comment {
   id: string;
@@ -98,6 +100,7 @@ export default function NoteDetailRoute() {
   const [showActions, setShowActions] = useState(false);
   const [showNewSubpage, setShowNewSubpage] = useState(false);
   const [newSubpageTitle, setNewSubpageTitle] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['note', workspace, noteSlug],
@@ -412,6 +415,16 @@ export default function NoteDetailRoute() {
                         </button>
                         <button
                           onClick={() => {
+                            setShowHistory(true);
+                            setShowActions(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                        >
+                          <History className="w-4 h-4" />
+                          Version History
+                        </button>
+                        <button
+                          onClick={() => {
                             setShowActions(false);
                             // Share functionality
                           }}
@@ -710,6 +723,14 @@ export default function NoteDetailRoute() {
           </div>
         </div>
       </div>
+
+      {/* History Panel */}
+      <NoteHistory
+        workspaceId={workspace!}
+        noteId={note.id}
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
     </AnimatedPage>
   );
 }

@@ -1,0 +1,75 @@
+# ============================================
+# Docker Ignore for API Service
+# ============================================
+# These files/directories are excluded from Docker build context
+# to keep the build fast and the image small.
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Environment files (security - never copy these!)
+.env
+.env.*
+!.env.example
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+coverage
+.nyc_output
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Docker files (we don't need these inside the container)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Prisma (we'll generate client in the container)
+# Note: We DO need the schema.prisma file, just not the generated client
+packages/db/prisma/generated
+
+# Uploads (these are mounted as volumes)
+data/uploads

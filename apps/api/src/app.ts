@@ -17,6 +17,9 @@ import searchRoutes from './modules/search/search.routes.js';
 import databaseRoutes from './modules/databases/databases.routes.js';
 import cycleRoutes from './modules/cycles/cycles.routes.js';
 import teamRoutes from './modules/teams/teams.routes.js';
+import triageRoutes from './modules/triage/triage.routes.js';
+import roadmapRoutes from './modules/roadmap/roadmap.routes.js';
+import historyRoutes from './modules/history/history.routes.js';
 import { websocketPlugin } from './plugins/websocket.js';
 
 export async function app(fastify: FastifyInstance) {
@@ -53,6 +56,9 @@ await fastify.register(databaseRoutes, { prefix: '/workspaces/:workspaceId/datab
   await fastify.register(aiRoutes, { prefix: '/ai' });
   await fastify.register(cycleRoutes, { prefix: '/workspaces/:workspaceId/cycles' });
   await fastify.register(teamRoutes, { prefix: '/workspaces/:workspaceId/teams' });
+  await fastify.register(triageRoutes, { prefix: '/workspaces/:workspaceId' });
+  await fastify.register(roadmapRoutes, { prefix: '/workspaces/:workspaceId/roadmap' });
+  await fastify.register(historyRoutes, { prefix: '/workspaces/:workspaceId/history' });
 
   // Register WebSocket plugin
   await fastify.register(websocketPlugin);

@@ -10,7 +10,6 @@ import {
   FileText,
   Settings,
   Users,
-  Bell,
   Search,
   Plus,
   LogOut,
@@ -19,8 +18,8 @@ import {
   Database,
   FolderKanban,
   Target,
-  Layers,
-  Sparkles,
+  Inbox,
+  Map,
 } from 'lucide-react';
 
 export default function WorkspaceLayout() {
@@ -32,9 +31,11 @@ export default function WorkspaceLayout() {
     { to: `/${workspace}`, icon: Layout, label: 'Home' },
     { to: `/${workspace}/issues`, icon: CircleDot, label: 'Issues' },
     { to: `/${workspace}/cycles`, icon: RotateCcw, label: 'Cycles' },
+    { to: `/${workspace}/triage`, icon: Inbox, label: 'Triage' },
   ];
 
   const planningNavItems = [
+    { to: `/${workspace}/roadmap`, icon: Map, label: 'Roadmap' },
     { to: `/${workspace}/projects`, icon: FolderKanban, label: 'Projects' },
     { to: `/${workspace}/initiatives`, icon: Target, label: 'Initiatives' },
   ];

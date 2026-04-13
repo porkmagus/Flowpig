@@ -1,5 +1,6 @@
 import { prisma } from './src/client.js';
 import { hash } from 'bcryptjs';
+import type { IssueState, Priority } from './prisma/generated/prisma/index.js';
 
 async function main() {
   console.log('🌱 Seeding database...');
@@ -96,11 +97,11 @@ async function main() {
 
   // Create workflow states
   const states = [
-    { name: 'Backlog', key: 'backlog', category: 'BACKLOG', position: 0, isDefault: true },
-    { name: 'Todo', key: 'todo', category: 'TODO', position: 1 },
-    { name: 'In Progress', key: 'in_progress', category: 'IN_PROGRESS', position: 2 },
-    { name: 'In Review', key: 'in_review', category: 'IN_REVIEW', position: 3 },
-    { name: 'Done', key: 'done', category: 'DONE', position: 4, isTerminal: true },
+    { name: 'Backlog', key: 'backlog', category: 'BACKLOG' as IssueState, position: 0, isDefault: true },
+    { name: 'Todo', key: 'todo', category: 'TODO' as IssueState, position: 1 },
+    { name: 'In Progress', key: 'in_progress', category: 'IN_PROGRESS' as IssueState, position: 2 },
+    { name: 'In Review', key: 'in_review', category: 'IN_REVIEW' as IssueState, position: 3 },
+    { name: 'Done', key: 'done', category: 'DONE' as IssueState, position: 4, isTerminal: true },
   ];
 
   for (const state of states) {
@@ -128,36 +129,36 @@ async function main() {
       identifier: 'ENG-1',
       title: 'Set up CI/CD pipeline',
       description: { type: 'doc', content: [] },
-      state: 'TODO',
-      priority: 'HIGH',
+      state: 'TODO' as IssueState,
+      priority: 'HIGH' as Priority,
     },
     {
       identifier: 'ENG-2',
       title: 'Design database schema',
       description: { type: 'doc', content: [] },
-      state: 'IN_PROGRESS',
-      priority: 'URGENT',
+      state: 'IN_PROGRESS' as IssueState,
+      priority: 'URGENT' as Priority,
     },
     {
       identifier: 'ENG-3',
       title: 'Implement authentication',
       description: { type: 'doc', content: [] },
-      state: 'BACKLOG',
-      priority: 'MEDIUM',
+      state: 'BACKLOG' as IssueState,
+      priority: 'MEDIUM' as Priority,
     },
     {
       identifier: 'ENG-4',
       title: 'Create API documentation',
       description: { type: 'doc', content: [] },
-      state: 'BACKLOG',
-      priority: 'LOW',
+      state: 'BACKLOG' as IssueState,
+      priority: 'LOW' as Priority,
     },
     {
       identifier: 'ENG-5',
       title: 'Fix navigation bug',
       description: { type: 'doc', content: [] },
-      state: 'DONE',
-      priority: 'HIGH',
+      state: 'DONE' as IssueState,
+      priority: 'HIGH' as Priority,
     },
   ];
 

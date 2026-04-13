@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const CreateIssueSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
-  description: z.record(z.any()).optional(),
+  description: z.record(z.string(), z.any()).optional(),
   teamId: z.string(),
   priority: z.enum(['NO_PRIORITY', 'LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   assigneeId: z.string().optional().nullable(),
@@ -12,7 +12,7 @@ export const CreateIssueSchema = z.object({
 
 export const UpdateIssueSchema = z.object({
   title: z.string().min(1).max(200).optional(),
-  description: z.record(z.any()).optional().nullable(),
+  description: z.record(z.string(), z.any()).optional().nullable(),
   state: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'CANCELLED']).optional(),
   priority: z.enum(['NO_PRIORITY', 'LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   assigneeId: z.string().optional().nullable(),

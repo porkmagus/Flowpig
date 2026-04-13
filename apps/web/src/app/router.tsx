@@ -15,6 +15,8 @@ import CyclesList from '~/routes/$workspace/cycles';
 import CycleDetail from '~/routes/$workspace/cycles.$cycleId';
 import TeamPage from '~/routes/$workspace/team';
 import SettingsPage from '~/routes/$workspace/settings';
+import TriagePage from '~/routes/$workspace/triage';
+import RoadmapPage from '~/routes/$workspace/roadmap';
 import DatabasesList from '~/routes/$workspace/databases';
 import DatabaseDetail from '~/routes/$workspace/databases.$databaseId';
 import ProjectsList from '~/routes/$workspace/projects';
@@ -45,6 +47,8 @@ const router = createBrowserRouter([
               { path: 'cycles', element: <CyclesList /> },
               { path: 'cycles/:cycleId', element: <CycleDetail /> },
               { path: 'team', element: <TeamPage /> },
+              { path: 'triage', element: <TriagePage /> },
+              { path: 'roadmap', element: <RoadmapPage /> },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'databases', element: <DatabasesList /> },
               { path: 'databases/:databaseId', element: <DatabaseDetail /> },

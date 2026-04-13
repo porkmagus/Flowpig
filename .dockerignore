@@ -1,0 +1,83 @@
+# ============================================
+# Root Docker Ignore
+# ============================================
+# Applied to all Docker builds from root context
+
+# Dependencies
+node_modules
+**/node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.dev.example
+!.env.prod.example
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+coverage
+.nyc_output
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Version control
+.git
+.gitignore
+.gitattributes
+.github
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+
+# Docker (prevent recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
+ops/docker/
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Prisma generated client (we generate this in container)
+packages/db/prisma/generated
+
+# Uploads (these are volumes)
+data/
+!data/.gitkeep
+
+# Local dev data
+uploads/

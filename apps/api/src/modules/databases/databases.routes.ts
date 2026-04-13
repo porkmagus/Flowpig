@@ -1,12 +1,12 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
+import { requireAuth } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
 export default async function databaseRoutes(fastify: FastifyInstance) {
   // List databases in workspace
   fastify.get('/', {
     preHandler: [requireAuth, extractWorkspace],
-  }, async (request: WorkspaceRequest, reply) => {
+  }, async (request: WorkspaceRequest) => {
     const workspaceId = request.workspace!.id;
 
     const databases = await fastify.prisma.database.findMany({
@@ -42,7 +42,6 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
     const workspaceId = request.workspace!.id;
     const { name, description, properties } = request.body as {
       name: string;
@@ -99,7 +98,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { databaseId } = request.params as { databaseId: string };
-    const { viewId, page = '1', limit = '50' } = request.query as {
+    const { page = '1', limit = '50' } = request.query as {
       viewId?: string;
       page?: string;
       limit?: string;
@@ -267,7 +266,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
   // Delete database row
   fastify.delete('/:databaseId/rows/:rowId', {
     preHandler: [requireAuth, extractWorkspace],
-  }, async (request: WorkspaceRequest, reply) => {
+  }, async (request: WorkspaceRequest) => {
     const { rowId } = request.params as { rowId: string };
 
     await fastify.prisma.databaseRow.update({
@@ -276,5 +275,232 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
     });
 
     return { success: true };
+  });
+
+  // Calculate rollup values for a row
+  fastify.get('/:databaseId/rows/:rowId/rollup', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { databaseId, rowId } = request.params as { databaseId: string; rowId: string };
+    const workspaceId = request.workspace!.id;
+
+    // Get database with rollup properties
+    const database = await fastify.prisma.database.findFirst({
+      where: {
+        id: databaseId,
+        workspaceId,
+        deletedAt: null,
+      },
+      include: {
+        properties: {
+          where: { type: 'ROLLUP' },
+        },
+      },
+    });
+
+    if (!database) {
+      return reply.status(404).send({ error: 'Database not found' });
+    }
+
+    const rollups: Record<string, any> = {};
+
+    for (const property of database.properties) {
+      const config = (property.config as any) || {};
+      const {
+        relationPropertyId,
+        rollupPropertyId,
+        function: rollupFunction = 'COUNT'
+      } = config;
+
+      if (!relationPropertyId) {
+        rollups[property.name] = null;
+        continue;
+      }
+
+      // Get the relation value to find related rows
+      const relationCell = await fastify.prisma.databaseCell.findFirst({
+        where: {
+          rowId,
+          property: {
+            id: relationPropertyId,
+          },
+        },
+      });
+
+      const relatedRowIds: string[] = relationCell?.value?.rowIds || [];
+
+      if (relatedRowIds.length === 0) {
+        rollups[property.name] = rollupFunction === 'COUNT' ? 0 : null;
+        continue;
+      }
+
+      // Calculate rollup based on function
+      let value: any = null;
+
+      switch (rollupFunction) {
+        case 'COUNT':
+          value = relatedRowIds.length;
+          break;
+
+        case 'SUM':
+        case 'AVERAGE':
+        case 'MIN':
+        case 'MAX':
+          if (rollupPropertyId) {
+            const relatedCells = await fastify.prisma.databaseCell.findMany({
+              where: {
+                rowId: { in: relatedRowIds },
+                propertyId: rollupPropertyId,
+              },
+            });
+
+            const numbers = relatedCells
+              .map(c => c.value)
+              .filter(v => typeof v === 'number');
+
+            if (numbers.length > 0) {
+              switch (rollupFunction) {
+                case 'SUM':
+                  value = numbers.reduce((a, b) => a + b, 0);
+                  break;
+                case 'AVERAGE':
+                  value = numbers.reduce((a, b) => a + b, 0) / numbers.length;
+                  break;
+                case 'MIN':
+                  value = Math.min(...numbers);
+                  break;
+                case 'MAX':
+                  value = Math.max(...numbers);
+                  break;
+              }
+            }
+          }
+          break;
+
+        case 'COUNT_VALUES':
+          if (rollupPropertyId) {
+            const relatedCells = await fastify.prisma.databaseCell.findMany({
+              where: {
+                rowId: { in: relatedRowIds },
+                propertyId: rollupPropertyId,
+              },
+            });
+
+            const allValues = relatedCells.flatMap(c => {
+              const v = c.value;
+              if (Array.isArray(v)) return v;
+              if (v) return [v];
+              return [];
+            });
+
+            value = allValues.length;
+          }
+          break;
+
+        case 'UNIQUE_VALUES':
+          if (rollupPropertyId) {
+            const relatedCells = await fastify.prisma.databaseCell.findMany({
+              where: {
+                rowId: { in: relatedRowIds },
+                propertyId: rollupPropertyId,
+              },
+            });
+
+            const uniqueValues = new Set(
+              relatedCells.map(c => JSON.stringify(c.value))
+            );
+            value = uniqueValues.size;
+          }
+          break;
+
+        case 'SHOW_ORIGINAL':
+          if (rollupPropertyId) {
+            const relatedCells = await fastify.prisma.databaseCell.findMany({
+              where: {
+                rowId: { in: relatedRowIds },
+                propertyId: rollupPropertyId,
+              },
+            });
+
+            value = relatedCells.map(c => c.value);
+          }
+          break;
+
+        default:
+          value = relatedRowIds.length;
+      }
+
+      rollups[property.name] = value;
+    }
+
+    return { rollups };
+  });
+
+  // Get database statistics (counts, aggregations)
+  fastify.get('/:databaseId/stats', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { databaseId } = request.params as { databaseId: string };
+    const workspaceId = request.workspace!.id;
+
+    const database = await fastify.prisma.database.findFirst({
+      where: {
+        id: databaseId,
+        workspaceId,
+        deletedAt: null,
+      },
+      include: {
+        properties: true,
+        _count: {
+          select: { rows: { where: { deletedAt: null } } },
+        },
+      },
+    });
+
+    if (!database) {
+      return reply.status(404).send({ error: 'Database not found' });
+    }
+
+    // Get property statistics
+    const propertyStats = await Promise.all(
+      database.properties
+        .filter(p => ['SELECT', 'MULTI_SELECT', 'STATUS'].includes(p.type))
+        .map(async (property) => {
+          const cells = await fastify.prisma.databaseCell.findMany({
+            where: {
+              propertyId: property.id,
+              row: { deletedAt: null },
+            },
+            select: { value: true },
+          });
+
+          const valueCounts: Record<string, number> = {};
+          cells.forEach(cell => {
+            const values = Array.isArray(cell.value)
+              ? cell.value
+              : [cell.value];
+            values.forEach((v: any) => {
+              if (v) {
+                const key = typeof v === 'string' ? v : JSON.stringify(v);
+                valueCounts[key] = (valueCounts[key] || 0) + 1;
+              }
+            });
+          });
+
+          return {
+            propertyId: property.id,
+            propertyName: property.name,
+            type: property.type,
+            valueCounts,
+          };
+        })
+    );
+
+    return {
+      stats: {
+        totalRows: database._count.rows,
+        properties: propertyStats,
+      },
+    };
   });
 }

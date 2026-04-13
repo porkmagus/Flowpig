@@ -23,7 +23,7 @@ export interface AuthenticatedRequest extends FastifyRequest {
 
 export const authPlugin = fp(async (fastify: FastifyInstance) => {
   const auth = betterAuth({
-    database: prismaAdapter(prisma),
+    database: prismaAdapter(prisma, { provider: 'postgresql' }),
     secret: process.env.AUTH_SECRET!,
     baseURL: process.env.BETTER_AUTH_URL!,
     trustedOrigins: process.env.NODE_ENV === 'development' 

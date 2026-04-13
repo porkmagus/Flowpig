@@ -19,6 +19,6 @@
     "db:studio": "npm --workspace @flowpigdev/db run studio"
   },
   "devDependencies": {
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.3"
   }
 }
