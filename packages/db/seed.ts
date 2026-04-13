@@ -9,7 +9,7 @@ config({ path: resolve(__dirname, '../../.env.dev') });
 // Now import prisma after env vars are loaded
 const { prisma } = await import('./src/client.js');
 import { hashPassword } from '@better-auth/utils/password';
-import type { IssueState, Priority } from './prisma/generated/prisma/index.js';
+import type { IssueState, Priority } from './src/generated/prisma/index.js';
 
 async function main() {
   console.log('🌱 Seeding database...');
