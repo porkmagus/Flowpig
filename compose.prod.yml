@@ -8,8 +8,6 @@
 #   docker compose -f compose.prod.yml logs -f
 #   docker compose -f compose.prod.yml down
 
-version: '3.8'
-
 networks:
   flowpig-prod:
     driver: bridge
@@ -142,7 +140,7 @@ services:
           memory: 512M
     security_opt:
       - no-new-privileges:true
-    read_only_root_filesystem: false  # Needs write access for uploads
+    read_only: false  # Needs write access for uploads
 
   # ----------------------------------------
   # React Router Web Frontend
@@ -182,7 +180,7 @@ services:
           memory: 256M
     security_opt:
       - no-new-privileges:true
-    read_only_root_filesystem: true
+    read_only: true
 
   # ----------------------------------------
   # Optional: Nginx Reverse Proxy
