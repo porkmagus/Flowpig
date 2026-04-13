@@ -262,7 +262,7 @@ export default function OnboardingRoute() {
   if (isAuthLoading || isLoading) {
     return (
       <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#5E6AD2]" />
+        <Loader2 className="w-8 h-8 animate-spin text-linear-accent" />
       </div>
     );
   }
