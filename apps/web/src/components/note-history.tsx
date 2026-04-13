@@ -11,8 +11,7 @@ import {
   ChevronRight,
   FileText
 } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '~/lib/runtime-config';
 
 interface NoteVersion {
   id: string;

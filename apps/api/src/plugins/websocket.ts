@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import websocket from '@fastify/websocket';
 import { prisma } from '@flowpigdev/db';
+import { getApiBaseUrl } from '../lib/env.js';
 
 // Store connected clients
 interface Client {
@@ -39,6 +40,8 @@ declare module 'fastify' {
 }
 
 export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
+  const authBaseUrl = getApiBaseUrl();
+
   await fastify.register(websocket);
 
   // WebSocket route
@@ -64,7 +67,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
           case 'auth':
             // Authenticate client with session token
             try {
-              const response = await fetch(`${process.env.BETTER_AUTH_URL}/auth/get-session`, {
+              const response = await fetch(`${authBaseUrl}/auth/get-session`, {
                 headers: {
                   'Cookie': `better-auth.session_token=${message.token}`,
                 },

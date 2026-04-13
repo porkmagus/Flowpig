@@ -34,7 +34,12 @@ fi
 echo -e "${GREEN}✓ Environment file found: $ENV_FILE${NC}"
 
 # Validate required environment variables
-required_vars=("DB_PASSWORD" "REDIS_PASSWORD" "AUTH_SECRET" "APP_URL" "API_URL")
+required_vars=("DB_PASSWORD" "REDIS_PASSWORD" "APP_URL" "API_URL" "VITE_API_URL")
+
+if ! grep -q "^BETTER_AUTH_SECRET=" "$ENV_FILE" && ! grep -q "^AUTH_SECRET=" "$ENV_FILE"; then
+    echo -e "${RED}Error: Missing required variable: BETTER_AUTH_SECRET (or legacy AUTH_SECRET)${NC}"
+    exit 1
+fi
 
 for var in "${required_vars[@]}"; do
     if ! grep -q "^$var=" "$ENV_FILE"; then
@@ -55,7 +60,7 @@ echo -e "${GREEN}✓ Upload directory created${NC}"
 echo -e "${YELLOW}Pulling base images...${NC}"
 docker pull postgres:17-alpine
 docker pull redis:7-alpine
-docker pull node:22-alpine
+docker pull node:24.14.1-alpine
 
 echo -e "${GREEN}✓ Base images updated${NC}"
 
@@ -88,7 +93,7 @@ fi
 
 # Run database migrations
 echo -e "${YELLOW}Running database migrations...${NC}"
-docker compose -f compose.prod.yml exec -T api npx prisma migrate deploy
+docker compose -f compose.prod.yml exec -T api npm --workspace @flowpigdev/db run deploy
 
 echo -e "${GREEN}✓ Database migrations completed${NC}"
 

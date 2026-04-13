@@ -90,7 +90,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: apps/api/Dockerfile
     container_name: flowpig-api-prod
     restart: always
     networks:
@@ -109,12 +109,17 @@ services:
       APP_URL: ${APP_URL:-http://localhost:3000}
       API_URL: ${API_URL:-http://localhost:3001}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       AUTH_SECRET: ${AUTH_SECRET}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-filesystem}
       UPLOAD_ROOT: ${UPLOAD_ROOT:-/app/data/uploads}
+      STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL}
       AI_PROVIDER: ${AI_PROVIDER:-openai}
       AI_API_KEY: ${AI_API_KEY}
+      AI_API_URL: ${AI_API_URL}
       AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -145,7 +150,10 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_WS_URL: ${VITE_WS_URL}
     container_name: flowpig-web-prod
     restart: always
     networks:
@@ -156,10 +164,10 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      API_URL: ${API_URL:-http://localhost:3001}
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      PORT: 3000
+      HOST: 0.0.0.0
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -121,6 +121,7 @@ services:
       APP_URL: ${APP_URL:-https://app.flowpig.dev}
       API_URL: ${API_URL:-https://api.flowpig.dev}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://api.flowpig.dev}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       
       # Database (internal Docker networking)
       DATABASE_URL: postgresql://${POSTGRES_USER:-flowpig}:${POSTGRES_PASSWORD:-changeme_strong_password}@postgres:5432/${POSTGRES_DB:-flowpig_prod}
@@ -134,12 +135,15 @@ services:
       # Storage
       STORAGE_DRIVER: ${STORAGE_DRIVER:-filesystem}
       UPLOAD_ROOT: /app/data/uploads
+      STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL}
       
       # AI Providers (optional)
       AI_PROVIDER: ${AI_PROVIDER:-openai}
       AI_API_KEY: ${AI_API_KEY}
       AI_API_URL: ${AI_API_URL}
       AI_MODEL: ${AI_MODEL:-gpt-4o}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       
       # OAuth (optional)
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
@@ -172,6 +176,9 @@ services:
     build:
       context: ../..
       dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_WS_URL: ${VITE_WS_URL}
     container_name: flowpig-web
     restart: unless-stopped
     networks:
@@ -180,11 +187,11 @@ services:
       api:
         condition: service_healthy
     environment:
-      # These are build-time vars, but we document them here
-      VITE_API_URL: ${API_URL:-https://api.flowpig.dev}
-      VITE_WS_URL: ${WS_URL:-wss://api.flowpig.dev}
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3

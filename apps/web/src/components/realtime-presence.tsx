@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WS_URL } from '~/lib/runtime-config';
 
 interface Cursor {
   id: string;
@@ -40,8 +41,7 @@ export function useRealtimePresence(workspaceId: string, currentUserId: string) 
   const heartbeatRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const connect = useCallback(() => {
-    const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/ws`;
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       setIsConnected(true);

@@ -3,6 +3,7 @@ import fp from 'fastify-plugin';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@flowpigdev/db';
+import { getAuthSecret, getApiBaseUrl, getTrustedOrigins } from '../lib/env.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -20,14 +21,14 @@ export interface AuthenticatedRequest extends FastifyRequest {
 }
 
 export const authPlugin = fp(async (fastify: FastifyInstance) => {
+  const trustedOrigins = getTrustedOrigins();
+
   const auth = betterAuth({
     database: prismaAdapter(prisma, { provider: 'postgresql' }),
-    secret: process.env.BETTER_AUTH_SECRET!,
-    baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
+    secret: getAuthSecret(),
+    baseURL: getApiBaseUrl(),
     basePath: '/auth',
-    trustedOrigins: process.env.NODE_ENV === 'development'
-      ? ['http://localhost:5173', 'http://127.0.0.1:5173']
-      : [process.env.APP_URL!].filter(Boolean),
+    trustedOrigins,
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
@@ -48,7 +49,7 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
     },
   });
 
-  fastify.decorate('auth', auth);
+  fastify.decorate('auth', auth as FastifyInstance['auth']);
 });
 
 export async function requireAuth(

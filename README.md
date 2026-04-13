@@ -2,6 +2,8 @@
 
 Modern project management rebuilt with Fastify + React Router + Prisma.
 
+Deployment notes for Coolify live in [docs/coolify.md](docs/coolify.md).
+
 ## ✅ What's Been Built
 
 ### Phase 2: Issues, Notes, Real-time & AI (NEW!)

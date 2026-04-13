@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { getApiBaseUrl } from '../../lib/env.js';
 
 function addContentTypeParser(fastify: FastifyInstance) {
   // Better Auth expects access to the raw request body for its own parsing.
@@ -14,8 +15,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // This plugin is mounted at `/auth`, so match the remaining path only once.
   fastify.all('/*', async (request: FastifyRequest, reply: FastifyReply) => {
     const auth = fastify.auth;
-    const baseURL = process.env.BETTER_AUTH_URL ?? 'http://localhost:3001';
-    const url = new URL(request.url, baseURL);
+    const url = new URL(request.url, getApiBaseUrl());
 
     const headers = new Headers(request.headers as Record<string, string>);
     const rawBody = request.body as Buffer | undefined;

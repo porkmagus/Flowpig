@@ -1,16 +1,11 @@
 # ============================================
 # API Service - Production Dockerfile
 # ============================================
-# Multi-stage build for optimized production image
-# Stage 1: Build dependencies and generate Prisma client
-# Stage 2: Production runtime with compiled code
+# The API runs from source via tsx so workspace packages that still export
+# TypeScript remain loadable in production.
 
-# ----------------------------------------
-# STAGE 1: Dependencies & Build
-# ----------------------------------------
-FROM node:24-alpine AS builder
+FROM node:24.14.1-alpine AS builder
 
-# Install build dependencies
 RUN apk add --no-cache \
     python3 \
     make \
@@ -19,73 +14,53 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-# Copy workspace configuration first (for better caching)
+ENV DATABASE_URL=postgresql://flowpig:flowpig@localhost:5432/flowpig_build
+
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/db/package.json ./packages/db/
 COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/ui/package.json ./packages/ui/
 
-# Install all dependencies
 RUN npm ci
 
-# Copy source code
 COPY apps/api ./apps/api
 COPY packages/db ./packages/db
 COPY packages/contracts ./packages/contracts
-COPY packages/ui ./packages/ui
 
-# Generate Prisma client (critical - must happen before build)
 RUN npm run db:generate
+RUN npm cache clean --force
 
-# Build TypeScript
-RUN npm run build --workspace=@flowpigdev/api
+FROM node:24.14.1-alpine AS runner
 
-# Remove devDependencies for production
-RUN npm prune --production
-
-# ----------------------------------------
-# STAGE 2: Production Runtime
-# ----------------------------------------
-FROM node:24-alpine AS runner
-
-# Install runtime dependencies only
 RUN apk add --no-cache \
     openssl \
     dumb-init
 
-# Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 flowpig
 
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV HOST=0.0.0.0
 
-# Copy built application from builder stage
 COPY --from=builder --chown=flowpig:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=flowpig:nodejs /app/apps/api/dist ./apps/api/dist
-COPY --from=builder --chown=flowpig:nodejs /app/apps/api/package.json ./apps/api/
-COPY --from=builder --chown=flowpig:nodejs /app/packages ./packages
-COPY --from=builder --chown=flowpig:nodejs /app/package.json ./
+COPY --from=builder --chown=flowpig:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=flowpig:nodejs /app/package-lock.json ./package-lock.json
+COPY --from=builder --chown=flowpig:nodejs /app/apps/api ./apps/api
+COPY --from=builder --chown=flowpig:nodejs /app/packages/db ./packages/db
+COPY --from=builder --chown=flowpig:nodejs /app/packages/contracts ./packages/contracts
 
-# Create uploads directory
-RUN mkdir -p /app/data/uploads && chown -R flowpig:nodejs /app/data
+RUN mkdir -p /app/data/uploads && chown -R flowpig:nodejs /app
 
-# Switch to non-root user
 USER flowpig
 
-# Expose the API port
 EXPOSE 3001
 
-# Health check to ensure container is healthy
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/health || exit 1
 
-# Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["node", "--import", "tsx", "apps/api/src/server.ts"]
