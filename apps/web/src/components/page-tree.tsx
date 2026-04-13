@@ -84,7 +84,7 @@ function TreeNode({
           to={`/${workspace}/notes/${node.slug}`}
           className="flex items-center gap-2 flex-1 min-w-0"
         >
-          <span className="flex-shrink-0">
+          <span className="shrink-0">
             {node.emoji || (hasChildren ? (
               isExpanded ? <FolderOpen className="w-4 h-4 text-yellow-500" /> : <Folder className="w-4 h-4 text-yellow-500" />
             ) : (
