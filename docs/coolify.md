@@ -19,7 +19,17 @@ The API and web app should be separate Dockerfile applications that both build f
 - Dockerfile location: `apps/api/Dockerfile`
 - Build context: repo root
 - Port: `3001`
-- Persistent storage: mount a volume at `/app/data/uploads`
+- Persistent storage: add storage for uploads at `/app/data/uploads`
+
+### API persistent storage
+
+In the current Coolify `Add Volume Mount` UI, use:
+
+- Name: `uploads`
+- Source path: `/data/flowpig/uploads`
+- Destination path: `/app/data/uploads`
+
+That matches the current Coolify form fields shown in the app UI.
 
 ### Required API environment variables
 
@@ -99,7 +109,11 @@ If you run it from inside the API container, make sure `DATABASE_URL` is already
 
 ## Uploads
 
-- File uploads are stored on the API container volume at `/app/data/uploads`.
+- File uploads are stored inside the API container at `/app/data/uploads`.
+- In Coolify, the current `Volume Mount` form should be filled as:
+  - Name: `uploads`
+  - Source path: `/data/flowpig/uploads`
+  - Destination path: `/app/data/uploads`
 - Upload URLs are served from `/uploads/*` on the API domain.
 - If you switch to object storage later, set `STORAGE_DRIVER` and `STORAGE_PUBLIC_URL` accordingly.
 
