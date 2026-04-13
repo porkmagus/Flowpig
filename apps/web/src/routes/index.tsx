@@ -136,10 +136,10 @@ export default function IndexRoute() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute left-[-12rem] top-[-10rem] h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[10rem] h-[22rem] w-[22rem] rounded-full bg-indigo-500/12 blur-3xl" />
-        <div className="absolute bottom-[-8rem] left-1/2 h-[20rem] w-[28rem] -translate-x-1/2 rounded-full bg-emerald-400/8 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:88px_88px] opacity-[0.06]" />
+        <div className="absolute -left-48 -top-40 h-112 w-md rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute -right-32 top-40 h-88 w-88 rounded-full bg-indigo-500/12 blur-3xl" />
+        <div className="absolute -bottom-32 left-1/2 h-80 w-md -translate-x-1/2 rounded-full bg-emerald-400/8 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[88px_88px] opacity-[0.06]" />
       </div>
 
       <header className="sticky top-0 z-40 border-b border-white/8 bg-[#05070b]/80 backdrop-blur-xl">
@@ -194,7 +194,7 @@ export default function IndexRoute() {
 
             <h1 className="max-w-4xl text-5xl font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl">
               Docs, issues, planning, and AI
-              <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-200 bg-clip-text text-transparent">
+              <span className="block bg-linear-to-r from-white via-cyan-100 to-emerald-200 bg-clip-text text-transparent">
                 in one deliberate workflow.
               </span>
             </h1>
@@ -236,9 +236,9 @@ export default function IndexRoute() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-cyan-400/10 via-transparent to-emerald-300/10 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-5">
-              <div className="rounded-[1.5rem] border border-white/10 bg-[#0b1016]/95 p-4 sm:p-5">
+            <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-cyan-400/10 via-transparent to-emerald-300/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-white/4 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-5">
+              <div className="rounded-3xl border border-white/10 bg-[#0b1016]/95 p-4 sm:p-5">
                 <div className="flex items-center justify-between border-b border-white/8 pb-4">
                   <div>
                     <div className="text-sm font-medium text-white/90">Workspace pulse</div>
@@ -253,7 +253,7 @@ export default function IndexRoute() {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                    <div className="rounded-[1.25rem] border border-white/8 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm font-medium text-white/86">
@@ -298,7 +298,7 @@ export default function IndexRoute() {
                       ].map(([value, label]) => (
                         <div
                           key={label}
-                          className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-4"
+                          className="rounded-[1.15rem] border border-white/8 bg-white/3 p-4"
                         >
                           <div className="text-2xl font-semibold tracking-tight text-white">
                             {value}
@@ -310,7 +310,7 @@ export default function IndexRoute() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                    <div className="rounded-[1.25rem] border border-white/8 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium text-white/88">Team inbox</div>
                         <Inbox className="h-4 w-4 text-cyan-300" />
@@ -331,7 +331,7 @@ export default function IndexRoute() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.25rem] border border-white/8 bg-gradient-to-br from-cyan-300/12 via-white/[0.03] to-emerald-300/10 p-4">
+                    <div className="rounded-[1.25rem] border border-white/8 bg-linear-to-br from-cyan-300/12 via-white/3 to-emerald-300/10 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-white/90">
                         <Bot className="h-4 w-4 text-emerald-200" />
                         AI assistant
@@ -361,10 +361,10 @@ export default function IndexRoute() {
               key={card.title}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: index * 0.06 }}
-              className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6"
+              className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/3 p-6"
             >
               <div
-                className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${card.accent} blur-2xl`}
+                className={`absolute inset-x-0 top-0 h-24 bg-linear-to-br ${card.accent} blur-2xl`}
               />
               <div className="relative">
                 <div className="text-xs uppercase tracking-[0.24em] text-white/42">
@@ -402,7 +402,7 @@ export default function IndexRoute() {
                 key={title}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: index * 0.05 }}
-                className="group rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-7 transition hover:border-white/16 hover:bg-white/[0.05]"
+                className="group rounded-[1.75rem] border border-white/10 bg-white/3 p-7 transition hover:border-white/16 hover:bg-white/5"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
                   <Icon className="h-5 w-5 text-cyan-200" />
@@ -420,7 +420,7 @@ export default function IndexRoute() {
           </div>
         </section>
 
-        <section id="workflow" className="border-y border-white/8 bg-white/[0.02]">
+          <section id="workflow" className="border-y border-white/8 bg-white/2">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
             <motion.div {...fadeUp} className="max-w-3xl">
               <div className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-200/72">
@@ -463,7 +463,7 @@ export default function IndexRoute() {
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <motion.div
             {...fadeUp}
-            className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-cyan-300/14 via-white/[0.05] to-emerald-300/10 p-8 sm:p-10"
+            className="overflow-hidden rounded-4xl border border-white/10 bg-linear-to-br from-cyan-300/14 via-white/5 to-emerald-300/10 p-8 sm:p-10"
           >
             <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
@@ -483,7 +483,7 @@ export default function IndexRoute() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Link
                   to="/signup"
-                  className="rounded-[1.5rem] border border-white/15 bg-white px-6 py-6 text-slate-950 transition hover:scale-[1.01]"
+                  className="rounded-3xl border border-white/15 bg-white px-6 py-6 text-slate-950 transition hover:scale-[1.01]"
                 >
                   <div className="text-sm font-medium uppercase tracking-[0.22em] text-slate-500">
                     Start free
@@ -499,7 +499,7 @@ export default function IndexRoute() {
 
                 <Link
                   to="/login"
-                  className="rounded-[1.5rem] border border-white/10 bg-black/20 px-6 py-6 text-white transition hover:border-white/18 hover:bg-black/28"
+                  className="rounded-3xl border border-white/10 bg-black/20 px-6 py-6 text-white transition hover:border-white/18 hover:bg-black/28"
                 >
                   <div className="text-sm font-medium uppercase tracking-[0.22em] text-white/45">
                     Existing team

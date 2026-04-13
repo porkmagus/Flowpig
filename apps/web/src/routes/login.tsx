@@ -90,7 +90,7 @@ export default function LoginRoute() {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/[0.06]"
+              className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
             />
           </label>
 
@@ -104,7 +104,7 @@ export default function LoginRoute() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 pr-12 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/[0.06]"
+                className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 pr-12 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
               />
               <button
                 type="button"
