@@ -1,306 +1,532 @@
 import { Link } from 'react-router';
 import { motion } from 'framer-motion';
-import { 
-  ArrowRight, 
-  CheckCircle2, 
-  Layers, 
-  Shield,
-  GitBranch,
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowRight,
   BarChart3,
+  Bot,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
   FileText,
+  GitBranch,
   Inbox,
-  Keyboard,
+  Layers,
   MessageSquare,
-  Clock,
-  Target,
+  PlayCircle,
+  ShieldCheck,
   Sparkles,
-  Star,
-  Play
+  Target,
+  Users,
 } from 'lucide-react';
 
-const features = [
-  { icon: Target, title: "My Issues Dashboard", description: "Personal todo view with issues grouped by due date, priority, and status." },
-  { icon: Inbox, title: "Smart Inbox", description: "Unified notification center with email-style threading." },
-  { icon: FileText, title: "Rich Block Editor", description: "Notion-style editor with toggles, callouts, math equations, tables, and embeds." },
-  { icon: GitBranch, title: "Git Integration", description: "Auto-link PRs, track commits, and generate branch names from issues." },
-  { icon: BarChart3, title: "Analytics & Velocity", description: "Burndown charts, cycle stats, team performance metrics." },
-  { icon: Layers, title: "Database Views", description: "Calendar, timeline, gallery, and table views for your databases." },
-  { icon: MessageSquare, title: "Page Hierarchy", description: "Nested pages with breadcrumbs, tree navigation, and easy organization." },
-  { icon: Keyboard, title: "Keyboard Shortcuts", description: "Cmd+K command palette with global shortcuts." },
-  { icon: Shield, title: "Sharing & Permissions", description: "Public pages, access control, invite by email, and granular permissions." },
-  { icon: GitBranch, title: "Real-time Sync", description: "Live cursors, presence indicators, and instant updates." },
-  { icon: Clock, title: "Cycles & Sprints", description: "Scrum-style sprints with burndown charts and velocity tracking." },
-  { icon: Star, title: "AI-Powered", description: "AI-generated issue titles, automatic categorization, and smart suggestions." },
+const pillars: Array<{
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}> = [
+  {
+    icon: FileText,
+    title: 'Docs that stay connected to execution',
+    description:
+      'Capture specs, meeting notes, decisions, and page history without losing the thread back to the work.',
+  },
+  {
+    icon: Target,
+    title: 'Issue tracking built for momentum',
+    description:
+      'Plan issues, triage work, and keep priorities visible without splitting your team across five tools.',
+  },
+  {
+    icon: Clock3,
+    title: 'Cycles, roadmap, and delivery in one view',
+    description:
+      'Move from long-range planning to weekly execution with fewer handoffs and less context switching.',
+  },
+  {
+    icon: Bot,
+    title: 'AI where it actually helps',
+    description:
+      'Generate issue drafts, summarize context, and assist with planning without turning the product into a gimmick.',
+  },
+];
+
+const workflow: Array<{
+  eyebrow: string;
+  title: string;
+  description: string;
+  points: string[];
+}> = [
+  {
+    eyebrow: 'Capture',
+    title: 'Write once, keep context attached',
+    description:
+      'Turn notes, decisions, and product specs into living references that stay close to execution.',
+    points: [
+      'Nested notes with page trees and version history',
+      'Rich editor blocks, comments, and sharing',
+      'Docs that link directly into issues and plans',
+    ],
+  },
+  {
+    eyebrow: 'Coordinate',
+    title: 'See what matters without chasing updates',
+    description:
+      'Keep triage, inbox, team coordination, and roadmap changes visible across the workspace in real time.',
+    points: [
+      'Unified inbox and notifications',
+      'Realtime updates for workspace activity',
+      'Roadmap, projects, and cycles in the same flow',
+    ],
+  },
+  {
+    eyebrow: 'Ship',
+    title: 'Move from planning to delivery faster',
+    description:
+      'Make progress measurable with analytics, Git context, and clearer ownership across the team.',
+    points: [
+      'Issue workflows with priorities and ownership',
+      'Git integration and branch-aware execution',
+      'Analytics and velocity views for follow-through',
+    ],
+  },
 ];
 
 const highlights = [
-  "Keyboard-first navigation",
-  "Dark & light themes", 
-  "Offline support",
-  "API & webhooks",
-  "Import from Jira/Linear",
-  "Export to PDF/Markdown",
+  { icon: Inbox, label: 'Inbox + notifications' },
+  { icon: GitBranch, label: 'Git-aware execution' },
+  { icon: MessageSquare, label: 'Comments and collaboration' },
+  { icon: BarChart3, label: 'Analytics and velocity' },
+  { icon: ShieldCheck, label: 'Workspace permissions' },
+  { icon: Users, label: 'Team visibility' },
 ];
 
+const previewCards = [
+  {
+    title: 'Release planning',
+    meta: 'Roadmap',
+    body: 'Line up initiatives, attach specs, and keep delivery tied to the work itself.',
+    accent: 'from-sky-400/30 to-cyan-300/10',
+  },
+  {
+    title: 'Cycle health',
+    meta: 'Analytics',
+    body: 'Track completion, drift, and velocity without jumping into another reporting tool.',
+    accent: 'from-emerald-400/25 to-teal-300/10',
+  },
+  {
+    title: 'Issue flow',
+    meta: 'Execution',
+    body: 'Triage incoming work, assign owners, and keep updates visible as the team moves.',
+    accent: 'from-violet-400/25 to-indigo-300/10',
+  },
+];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.25 },
+  transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] },
+};
+
 export default function IndexRoute() {
-  const styles = {
-    page: { minHeight: '100vh', backgroundColor: '#0D0D0D', fontFamily: 'Inter, system-ui, sans-serif' },
-    nav: { 
-      position: 'fixed' as const, top: 0, left: 0, right: 0, zIndex: 50,
-      backgroundColor: 'rgba(13,13,13,0.9)', backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid #2A2A2A'
-    },
-    navInner: { maxWidth: '72rem', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' },
-    logo: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
-    logoIcon: { width: '2rem', height: '2rem', backgroundColor: 'rgba(94,106,210,0.15)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(94,106,210,0.25)' },
-    logoText: { fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', letterSpacing: '-0.01em' },
-    navLinks: { display: 'flex', alignItems: 'center', gap: '1.5rem' },
-    navLink: { fontSize: '0.875rem', color: '#A0A0A0', textDecoration: 'none', transition: 'color 0.15s ease' },
-    navButton: { fontSize: '0.875rem', backgroundColor: '#5E6AD2', color: 'white', padding: '0.625rem 1.25rem', borderRadius: '0.5rem', fontWeight: 500, textDecoration: 'none', transition: 'background-color 0.15s ease' },
-    hero: { paddingTop: '10rem', paddingBottom: '6rem', paddingLeft: '1rem', paddingRight: '1rem', textAlign: 'center' as const },
-    badge: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', backgroundColor: 'rgba(94,106,210,0.1)', border: '1px solid rgba(94,106,210,0.25)', borderRadius: '9999px', fontSize: '0.875rem', color: '#5E6AD2', marginBottom: '1.5rem' },
-    heading: { fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 600, color: '#FFFFFF', marginBottom: '1.5rem', lineHeight: 1.1, letterSpacing: '-0.02em' },
-    accent: { color: '#5E6AD2' },
-    subheading: { fontSize: '1.25rem', color: '#A0A0A0', maxWidth: '42rem', margin: '0 auto 2.5rem', lineHeight: 1.7 },
-    buttonGroup: { display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' as const },
-    primaryButton: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#5E6AD2', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: 500, textDecoration: 'none', fontSize: '1rem', transition: 'background-color 0.15s ease' },
-    secondaryButton: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'transparent', color: '#E0E0E0', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: 500, textDecoration: 'none', border: '1px solid #2A2A2A', transition: 'border-color 0.15s ease, color 0.15s ease' },
-    features: { padding: '6rem 1rem', backgroundColor: '#0D0D0D' },
-    sectionTitle: { textAlign: 'center' as const, marginBottom: '3.5rem' },
-    sectionHeading: { fontSize: '2.25rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '1rem', letterSpacing: '-0.02em' },
-    sectionSubheading: { fontSize: '1.125rem', color: '#A0A0A0', maxWidth: '42rem', margin: '0 auto', lineHeight: 1.6 },
-    featuresGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem', maxWidth: '72rem', margin: '0 auto' },
-    featureCard: { backgroundColor: '#1A1A1A', borderRadius: '1rem', padding: '1.75rem', border: '1px solid #2A2A2A', transition: 'border-color 0.2s, transform 0.2s' },
-    featureIcon: { width: '2.75rem', height: '2.75rem', backgroundColor: 'rgba(94,106,210,0.1)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', border: '1px solid rgba(94,106,210,0.15)' },
-    featureTitle: { fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '0.5rem' },
-    featureDesc: { fontSize: '0.9375rem', color: '#A0A0A0', lineHeight: 1.6 },
-    highlights: { padding: '6rem 1rem', maxWidth: '64rem', margin: '0 auto' },
-    highlightsGrid: { display: 'flex', flexWrap: 'wrap' as const, justifyContent: 'center', gap: '0.75rem' },
-    highlightTag: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', backgroundColor: '#1A1A1A', borderRadius: '9999px', fontSize: '0.875rem', color: '#A0A0A0', border: '1px solid #2A2A2A' },
-    cta: { padding: '6rem 1rem', maxWidth: '48rem', margin: '0 auto' },
-    ctaBox: { textAlign: 'center' as const, padding: '3.5rem', background: 'linear-gradient(135deg, #5E6AD2 0%, #4A55B8 100%)', borderRadius: '1.25rem', color: 'white', border: '1px solid rgba(94,106,210,0.3)' },
-    ctaHeading: { fontSize: '2rem', fontWeight: 600, marginBottom: '1rem', letterSpacing: '-0.02em' },
-    ctaText: { fontSize: '1.125rem', color: 'rgba(255, 255, 255, 0.85)', marginBottom: '2rem', lineHeight: 1.6 },
-    ctaButton: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', color: '#5E6AD2', padding: '0.875rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, textDecoration: 'none', transition: 'transform 0.15s ease' },
-    ctaButton2: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(255, 255, 255, 0.15)', color: 'white', padding: '0.875rem 1.75rem', borderRadius: '0.5rem', fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255, 255, 255, 0.25)', transition: 'background-color 0.15s ease' },
-    footer: { padding: '4rem 1rem', borderTop: '1px solid #2A2A2A', backgroundColor: '#0D0D0D' },
-    footerInner: { maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem' },
-    footerLogo: { fontWeight: 600, color: '#FFFFFF' },
-    footerText: { fontSize: '0.875rem', color: '#6E6E6E', marginTop: '0.5rem' },
-    footerHeading: { fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem', color: '#E0E0E0' },
-    footerList: { listStyle: 'none', fontSize: '0.875rem', color: '#A0A0A0', lineHeight: 2 },
-    footerLink: { color: '#A0A0A0', textDecoration: 'none', transition: 'color 0.15s ease' },
-    footerBottom: { maxWidth: '72rem', margin: '2.5rem auto 0', paddingTop: '2rem', borderTop: '1px solid #2A2A2A', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '1rem', fontSize: '0.875rem', color: '#6E6E6E' },
-  };
-
   return (
-    <div style={styles.page}>
-      {/* Navigation */}
-      <nav style={styles.nav}>
-        <div style={styles.navInner}>
-          <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <Layers style={{ width: '1.25rem', height: '1.25rem', color: '#5E6AD2' }} />
+    <div className="min-h-screen overflow-x-hidden bg-[#05070b] text-white">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute left-[-12rem] top-[-10rem] h-[28rem] w-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute right-[-8rem] top-[10rem] h-[22rem] w-[22rem] rounded-full bg-indigo-500/12 blur-3xl" />
+        <div className="absolute bottom-[-8rem] left-1/2 h-[20rem] w-[28rem] -translate-x-1/2 rounded-full bg-emerald-400/8 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:88px_88px] opacity-[0.06]" />
+      </div>
+
+      <header className="sticky top-0 z-40 border-b border-white/8 bg-[#05070b]/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+              <Layers className="h-5 w-5 text-cyan-300" />
             </div>
-            <span style={styles.logoText}>Flowpig</span>
-          </div>
-          <div style={styles.navLinks}>
-            <Link 
-              to="/login" 
-              style={styles.navLink}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#E0E0E0'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}
+            <div>
+              <div className="text-base font-semibold tracking-tight">Flowpig</div>
+              <div className="text-xs text-white/45">Plan clearly. Ship calmly.</div>
+            </div>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-sm text-white/60 lg:flex">
+            <a href="#product" className="transition hover:text-white">
+              Product
+            </a>
+            <a href="#workflow" className="transition hover:text-white">
+              Workflow
+            </a>
+            <a href="#proof" className="transition hover:text-white">
+              Why teams switch
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/login"
+              className="hidden rounded-full px-4 py-2 text-sm text-white/70 transition hover:bg-white/6 hover:text-white sm:inline-flex"
             >
-              Sign In
+              Sign in
             </Link>
-            <Link 
-              to="/signup" 
-              style={styles.navButton}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#545EC4'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5E6AD2'}
+            <Link
+              to="/signup"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/14 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:border-cyan-200/40 hover:bg-cyan-300/22"
             >
-              Get Started
+              Start free
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* Hero */}
-      <section style={styles.hero}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div style={styles.badge}>
-            <Sparkles style={{ width: '0.875rem', height: '0.875rem' }} />
-            <span>Now with AI-powered features</span>
-          </div>
-          
-          <h1 style={styles.heading}>
-            The workspace for
-            <br />
-            <span style={styles.accent}>modern teams</span>
-          </h1>
-          
-          <p style={styles.subheading}>
-            Notion-style docs meet Linear-style issue tracking.
-            Write, plan, and ship products — all in one place.
-          </p>
-          
-          <div style={styles.buttonGroup}>
-            <Link 
-              to="/signup" 
-              style={styles.primaryButton}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#545EC4'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#5E6AD2'}
-            >
-              Get Started Free
-              <ArrowRight style={{ width: '1rem', height: '1rem' }} />
-            </Link>
-            <Link 
-              to="/acme-corp" 
-              style={styles.secondaryButton}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#5E6AD2';
-                e.currentTarget.style.color = '#5E6AD2';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#2A2A2A';
-                e.currentTarget.style.color = '#E0E0E0';
-              }}
-            >
-              <Play style={{ width: '1rem', height: '1rem' }} />
-              View Demo
-            </Link>
-          </div>
-        </motion.div>
-      </section>
+      <main className="relative">
+        <section className="mx-auto grid max-w-7xl gap-16 px-5 pb-20 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-28 lg:pt-20">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+            className="relative"
+          >
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-sm text-white/70">
+              <Sparkles className="h-4 w-4 text-cyan-300" />
+              A calmer operating system for product teams
+            </div>
 
-      {/* Features */}
-      <section id="features" style={styles.features}>
-        <div style={styles.sectionTitle}>
-          <h2 style={styles.sectionHeading}>Everything you need to ship faster</h2>
-          <p style={styles.sectionSubheading}>Combine the best of Notion and Linear into a single, seamless experience.</p>
-        </div>
+            <h1 className="max-w-4xl text-5xl font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl">
+              Docs, issues, planning, and AI
+              <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-200 bg-clip-text text-transparent">
+                in one deliberate workflow.
+              </span>
+            </h1>
 
-        <div style={styles.featuresGrid}>
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              style={styles.featureCard}
-              whileHover={{ 
-                borderColor: '#3A3A3A',
-                transform: 'translateY(-2px)'
-              }}
-            >
-              <div style={styles.featureIcon}>
-                <feature.icon style={{ width: '1.25rem', height: '1.25rem', color: '#5E6AD2' }} />
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/68 sm:text-xl">
+              Flowpig brings the strongest parts of docs, issue tracking, cycles, and
+              collaboration into one workspace so teams can move from idea to shipped
+              work with less friction and less tool sprawl.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/signup"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:scale-[1.01] hover:bg-cyan-50"
+              >
+                Create workspace
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/acme-corp"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/6 px-6 py-3.5 text-sm font-medium text-white/86 transition hover:border-white/20 hover:bg-white/9"
+              >
+                <PlayCircle className="h-4 w-4 text-cyan-300" />
+                Open live demo
+              </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/62">
+              {highlights.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2"
+                >
+                  <Icon className="h-4 w-4 text-cyan-300" />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+            className="relative"
+          >
+            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-cyan-400/10 via-transparent to-emerald-300/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-5">
+              <div className="rounded-[1.5rem] border border-white/10 bg-[#0b1016]/95 p-4 sm:p-5">
+                <div className="flex items-center justify-between border-b border-white/8 pb-4">
+                  <div>
+                    <div className="text-sm font-medium text-white/90">Workspace pulse</div>
+                    <div className="mt-1 text-sm text-white/45">
+                      Everything a product team needs, without the tab chaos.
+                    </div>
+                  </div>
+                  <div className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                    Realtime
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
+                  <div className="space-y-4">
+                    <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-white/86">
+                            Release 2.4 planning
+                          </div>
+                          <div className="mt-1 text-xs uppercase tracking-[0.24em] text-cyan-200/70">
+                            Active cycle
+                          </div>
+                        </div>
+                        <div className="rounded-full bg-cyan-300/12 px-2.5 py-1 text-xs text-cyan-100">
+                          8 open issues
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {[
+                          ['Improve triage intake', 'High priority', 'bg-amber-300/16 text-amber-100'],
+                          ['Polish workspace onboarding', 'In progress', 'bg-cyan-300/14 text-cyan-100'],
+                          ['Connect roadmap to issue rollups', 'Planned', 'bg-white/10 text-white/70'],
+                        ].map(([title, badge, tone]) => (
+                          <div
+                            key={title}
+                            className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-3 py-3"
+                          >
+                            <div>
+                              <div className="text-sm text-white/90">{title}</div>
+                              <div className="mt-1 text-xs text-white/45">Linked to release notes</div>
+                            </div>
+                            <span className={`rounded-full px-2 py-1 text-[11px] ${tone}`}>
+                              {badge}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {[
+                        ['24', 'Issues in cycle'],
+                        ['7', 'Docs updated'],
+                        ['92%', 'Planned work visible'],
+                      ].map(([value, label]) => (
+                        <div
+                          key={label}
+                          className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-4"
+                        >
+                          <div className="text-2xl font-semibold tracking-tight text-white">
+                            {value}
+                          </div>
+                          <div className="mt-1 text-xs leading-5 text-white/48">{label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium text-white/88">Team inbox</div>
+                        <Inbox className="h-4 w-4 text-cyan-300" />
+                      </div>
+                      <div className="mt-3 space-y-3 text-sm">
+                        {[
+                          'Roadmap updated by product',
+                          'Design review notes synced to issue FP-184',
+                          'Cycle burndown changed after reprioritization',
+                        ].map((item) => (
+                          <div
+                            key={item}
+                            className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3 text-white/72"
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.25rem] border border-white/8 bg-gradient-to-br from-cyan-300/12 via-white/[0.03] to-emerald-300/10 p-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-white/90">
+                        <Bot className="h-4 w-4 text-emerald-200" />
+                        AI assistant
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-white/62">
+                        Summarize the latest triage thread, draft follow-up issues, and
+                        convert meeting notes into actionable work.
+                      </p>
+                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-cyan-100">
+                        See how the team is moving
+                        <ChevronRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 style={styles.featureTitle}>{feature.title}</h3>
-              <p style={styles.featureDesc}>{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+            </div>
+          </motion.div>
+        </section>
 
-      {/* Highlights */}
-      <section style={styles.highlights}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h2 style={styles.sectionHeading}>Loved by productive teams</h2>
-        </div>
-        <div style={styles.highlightsGrid}>
-          {highlights.map((highlight, index) => (
-            <motion.div 
-              key={index} 
-              style={styles.highlightTag}
-              whileHover={{ borderColor: '#5E6AD2', color: '#5E6AD2' }}
-            >
-              <CheckCircle2 style={{ width: '0.875rem', height: '0.875rem', color: '#0D9B6A' }} />
-              <span>{highlight}</span>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={styles.cta}>
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }} 
-          animate={{ opacity: 1, scale: 1 }} 
-          transition={{ duration: 0.5 }} 
-          style={styles.ctaBox}
+        <section
+          id="proof"
+          className="mx-auto grid max-w-7xl gap-5 px-5 pb-8 sm:px-8 lg:grid-cols-3"
         >
-          <h2 style={styles.ctaHeading}>Ready to streamline your workflow?</h2>
-          <p style={styles.ctaText}>Join thousands of teams who write, plan, and ship faster with Flowpig.</p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link 
-              to="/signup" 
-              style={styles.ctaButton}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          {previewCards.map((card, index) => (
+            <motion.div
+              key={card.title}
+              {...fadeUp}
+              transition={{ ...fadeUp.transition, delay: index * 0.06 }}
+              className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-6"
             >
-              Get Started Free
-              <ArrowRight style={{ width: '1rem', height: '1rem' }} />
-            </Link>
-            <Link 
-              to="/acme-corp" 
-              style={styles.ctaButton2}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
-            >
-              <Play style={{ width: '1rem', height: '1rem' }} />
-              View Demo
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Footer */}
-      <footer style={styles.footer}>
-        <div style={styles.footerInner}>
-          <div>
-            <div style={styles.logo}>
-              <div style={styles.logoIcon}>
-                <Layers style={{ width: '1.25rem', height: '1.25rem', color: '#5E6AD2' }} />
+              <div
+                className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${card.accent} blur-2xl`}
+              />
+              <div className="relative">
+                <div className="text-xs uppercase tracking-[0.24em] text-white/42">
+                  {card.meta}
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+                  {card.title}
+                </h2>
+                <p className="mt-3 max-w-md text-sm leading-7 text-white/62">
+                  {card.body}
+                </p>
               </div>
-              <span style={styles.footerLogo}>Flowpig</span>
+            </motion.div>
+          ))}
+        </section>
+
+        <section id="product" className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+          <motion.div {...fadeUp} className="max-w-3xl">
+            <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-200/72">
+              Product pillars
             </div>
-            <p style={styles.footerText}>The workspace for modern teams.</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+              World-class tools feel coherent before they feel feature-rich.
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-white/64">
+              Flowpig already spans notes, issues, roadmap, cycles, AI, and analytics.
+              The opportunity is to make that breadth feel unified, fast, and obvious
+              to use from the first screen onward.
+            </p>
+          </motion.div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-2">
+            {pillars.map(({ icon: Icon, title, description }, index) => (
+              <motion.div
+                key={title}
+                {...fadeUp}
+                transition={{ ...fadeUp.transition, delay: index * 0.05 }}
+                className="group rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-7 transition hover:border-white/16 hover:bg-white/[0.05]"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
+                  <Icon className="h-5 w-5 text-cyan-200" />
+                </div>
+                <h3 className="mt-5 text-2xl font-semibold tracking-tight text-white">
+                  {title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-white/62">{description}</p>
+                <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white/76">
+                  Built for product, design, and engineering
+                  <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </div>
+              </motion.div>
+            ))}
           </div>
-          <div>
-            <h4 style={styles.footerHeading}>Product</h4>
-            <ul style={styles.footerList}>
-              <li><a href="#features" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Features</a></li>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Pricing</a></li>
-              <li><Link to="/acme-corp" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Demo</Link></li>
-            </ul>
+        </section>
+
+        <section id="workflow" className="border-y border-white/8 bg-white/[0.02]">
+          <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+            <motion.div {...fadeUp} className="max-w-3xl">
+              <div className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-200/72">
+                Workflow
+              </div>
+              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+                The best teams don’t need more tabs. They need better flow.
+              </h2>
+            </motion.div>
+
+            <div className="mt-12 grid gap-5 lg:grid-cols-3">
+              {workflow.map((step, index) => (
+                <motion.div
+                  key={step.title}
+                  {...fadeUp}
+                  transition={{ ...fadeUp.transition, delay: index * 0.06 }}
+                  className="rounded-[1.75rem] border border-white/10 bg-[#081018] p-6"
+                >
+                  <div className="text-xs uppercase tracking-[0.26em] text-emerald-200/68">
+                    {step.eyebrow}
+                  </div>
+                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-white/62">{step.description}</p>
+                  <div className="mt-6 space-y-3">
+                    {step.points.map((point) => (
+                      <div key={point} className="flex items-start gap-3">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-200" />
+                        <span className="text-sm leading-6 text-white/72">{point}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-          <div>
-            <h4 style={styles.footerHeading}>Resources</h4>
-            <ul style={styles.footerList}>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Documentation</a></li>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>API</a></li>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Community</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 style={styles.footerHeading}>Company</h4>
-            <ul style={styles.footerList}>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>About</a></li>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Blog</a></li>
-              <li><a href="#" style={styles.footerLink} onMouseEnter={(e) => e.currentTarget.style.color = '#5E6AD2'} onMouseLeave={(e) => e.currentTarget.style.color = '#A0A0A0'}>Careers</a></li>
-            </ul>
-          </div>
-        </div>
-        <div style={styles.footerBottom}>
-          <p>© 2025 Flowpig. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <a href="#" style={{ ...styles.footerLink, color: '#6E6E6E' }} onMouseEnter={(e) => e.currentTarget.style.color = '#A0A0A0'} onMouseLeave={(e) => e.currentTarget.style.color = '#6E6E6E'}>Privacy</a>
-            <a href="#" style={{ ...styles.footerLink, color: '#6E6E6E' }} onMouseEnter={(e) => e.currentTarget.style.color = '#A0A0A0'} onMouseLeave={(e) => e.currentTarget.style.color = '#6E6E6E'}>Terms</a>
-            <a href="#" style={{ ...styles.footerLink, color: '#6E6E6E' }} onMouseEnter={(e) => e.currentTarget.style.color = '#A0A0A0'} onMouseLeave={(e) => e.currentTarget.style.color = '#6E6E6E'}>Security</a>
-          </div>
-        </div>
-      </footer>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+          <motion.div
+            {...fadeUp}
+            className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-cyan-300/14 via-white/[0.05] to-emerald-300/10 p-8 sm:p-10"
+          >
+            <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+              <div>
+                <div className="text-sm font-medium uppercase tracking-[0.24em] text-cyan-100/72">
+                  Ready to go deeper
+                </div>
+                <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+                  Start with the product your team already wants to use.
+                </h2>
+                <p className="mt-5 max-w-xl text-lg leading-8 text-white/68">
+                  This first polish pass upgrades the front door. From here, the next
+                  best improvements are onboarding, issue detail quality, and resolving
+                  the existing editor typecheck drift.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Link
+                  to="/signup"
+                  className="rounded-[1.5rem] border border-white/15 bg-white px-6 py-6 text-slate-950 transition hover:scale-[1.01]"
+                >
+                  <div className="text-sm font-medium uppercase tracking-[0.22em] text-slate-500">
+                    Start free
+                  </div>
+                  <div className="mt-3 text-2xl font-semibold tracking-tight">
+                    Create your workspace
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+                    Get into the app
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </Link>
+
+                <Link
+                  to="/login"
+                  className="rounded-[1.5rem] border border-white/10 bg-black/20 px-6 py-6 text-white transition hover:border-white/18 hover:bg-black/28"
+                >
+                  <div className="text-sm font-medium uppercase tracking-[0.22em] text-white/45">
+                    Existing team
+                  </div>
+                  <div className="mt-3 text-2xl font-semibold tracking-tight">
+                    Jump back in
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-sm font-medium text-white/74">
+                    Sign in
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+      </main>
     </div>
   );
 }
