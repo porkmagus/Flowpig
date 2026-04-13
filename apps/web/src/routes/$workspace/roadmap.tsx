@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { AnimatedPage } from '@flowpigdev/ui';
+import { API_URL } from '~/lib/runtime-config';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -16,8 +17,6 @@ import {
   AlertCircle,
   ArrowRight
 } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface RoadmapCycle {
   id: string;

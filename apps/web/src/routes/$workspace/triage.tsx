@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
+import { API_URL } from '~/lib/runtime-config';
 import { 
   Inbox, 
   CheckCircle, 
@@ -17,8 +18,6 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useWorkspaceRealtime } from '~/lib/ws';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface TriageIssue {
   id: string;

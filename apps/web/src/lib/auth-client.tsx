@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { createAuthClient } from 'better-auth/react';
 import { Navigate, useNavigate } from 'react-router';
+import { API_URL } from './runtime-config';
 
 const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: API_URL,
   basePath: '/auth',
   fetchOptions: {
     credentials: 'include',

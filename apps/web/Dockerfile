@@ -1,75 +1,75 @@
 # ============================================
 # Web Service - Production Dockerfile
 # ============================================
-# Multi-stage build for optimized production image
-# Stage 1: Build the React application
-# Stage 2: Serve with Nginx
+# React Router builds the server bundle, then the runtime serves it with
+# react-router-serve.
 
-# ----------------------------------------
-# STAGE 1: Build
-# ----------------------------------------
-FROM node:24-alpine AS builder
+FROM node:24.14.1-bookworm-slim AS builder
 
-# Install build dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy workspace configuration
+ARG VITE_API_URL
+ARG VITE_WS_URL
+
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_WS_URL=${VITE_WS_URL}
+
+RUN test -n "$VITE_API_URL"
+
+COPY package.json package-lock.json ./
+COPY .nvmrc ./
+COPY scripts ./scripts
+COPY apps/web/package.json ./apps/web/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/ui/package.json ./packages/ui/
+
+RUN npm ci
+
+COPY apps/web ./apps/web
+COPY packages/contracts ./packages/contracts
+COPY packages/ui ./packages/ui
+
+RUN npm run build --workspace=@flowpigdev/web
+RUN npm cache clean --force
+
+FROM node:24.14.1-bookworm-slim AS runner
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 flowpig
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY packages/ui/package.json ./packages/ui/
 
-# Install dependencies
-RUN npm ci
+RUN npm ci --omit=dev
+RUN npm cache clean --force
 
-# Copy source code
-COPY apps/web ./apps/web
-COPY packages/contracts ./packages/contracts
-COPY packages/ui ./packages/ui
+COPY --from=builder --chown=flowpig:nodejs /app/apps/web/build ./apps/web/build
 
-# Build the application (Vite build for React Router)
-RUN npm run build --workspace=@flowpigdev/web
+USER flowpig
 
-# ----------------------------------------
-# STAGE 2: Production with Nginx
-# ----------------------------------------
-FROM nginx:1.27-alpine AS runner
+EXPOSE 3000
 
-# Remove default nginx website
-RUN rm -rf /usr/share/nginx/html/*
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
-# Copy built application
-COPY --from=builder /app/apps/web/build/client /usr/share/nginx/html
+ENTRYPOINT ["dumb-init", "--"]
 
-# Copy custom nginx configuration
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create non-root user
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
-
-# Set proper permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
-
-# Switch to non-root user
-USER nginx
-
-# Expose port 80
-EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "--workspace", "@flowpigdev/web", "run", "start"]

@@ -26,12 +26,14 @@ import issueRelationsRoutes from './modules/issues/issues.relations.routes.js';
 import noteVersionRoutes from './modules/notes/notes.versions.routes.js';
 import billingRoutes, { stripeWebhookRoute } from './modules/billing/billing.routes.js';
 import { websocketPlugin } from './plugins/websocket.js';
+import uploadPublicRoutes from './modules/uploads/uploads.public.routes.js';
+import { getTrustedOrigins } from './lib/env.js';
 
 export async function app(fastify: FastifyInstance) {
+  const trustedOrigins = getTrustedOrigins();
+
   await fastify.register(cors, {
-    origin: process.env.NODE_ENV === 'development'
-      ? ['http://localhost:5173', 'http://127.0.0.1:5173']
-      : process.env.APP_URL || true,
+    origin: trustedOrigins,
     credentials: true,
   });
 
@@ -42,6 +44,7 @@ export async function app(fastify: FastifyInstance) {
   // Public routes - no auth required
   await fastify.register(healthRoutes, { prefix: '/health' });
   await fastify.register(authRoutes, { prefix: '/auth' });
+  await fastify.register(uploadPublicRoutes, { prefix: '/uploads' });
 
   // Auth middleware for all other routes
   fastify.addHook('onRequest', async (request: AuthenticatedRequest, reply) => {

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { API_URL } from './runtime-config';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -25,7 +26,6 @@ export function useAIStream(
   options: UseAIStreamOptions = {}
 ): UseAIStreamReturn {
   const { onToken, onComplete, onError } = options;
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -155,7 +155,6 @@ export function useAIStream(
 
 // Non-streaming AI chat hook
 export function useAIChat(workspaceId: string) {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

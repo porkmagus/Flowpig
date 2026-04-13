@@ -180,6 +180,12 @@ export default async function billingRoutes(fastify: FastifyInstance) {
 
 // Stripe webhook handler — mounted separately at /webhooks/stripe (raw body needed)
 export async function stripeWebhookRoute(fastify: FastifyInstance) {
+  fastify.addContentTypeParser(
+    'application/json',
+    { parseAs: 'buffer' },
+    async (_request, body) => body
+  );
+
   fastify.post(
     '/stripe',
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -198,8 +204,9 @@ export async function stripeWebhookRoute(fastify: FastifyInstance) {
       const sig = request.headers['stripe-signature'] as string;
       let event: import('stripe').Stripe.Event;
       try {
+        const rawBody = request.body as Buffer;
         event = stripe.webhooks.constructEvent(
-          request.rawBody as Buffer,
+          rawBody,
           sig,
           webhookSecret
         );

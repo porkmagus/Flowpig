@@ -1,83 +1,66 @@
 # ============================================
 # Multi-stage Build: API (Fastify Backend)
 # ============================================
-# Stage 1: Dependencies
-FROM node:24-alpine AS dependencies
+# The API runs from source via tsx so workspace packages that still export
+# TypeScript remain loadable in production.
+
+FROM node:24.14.1-alpine AS builder
+
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    openssl
 
 WORKDIR /app
 
-# Copy lockfile for better caching
-COPY package-lock.json .
-COPY package.json .
+ENV DATABASE_URL=postgresql://flowpig:flowpig@localhost:5432/flowpig_build
 
-# Copy workspace definitions and package.json files
-COPY packages/db/package.json packages/db/
-COPY packages/contracts/package.json packages/contracts/
-COPY apps/api/package.json apps/api/
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/db/package.json ./packages/db/
+COPY packages/contracts/package.json ./packages/contracts/
 
-# Install dependencies (including dev deps for build)
 RUN npm ci
 
-# ============================================
-# Stage 2: Build
-FROM node:24-alpine AS builder
+COPY apps/api ./apps/api
+COPY packages/db ./packages/db
+COPY packages/contracts ./packages/contracts
+
+RUN npm run db:generate
+RUN npm cache clean --force
+
+FROM node:24.14.1-alpine AS runner
+
+RUN apk add --no-cache \
+    openssl \
+    dumb-init
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 flowpig
 
 WORKDIR /app
 
-# Copy dependencies from previous stage
-COPY --from=dependencies /app/node_modules ./node_modules
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV HOST=0.0.0.0
 
-# Copy all source code
-COPY package.json .
-COPY package-lock.json .
-COPY packages/db packages/db
-COPY packages/contracts packages/contracts
-COPY apps/api apps/api
+COPY --from=builder --chown=flowpig:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=flowpig:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=flowpig:nodejs /app/package-lock.json ./package-lock.json
+COPY --from=builder --chown=flowpig:nodejs /app/apps/api ./apps/api
+COPY --from=builder --chown=flowpig:nodejs /app/packages/db ./packages/db
+COPY --from=builder --chown=flowpig:nodejs /app/packages/contracts ./packages/contracts
 
-# Generate Prisma client
-RUN cd packages/db && npx prisma generate
+RUN mkdir -p /app/data/uploads && chown -R flowpig:nodejs /app
 
-# Build API
-RUN cd apps/api && npm run build
+USER flowpig
 
-# ============================================
-# Stage 3: Runtime
-FROM node:24-alpine
-
-WORKDIR /app
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Copy package files
-COPY package*.json ./
-COPY packages/db/package.json packages/db/
-COPY packages/contracts/package.json packages/contracts/
-COPY apps/api/package.json apps/api/
-
-# Install production dependencies only
-RUN npm ci --omit=dev && \
-    npm cache clean --force
-
-# Copy built code from builder
-COPY --from=builder /app/packages/db/prisma packages/db/prisma
-COPY --from=builder /app/packages/db/node_modules packages/db/node_modules
-COPY --from=builder /app/packages/contracts packages/contracts
-COPY --from=builder /app/apps/api/dist apps/api/dist
-
-# Copy migrations folder
-COPY --from=builder /app/packages/db/prisma packages/db/prisma
-
-# Switch to non-root user
-USER nodejs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3001/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
-
-# Expose API port
 EXPOSE 3001
 
-# Run the application
-CMD ["node", "apps/api/dist/server.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/health || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+
+CMD ["node", "--import", "tsx", "apps/api/src/server.ts"]

@@ -1,16 +1,25 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth';
-import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace';
+import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
+import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { OpenAI } from 'openai';
 import { Anthropic } from '@anthropic-ai/sdk';
 
+const aiProvider = process.env.AI_PROVIDER || 'openai';
+const openAiApiKey = process.env.OPENAI_API_KEY
+  || (aiProvider === 'openai' ? process.env.AI_API_KEY : undefined);
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY
+  || (aiProvider === 'anthropic' ? process.env.AI_API_KEY : undefined);
+const defaultModel = process.env.AI_MODEL
+  || (aiProvider === 'anthropic' ? 'claude-3-5-sonnet-latest' : 'gpt-4o-mini');
+
 // Initialize AI clients
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = openAiApiKey ? new OpenAI({
+  apiKey: openAiApiKey,
+  baseURL: process.env.AI_API_URL || undefined,
 }) : null;
 
-const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const anthropic = anthropicApiKey ? new Anthropic({
+  apiKey: anthropicApiKey,
 }) : null;
 
 export default async function aiRoutes(fastify: FastifyInstance) {
@@ -20,7 +29,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
   }, async (request: WorkspaceRequest, reply) => {
     const userId = (request as any).user!.id;
     const workspaceId = request.workspace!.id;
-    const { messages, model = 'gpt-4o-mini', temperature = 0.7 } = request.body as {
+    const { messages, model = defaultModel, temperature = 0.7 } = request.body as {
       messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
       model?: string;
       temperature?: number;
@@ -36,7 +45,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
       if (model.startsWith('claude') && anthropic) {
         // Anthropic
         response = await anthropic.messages.create({
-          model: model || 'claude-3-5-sonnet-20241022',
+          model: model || defaultModel,
           max_tokens: 4096,
           temperature,
           messages: messages.map(m => ({
@@ -58,7 +67,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
       } else if (openai) {
         // OpenAI
         response = await openai.chat.completions.create({
-          model: model || 'gpt-4o-mini',
+          model: model || defaultModel,
           temperature,
           messages,
         });
@@ -70,7 +79,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
       } else {
         return reply.status(503).send({ 
           error: 'AI service not configured',
-          message: 'Please configure OPENAI_API_KEY or ANTHROPIC_API_KEY' 
+          message: 'Please configure AI_PROVIDER with AI_API_KEY, or set OPENAI_API_KEY / ANTHROPIC_API_KEY directly.' 
         });
       }
     } catch (error) {
@@ -88,7 +97,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
   }, async (request: WorkspaceRequest, reply) => {
     const userId = (request as any).user!.id;
     const workspaceId = request.workspace!.id;
-    const { messages, model = 'gpt-4o-mini', temperature = 0.7, conversationId } = request.body as {
+    const { messages, model = defaultModel, temperature = 0.7, conversationId } = request.body as {
       messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
       model?: string;
       temperature?: number;
@@ -110,7 +119,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
       if (model.startsWith('claude') && anthropic) {
         // Anthropic streaming
         const stream = await anthropic.messages.create({
-          model: model || 'claude-3-5-sonnet-20241022',
+          model: model || defaultModel,
           max_tokens: 4096,
           temperature,
           messages: messages.map(m => ({
@@ -147,7 +156,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
       } else if (openai) {
         // OpenAI streaming
         const stream = await openai.chat.completions.create({
-          model: model || 'gpt-4o-mini',
+          model: model || defaultModel,
           temperature,
           messages,
           stream: true,
@@ -190,7 +199,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
         const error = {
           type: 'error',
           error: 'AI service not configured',
-          message: 'Please configure OPENAI_API_KEY or ANTHROPIC_API_KEY',
+          message: 'Please configure AI_PROVIDER with AI_API_KEY, or set OPENAI_API_KEY / ANTHROPIC_API_KEY directly.',
         };
         reply.raw.write(`data: ${JSON.stringify(error)}\n\n`);
       }

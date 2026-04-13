@@ -1,74 +1,75 @@
 # ============================================
 # Multi-stage Build: Web (React Router Frontend)
 # ============================================
-# Stage 1: Dependencies
-FROM node:24-alpine AS dependencies
+# React Router builds the server bundle, then the runtime serves it with
+# react-router-serve.
+
+FROM node:24.14.1-bookworm-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy lockfile for better caching
-COPY package-lock.json .
-COPY package.json .
+ARG VITE_API_URL
+ARG VITE_WS_URL
 
-# Copy workspace definitions
-COPY packages/ui/package.json packages/ui/
-COPY packages/contracts/package.json packages/contracts/
-COPY apps/web/package.json apps/web/
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_WS_URL=${VITE_WS_URL}
 
-# Install dependencies (including dev deps for build)
+RUN test -n "$VITE_API_URL"
+
+COPY package.json package-lock.json ./
+COPY .nvmrc ./
+COPY scripts ./scripts
+COPY apps/web/package.json ./apps/web/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/ui/package.json ./packages/ui/
+
 RUN npm ci
 
-# ============================================
-# Stage 2: Build
-FROM node:24-alpine AS builder
+COPY apps/web ./apps/web
+COPY packages/contracts ./packages/contracts
+COPY packages/ui ./packages/ui
+
+RUN npm run build --workspace=@flowpigdev/web
+RUN npm cache clean --force
+
+FROM node:24.14.1-bookworm-slim AS runner
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 flowpig
 
 WORKDIR /app
 
-# Copy dependencies from previous stage
-COPY --from=dependencies /app/node_modules ./node_modules
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
 
-# Copy all source code
-COPY package.json .
-COPY package-lock.json .
-COPY packages/ui packages/ui
-COPY packages/contracts packages/contracts
-COPY apps/web apps/web
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/ui/package.json ./packages/ui/
 
-# Build React app
-RUN cd apps/web && npm run build
+RUN npm ci --omit=dev
+RUN npm cache clean --force
 
-# ============================================
-# Stage 3: Runtime
-FROM node:24-alpine
+COPY --from=builder --chown=flowpig:nodejs /app/apps/web/build ./apps/web/build
 
-WORKDIR /app
+USER flowpig
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Copy package files
-COPY package*.json ./
-COPY packages/ui/package.json packages/ui/
-COPY packages/contracts/package.json packages/contracts/
-COPY apps/web/package.json apps/web/
-
-# Install production dependencies only
-RUN npm ci --omit=dev && \
-    npm cache clean --force
-
-# Copy built app from builder
-COPY --from=builder /app/apps/web/build apps/web/build
-
-# Switch to non-root user
-USER nodejs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
-
-# Expose web port
 EXPOSE 3000
 
-# Run the application
-CMD ["node", "apps/web/build/server/index.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+
+ENTRYPOINT ["dumb-init", "--"]
+
+CMD ["npm", "--workspace", "@flowpigdev/web", "run", "start"]

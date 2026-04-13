@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { MultipartFile } from '@fastify/multipart';
+import { getStoragePublicUrl } from '../env.js';
 
 // Storage abstraction interface
 export interface StorageProvider {
@@ -141,7 +142,9 @@ declare module 'fastify' {
 export const storagePlugin = fp(async (fastify: FastifyInstance) => {
   const driver = process.env.STORAGE_DRIVER || 'filesystem';
   const uploadDir = process.env.UPLOAD_ROOT || './uploads';
-  const publicUrl = process.env.STORAGE_PUBLIC_URL || '/uploads';
+  const publicUrl = getStoragePublicUrl();
+
+  await fs.mkdir(uploadDir, { recursive: true });
 
   const storage = createStorage({
     driver: driver as 'filesystem' | 's3',

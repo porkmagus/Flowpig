@@ -1,4 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
+import { API_URL } from './runtime-config';
+
+export { API_URL };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -8,8 +11,6 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export async function fetchApi<T>(
   path: string,
