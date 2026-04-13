@@ -26,8 +26,9 @@ function normalizeUploadKey(rawPath: string) {
 }
 
 export default async function uploadPublicRoutes(fastify: FastifyInstance) {
+  const uploadRoot = path.resolve(process.env.UPLOAD_ROOT || './uploads');
+
   fastify.get('/*', async (request, reply) => {
-    const uploadRoot = path.resolve(process.env.UPLOAD_ROOT || './uploads');
     const wildcard = (request.params as { '*': string })['*'];
     const normalizedKey = normalizeUploadKey(wildcard);
 
