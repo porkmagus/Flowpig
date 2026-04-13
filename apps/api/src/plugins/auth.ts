@@ -30,6 +30,8 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
       : [process.env.APP_URL!].filter(Boolean),
     emailAndPassword: {
       enabled: true,
+      minPasswordLength: 8,
+      autoSignIn: true,
     },
     socialProviders: {
       github: process.env.GITHUB_CLIENT_ID ? {

@@ -74,40 +74,40 @@ export function CalendarView({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200">
+    <div className="h-full flex flex-col bg-linear-elevated rounded-md border border-linear-border">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-linear-border">
         <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-linear-text">
             {format(currentMonth, 'MMMM yyyy')}
           </h3>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-linear-surface rounded-md transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="w-5 h-5 text-linear-text-secondary" />
             </button>
             <button
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-linear-surface rounded-md transition-colors"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
+              <ChevronRight className="w-5 h-5 text-linear-text-secondary" />
             </button>
           </div>
         </div>
         <button
           onClick={() => setCurrentMonth(new Date())}
-          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-sm text-linear-text-secondary hover:bg-linear-surface rounded-md transition-colors"
         >
           Today
         </button>
       </div>
 
       {/* Weekday Headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="grid grid-cols-7 border-b border-linear-border">
         {weekDays.map((weekDay) => (
-          <div key={weekDay} className="py-2 text-center text-sm font-medium text-gray-500">
+          <div key={weekDay} className="py-2 text-center text-sm font-medium text-linear-text-secondary">
             {weekDay}
           </div>
         ))}
@@ -125,25 +125,25 @@ export function CalendarView({
             <div
               key={date.toISOString()}
               className={`
-                min-h-[100px] p-2 border-r border-b border-gray-100
-                ${!isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'}
+                min-h-25 p-2 border-r border-b border-linear-border/50
+                ${!isCurrentMonth ? 'bg-linear-surface/30' : 'bg-linear-elevated'}
                 ${index % 7 === 6 ? 'border-r-0' : ''}
               `}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className={`
                   text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
-                  ${isToday ? 'bg-primary-500 text-white' : 'text-gray-700'}
-                  ${!isCurrentMonth ? 'text-gray-400' : ''}
+                  ${isToday ? 'bg-linear-accent text-white' : 'text-linear-text'}
+                  ${!isCurrentMonth ? 'text-linear-text-tertiary' : ''}
                 `}>
                   {format(date, 'd')}
                 </span>
                 {isCurrentMonth && onAddClick && (
                   <button
                     onClick={() => onAddClick(date)}
-                    className="opacity-0 hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                    className="opacity-0 hover:opacity-100 transition-opacity p-1 hover:bg-linear-surface rounded"
                   >
-                    <Plus className="w-3.5 h-3.5 text-gray-400" />
+                    <Plus className="w-3.5 h-3.5 text-linear-text-tertiary" />
                   </button>
                 )}
               </div>
@@ -156,14 +156,14 @@ export function CalendarView({
                     <button
                       key={row.id}
                       onClick={() => onRowClick?.(row.id)}
-                      className="w-full text-left px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors truncate"
+                      className="w-full text-left px-2 py-1 text-xs bg-linear-accent-light text-linear-accent rounded hover:bg-linear-accent/20 transition-colors truncate"
                     >
                       {title}
                     </button>
                   );
                 })}
                 {dayRows.length > 3 && (
-                  <div className="text-xs text-gray-400 px-2">
+                  <div className="text-xs text-linear-text-tertiary px-2">
                     +{dayRows.length - 3} more
                   </div>
                 )}

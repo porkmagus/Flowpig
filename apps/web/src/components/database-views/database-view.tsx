@@ -101,7 +101,7 @@ export function DatabaseView({
       case 'calendar':
         if (!config.datePropertyId) {
           return (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="flex items-center justify-center h-64 text-linear-text-secondary">
               Please configure a date property for calendar view
             </div>
           );
@@ -120,7 +120,7 @@ export function DatabaseView({
       case 'timeline':
         if (!config.startDatePropertyId) {
           return (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="flex items-center justify-center h-64 text-linear-text-secondary">
               Please configure start and end date properties for timeline view
             </div>
           );
@@ -156,24 +156,24 @@ export function DatabaseView({
         return (
           <div className="h-full overflow-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0">
+              <thead className="bg-linear-surface sticky top-0">
                 <tr>
                   {database.properties.map(prop => (
                     <th 
                       key={prop.id}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+                      className="px-4 py-3 text-left text-xs font-medium text-linear-text-secondary uppercase tracking-wider border-b border-linear-border"
                     >
                       {prop.name}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-linear-border/50">
                 {filteredRows.map(row => (
                   <tr 
                     key={row.id}
                     onClick={() => onRowClick?.(row.id)}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-linear-surface cursor-pointer"
                   >
                     {database.properties.map(prop => {
                       const cell = row.cells.find(c => c.propertyId === prop.id);
@@ -182,7 +182,7 @@ export function DatabaseView({
                       return (
                         <td 
                           key={prop.id}
-                          className="px-4 py-3 text-sm text-gray-700"
+                          className="px-4 py-3 text-sm text-linear-text"
                         >
                           {formatCellValue(value, prop)}
                         </td>
@@ -199,7 +199,7 @@ export function DatabaseView({
 
   const formatCellValue = (value: any, property: any) => {
     if (value === null || value === undefined) {
-      return <span className="text-gray-300">-</span>;
+      return <span className="text-linear-text-tertiary">-</span>;
     }
 
     switch (property.type) {
@@ -254,7 +254,7 @@ export function DatabaseView({
             href={value} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-primary-600 hover:underline"
+            className="text-linear-accent hover:underline"
             onClick={e => e.stopPropagation()}
           >
             {value}
@@ -269,13 +269,13 @@ export function DatabaseView({
   return (
     <div className="h-full flex flex-col">
       {/* View Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-linear-border bg-linear-elevated">
         <div className="flex items-center gap-4">
           {/* View Switcher */}
           <div className="relative">
             <button
               onClick={() => setShowViewMenu(!showViewMenu)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-linear-surface hover:bg-linear-border rounded-md text-sm font-medium text-linear-text transition-colors"
             >
               {(() => {
                 const Icon = viewIcons[view.type];
@@ -286,7 +286,7 @@ export function DatabaseView({
             </button>
 
             {showViewMenu && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+              <div className="absolute top-full left-0 mt-1 w-48 bg-linear-elevated border border-linear-border rounded-md shadow-elevation-2 z-50 py-1">
                 {(Object.keys(viewLabels) as DatabaseViewType[]).map((viewType) => {
                   const Icon = viewIcons[viewType];
                   return (
@@ -296,8 +296,8 @@ export function DatabaseView({
                         onViewChange?.(viewType);
                         setShowViewMenu(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-50 ${
-                        view.type === viewType ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-linear-surface ${
+                        view.type === viewType ? 'bg-linear-accent-light text-linear-accent' : 'text-linear-text'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -311,20 +311,20 @@ export function DatabaseView({
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-linear-text-tertiary" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
-              className="pl-9 pr-4 py-1.5 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48"
+              className="pl-9 pr-4 py-1.5 bg-linear-surface rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent w-48"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* View Settings */}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500">
+          <button className="p-2 hover:bg-linear-surface rounded-md transition-colors text-linear-text-secondary">
             <Settings className="w-4 h-4" />
           </button>
 
@@ -332,7 +332,7 @@ export function DatabaseView({
           {onAddRow && (
             <button
               onClick={onAddRow}
-              className="flex items-center gap-2 px-3 py-1.5 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-linear-accent text-white rounded-md text-sm font-medium hover:bg-linear-accent-hover transition-colors"
             >
               <Plus className="w-4 h-4" />
               New

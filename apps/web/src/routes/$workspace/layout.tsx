@@ -228,7 +228,7 @@ export default function WorkspaceLayout() {
             initial={{ x: -10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.25, delay: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
-            className="w-56 bg-linear-surface border-r border-linear-border flex flex-col fixed h-full ml-52 z-10"
+            className="w-56 bg-linear-surface border-r border-linear-border flex flex-col fixed h-full left-56 z-10"
           >
             <PageTree 
               onCreatePage={() => navigate(`/${workspace}/notes`)}
@@ -239,7 +239,7 @@ export default function WorkspaceLayout() {
         {/* Main content */}
         <main className={cn(
           "flex-1",
-          isNotesSection ? 'ml-104' : 'ml-56'
+          isNotesSection ? 'ml-112' : 'ml-56'
         )}>
           {/* Top bar */}
           <header className="h-12 bg-linear-elevated border-b border-linear-border flex items-center justify-between px-4 sticky top-0 z-30">

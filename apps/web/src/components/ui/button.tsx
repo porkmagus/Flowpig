@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-linear-text text-white hover:bg-linear-text/90 active:scale-[0.98]",
+          "bg-linear-accent text-white hover:bg-linear-accent-hover active:scale-[0.98]",
         destructive:
           "bg-linear-error text-white hover:bg-linear-error/90 active:scale-[0.98]",
         outline:

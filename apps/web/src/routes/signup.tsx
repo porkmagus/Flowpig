@@ -44,17 +44,47 @@ export default function SignupRoute() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const passwordStrength = (() => {
+    if (password.length === 0) return null;
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    if (score <= 1) return { label: 'Weak', color: 'bg-linear-error', width: '25%' };
+    if (score === 2) return { label: 'Fair', color: 'bg-linear-warning', width: '50%' };
+    if (score === 3) return { label: 'Good', color: 'bg-linear-success', width: '75%' };
+    return { label: 'Strong', color: 'bg-linear-success', width: '100%' };
+  })();
+
+  function validateForm(): string | null {
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) return 'Name must be at least 2 characters.';
+    if (trimmedName.length > 100) return 'Name must be 100 characters or fewer.';
+    if (password.length < 8) return 'Password must be at least 8 characters.';
+    return null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) { setError(validationError); return; }
     setError('');
     setIsLoading(true);
 
     try {
-      await signup(email, password, name);
+      await signup(email, password, name.trim());
       setIsSuccess(true);
       setTimeout(() => navigate('/onboarding'), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist')) {
+        setError('An account with this email already exists. Try signing in.');
+      } else if (msg.toLowerCase().includes('password')) {
+        setError('Password does not meet requirements.');
+      } else {
+        setError(msg || 'Could not create account. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +101,7 @@ export default function SignupRoute() {
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-cyan-200 hover:text-cyan-100">
+          <Link to="/login" className="font-medium text-linear-accent hover:text-linear-accent-hover">
             Sign in
           </Link>
         </>
@@ -79,13 +109,13 @@ export default function SignupRoute() {
     >
       <div className="space-y-4">
         {error ? (
-          <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">
+          <div className="rounded-md border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">
             {error}
           </div>
         ) : null}
 
         {isSuccess ? (
-          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+          <div className="rounded-md border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
             <span className="inline-flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
               Account created. Redirecting to onboarding...
@@ -103,7 +133,7 @@ export default function SignupRoute() {
               placeholder="Jane Doe"
               autoComplete="name"
               required
-              className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
+              className="w-full rounded-md border border-white/10 bg-white/4 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-linear-accent/50 focus:bg-white/6"
             />
           </label>
 
@@ -116,7 +146,7 @@ export default function SignupRoute() {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
+              className="w-full rounded-md border border-white/10 bg-white/4 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-linear-accent/50 focus:bg-white/6"
             />
           </label>
 
@@ -131,7 +161,7 @@ export default function SignupRoute() {
                 autoComplete="new-password"
                 minLength={8}
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 pr-12 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
+                className="w-full rounded-md border border-white/10 bg-white/4 px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-linear-accent/50 focus:bg-white/6"
               />
               <button
                 type="button"
@@ -142,12 +172,23 @@ export default function SignupRoute() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {passwordStrength && (
+              <div className="mt-2 space-y-1">
+                <div className="h-1 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${passwordStrength.color}`}
+                    style={{ width: passwordStrength.width }}
+                  />
+                </div>
+                <p className="text-xs text-white/40">{passwordStrength.label} password</p>
+              </div>
+            )}
           </label>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-65"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-linear-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-linear-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? (
               <>

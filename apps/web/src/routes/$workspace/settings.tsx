@@ -20,7 +20,12 @@ import {
   Link,
   ChevronRight,
   Plus,
-  X
+  X,
+  CreditCard,
+  Zap,
+  CheckCircle2,
+  ExternalLink,
+  AlertTriangle,
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { cn } from '~/lib/utils';
@@ -91,6 +96,7 @@ export default function SettingsPage() {
     { id: 'integrations', label: 'Integrations', icon: Key },
     { id: 'webhooks', label: 'Webhooks', icon: Webhook },
     { id: 'data', label: 'Data', icon: Database },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
 
   return (
@@ -158,6 +164,9 @@ export default function SettingsPage() {
             )}
             {activeTab === 'data' && (
               <DataSettings />
+            )}
+            {activeTab === 'billing' && (
+              <BillingSettings workspaceId={workspace || ''} />
             )}
             {['security', 'webhooks'].includes(activeTab) && (
               <Card>
@@ -540,6 +549,256 @@ function DataSettings() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+const PLANS = [
+  {
+    id: 'FREE',
+    name: 'Free',
+    price: '$0',
+    interval: 'forever',
+    description: 'For individuals and small teams getting started.',
+    features: ['Up to 5 members', '500 issues', '1 GB storage', '50 AI requests/month', 'Core features'],
+    cta: null,
+  },
+  {
+    id: 'PRO',
+    name: 'Pro',
+    price: '$12',
+    interval: '/seat/month',
+    description: 'For growing teams that need more power and fewer limits.',
+    features: ['Up to 25 members', '10,000 issues', '20 GB storage', '500 AI requests/month', 'Advanced analytics', 'Priority support'],
+    cta: 'Upgrade to Pro',
+  },
+  {
+    id: 'ENTERPRISE',
+    name: 'Enterprise',
+    price: 'Custom',
+    interval: '',
+    description: 'For large teams with custom needs.',
+    features: ['Unlimited members', 'Unlimited issues', 'Unlimited storage', 'Unlimited AI', 'SSO/SAML', 'Dedicated support', 'Custom contracts'],
+    cta: 'Contact Sales',
+  },
+];
+
+function BillingSettings({ workspaceId }: { workspaceId: string }) {
+  const [isUpgrading, setIsUpgrading] = useState<string | null>(null);
+  const { data, isLoading } = useQuery({
+    queryKey: ['billing', workspaceId],
+    queryFn: async () => {
+      const res = await fetch(`${API_URL}/workspaces/${workspaceId}/billing`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load billing');
+      return res.json();
+    },
+  });
+
+  async function handleUpgrade(plan: string) {
+    setIsUpgrading(plan);
+    try {
+      const res = await fetch(`${API_URL}/workspaces/${workspaceId}/billing/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ plan, interval: 'monthly' }),
+      });
+      const json = await res.json();
+      if (json.url) {
+        window.location.href = json.url;
+      } else {
+        // Stripe not configured — show message
+        alert(json.message || 'Billing not configured on this server.');
+      }
+    } catch {
+      alert('Could not start checkout. Please try again.');
+    } finally {
+      setIsUpgrading(null);
+    }
+  }
+
+  async function handleManageBilling() {
+    try {
+      const res = await fetch(`${API_URL}/workspaces/${workspaceId}/billing/portal`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const json = await res.json();
+      if (json.url) window.location.href = json.url;
+    } catch {
+      alert('Could not open billing portal.');
+    }
+  }
+
+  const billing = data?.billing;
+  const usage = data?.usage;
+  const limits = data?.limits;
+  const invoices: any[] = data?.invoices || [];
+  const currentPlan = billing?.plan || 'FREE';
+
+  return (
+    <div className="space-y-6">
+      {/* Current plan banner */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-linear-accent" />
+                Current Plan
+              </CardTitle>
+              <CardDescription>
+                {isLoading ? 'Loading...' : `You are on the ${currentPlan} plan`}
+              </CardDescription>
+            </div>
+            {billing?.hasStripeSubscription && (
+              <Button variant="outline" size="sm" onClick={handleManageBilling} className="gap-1.5">
+                <ExternalLink className="w-3.5 h-3.5" />
+                Manage billing
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        {usage && limits && (
+          <CardContent className="space-y-3">
+            {billing?.cancelAtPeriodEnd && (
+              <div className="flex items-center gap-2 p-3 rounded-md bg-linear-warning-light border border-linear-warning/30 text-sm text-linear-warning">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                Your plan will cancel at the end of the billing period.
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Members', used: usage.members, max: limits.members },
+                { label: 'Issues', used: usage.issues, max: limits.issues },
+              ].map(({ label, used, max }) => (
+                <div key={label} className="p-3 bg-linear-surface rounded-md">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-linear-text-secondary">{label}</span>
+                    <span className="text-xs text-linear-text-tertiary">
+                      {used}{max ? ` / ${max}` : ''}
+                    </span>
+                  </div>
+                  {max && (
+                    <div className="h-1 bg-linear-border rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          used / max > 0.9 ? "bg-linear-error" :
+                          used / max > 0.7 ? "bg-linear-warning" : "bg-linear-accent"
+                        )}
+                        style={{ width: `${Math.min(100, (used / max) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {billing?.currentPeriodEnd && (
+              <p className="text-xs text-linear-text-tertiary">
+                Billing period ends {new Date(billing.currentPeriodEnd).toLocaleDateString()}
+              </p>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Plan comparison */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {PLANS.map((plan) => {
+          const isCurrent = currentPlan === plan.id;
+          return (
+            <div
+              key={plan.id}
+              className={cn(
+                "rounded-lg border p-5 flex flex-col gap-4 transition-all",
+                isCurrent
+                  ? "border-linear-accent bg-linear-accent-light"
+                  : "border-linear-border bg-linear-surface hover:border-linear-border-hover"
+              )}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-semibold text-linear-text">{plan.name}</h3>
+                  {isCurrent && (
+                    <Badge variant="accent" className="text-[10px]">Current</Badge>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-2xl font-bold text-linear-text">{plan.price}</span>
+                  {plan.interval && (
+                    <span className="text-xs text-linear-text-tertiary">{plan.interval}</span>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-linear-text-secondary">{plan.description}</p>
+              </div>
+
+              <ul className="space-y-1.5 flex-1">
+                {plan.features.map((feat) => (
+                  <li key={feat} className="flex items-center gap-2 text-xs text-linear-text-secondary">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-linear-success shrink-0" />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+
+              {plan.cta && !isCurrent && (
+                <Button
+                  size="sm"
+                  disabled={!!isUpgrading}
+                  onClick={() => handleUpgrade(plan.id)}
+                  className="w-full gap-1.5"
+                >
+                  {isUpgrading === plan.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Zap className="w-3.5 h-3.5" />
+                  )}
+                  {plan.cta}
+                </Button>
+              )}
+              {isCurrent && (
+                <div className="text-xs text-center text-linear-accent font-medium py-1">
+                  Active plan
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Invoice history */}
+      {invoices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Invoice History</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {invoices.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between p-3 bg-linear-surface rounded-md text-sm">
+                <div>
+                  <span className="font-medium text-linear-text">
+                    ${(inv.amount / 100).toFixed(2)} {inv.currency}
+                  </span>
+                  <span className="ml-3 text-linear-text-secondary">
+                    {new Date(inv.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={inv.status === 'PAID' ? 'success' : 'warning'} className="text-[10px]">
+                    {inv.status}
+                  </Badge>
+                  {inv.pdfUrl && (
+                    <a href={inv.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-linear-accent hover:text-linear-accent-hover">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -24,6 +24,7 @@ import gitRoutes from './modules/git/git.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import issueRelationsRoutes from './modules/issues/issues.relations.routes.js';
 import noteVersionRoutes from './modules/notes/notes.versions.routes.js';
+import billingRoutes, { stripeWebhookRoute } from './modules/billing/billing.routes.js';
 import { websocketPlugin } from './plugins/websocket.js';
 
 export async function app(fastify: FastifyInstance) {
@@ -86,6 +87,9 @@ export async function app(fastify: FastifyInstance) {
   await fastify.register(analyticsRoutes, { prefix: '/workspaces/:workspaceId/analytics' });
   await fastify.register(issueRelationsRoutes, { prefix: '/workspaces/:workspaceId/issues' });
   await fastify.register(noteVersionRoutes, { prefix: '/workspaces/:workspaceId/notes' });
+  await fastify.register(billingRoutes, { prefix: '/workspaces/:workspaceId/billing' });
+  // Stripe webhooks need raw body - registered separately
+  await fastify.register(stripeWebhookRoute, { prefix: '/webhooks' });
 
   await fastify.register(websocketPlugin);
 }

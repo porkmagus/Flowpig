@@ -68,32 +68,32 @@ export function TimelineView({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="h-full flex flex-col bg-linear-elevated rounded-md border border-linear-border overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between p-3 border-b border-linear-border bg-linear-surface">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-gray-700">Timeline</h3>
+          <h3 className="text-sm font-medium text-linear-text">Timeline</h3>
           <div className="flex items-center gap-1">
             <button
               onClick={() => navigateWeeks(-1)}
-              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-linear-border rounded-md transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
+              <ChevronLeft className="w-4 h-4 text-linear-text-secondary" />
             </button>
-            <span className="text-sm text-gray-600 min-w-[140px] text-center">
+            <span className="text-sm text-linear-text-secondary min-w-35 text-center">
               {format(startDate, 'MMM d')} - {format(addDays(startDate, 27), 'MMM d, yyyy')}
             </span>
             <button
               onClick={() => navigateWeeks(1)}
-              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-linear-border rounded-md transition-colors"
             >
-              <ChevronRight className="w-4 h-4 text-gray-600" />
+              <ChevronRight className="w-4 h-4 text-linear-text-secondary" />
             </button>
           </div>
         </div>
         <button
           onClick={() => setStartDate(startOfWeek(new Date()))}
-          className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-sm text-linear-text-secondary hover:bg-linear-border rounded-md transition-colors"
         >
           Today
         </button>
@@ -103,20 +103,20 @@ export function TimelineView({
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Row titles */}
         <div 
-          className="flex-shrink-0 border-r border-gray-200 bg-gray-50"
+          className="shrink-0 border-r border-linear-border bg-linear-surface"
           style={{ width: SIDEBAR_WIDTH }}
         >
-          <div style={{ height: HEADER_HEIGHT }} className="border-b border-gray-200" />
+          <div style={{ height: HEADER_HEIGHT }} className="border-b border-linear-border" />
           <div className="overflow-hidden">
             {datedRows.map((row) => (
               <div
                 key={row.id}
-                className="flex items-center gap-2 px-3 border-b border-gray-100 hover:bg-gray-100 cursor-pointer"
+                className="flex items-center gap-2 px-3 border-b border-linear-border/50 hover:bg-linear-surface cursor-pointer"
                 style={{ height: ROW_HEIGHT }}
                 onClick={() => onRowClick?.(row.id)}
               >
-                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                <span className="text-sm text-gray-700 truncate">
+                <GripVertical className="w-4 h-4 text-linear-text-tertiary shrink-0" />
+                <span className="text-sm text-linear-text truncate">
                   {getCellValue(row, titlePropertyId) || 'Untitled'}
                 </span>
               </div>
@@ -133,23 +133,23 @@ export function TimelineView({
           <div style={{ width: timelineWidth }}>
             {/* Day Headers */}
             <div 
-              className="flex border-b border-gray-200 bg-gray-50 sticky top-0"
+              className="flex border-b border-linear-border bg-linear-surface sticky top-0"
               style={{ height: HEADER_HEIGHT }}
             >
               {days.map((date, index) => (
                 <div
                   key={date.toISOString()}
                   className={`
-                    flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center
-                    ${isSameDay(date, new Date()) ? 'bg-blue-50' : ''}
-                    ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-gray-100' : ''}
+                    shrink-0 border-r border-linear-border flex flex-col items-center justify-center
+                    ${isSameDay(date, new Date()) ? 'bg-linear-accent-light' : ''}
+                    ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-linear-surface' : ''}
                   `}
                   style={{ width: DAY_WIDTH }}
                 >
-                  <span className="text-xs text-gray-500">{format(date, 'EEE')}</span>
+                  <span className="text-xs text-linear-text-secondary">{format(date, 'EEE')}</span>
                   <span className={`
                     text-sm font-medium
-                    ${isSameDay(date, new Date()) ? 'text-blue-600' : 'text-gray-700'}
+                    ${isSameDay(date, new Date()) ? 'text-linear-accent' : 'text-linear-text'}
                   `}>
                     {format(date, 'd')}
                   </span>
@@ -165,8 +165,8 @@ export function TimelineView({
                   <div
                     key={date.toISOString()}
                     className={`
-                      flex-shrink-0 border-r border-gray-100
-                      ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-gray-50/50' : ''}
+                      shrink-0 border-r border-linear-border/50
+                      ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-linear-surface/30' : ''}
                     `}
                     style={{ width: DAY_WIDTH, height: datedRows.length * ROW_HEIGHT }}
                   />
@@ -211,7 +211,7 @@ export function TimelineView({
                   >
                     <button
                       onClick={() => onRowClick?.(row.id)}
-                      className="w-full h-full px-2 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-md shadow-sm transition-colors flex items-center"
+                      className="w-full h-full px-2 bg-linear-accent hover:bg-linear-accent-hover text-white text-xs rounded-md shadow-sm transition-colors flex items-center"
                     >
                       <span className="truncate">{title}</span>
                     </button>
@@ -224,7 +224,7 @@ export function TimelineView({
                 <div
                   key={`spacer-${row.id}`}
                   style={{ height: ROW_HEIGHT }}
-                  className="border-b border-gray-100"
+                  className="border-b border-linear-border/50"
                 />
               ))}
             </div>

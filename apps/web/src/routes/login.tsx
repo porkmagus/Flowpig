@@ -50,7 +50,14 @@ export default function LoginRoute() {
       await login(email, password);
       navigate('/onboarding');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credential') || msg.toLowerCase().includes('password')) {
+        setError('Incorrect email or password.');
+      } else if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('no user')) {
+        setError('No account found with that email.');
+      } else {
+        setError(msg || 'Sign in failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +74,7 @@ export default function LoginRoute() {
       footer={
         <>
           Don&apos;t have an account?{' '}
-          <Link to="/signup" className="font-medium text-cyan-200 hover:text-cyan-100">
+          <Link to="/signup" className="font-medium text-linear-accent hover:text-linear-accent-hover">
             Create one
           </Link>
         </>
@@ -75,7 +82,7 @@ export default function LoginRoute() {
     >
       <div className="space-y-4">
         {error ? (
-          <div className="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">
+          <div className="rounded-md border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-100">
             {error}
           </div>
         ) : null}
@@ -90,7 +97,7 @@ export default function LoginRoute() {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
+              className="w-full rounded-md border border-white/10 bg-white/4 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-linear-accent/50 focus:bg-white/6"
             />
           </label>
 
@@ -104,7 +111,7 @@ export default function LoginRoute() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/4 px-4 py-3 pr-12 text-base text-white outline-none transition placeholder:text-white/28 focus:border-cyan-300/35 focus:bg-white/6"
+                className="w-full rounded-md border border-white/10 bg-white/4 px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-linear-accent/50 focus:bg-white/6"
               />
               <button
                 type="button"
@@ -120,7 +127,7 @@ export default function LoginRoute() {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-65"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-linear-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-linear-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? (
               <>

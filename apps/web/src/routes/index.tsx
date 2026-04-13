@@ -145,7 +145,7 @@ export default function IndexRoute() {
       <header className="sticky top-0 z-40 border-b border-white/5 bg-linear-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-linear-accent/20 bg-linear-accent/10">
               <Layers className="h-5 w-5 text-cyan-300" />
             </div>
             <div>
@@ -169,13 +169,13 @@ export default function IndexRoute() {
           <div className="flex items-center gap-3">
             <Link
               to="/login"
-              className="hidden rounded-full px-4 py-2 text-sm text-white/70 transition hover:bg-white/6 hover:text-white sm:inline-flex"
+              className="hidden rounded-md px-4 py-2 text-sm text-white/70 transition hover:bg-white/6 hover:text-white sm:inline-flex"
             >
               Sign in
             </Link>
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/14 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:border-cyan-200/40 hover:bg-cyan-300/22"
+              className="inline-flex items-center gap-2 rounded-md border border-linear-accent/30 bg-linear-accent/15 px-4 py-2 text-sm font-medium text-linear-accent transition hover:border-linear-accent/50 hover:bg-linear-accent/25"
             >
               Start free
               <ArrowRight className="h-4 w-4" />
@@ -187,7 +187,7 @@ export default function IndexRoute() {
       <main className="relative">
         <section className="mx-auto grid max-w-7xl gap-16 px-5 pb-20 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-28 lg:pt-20">
           <div className="relative">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-sm text-white/70">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-white/12 bg-white/6 px-3 py-1.5 text-sm text-white/70">
               <Sparkles className="h-4 w-4 text-cyan-300" />
               A calmer operating system for product teams
             </div>
@@ -208,14 +208,14 @@ export default function IndexRoute() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:scale-[1.01] hover:bg-cyan-50"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-linear-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-linear-accent-hover"
               >
                 Create workspace
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 to="/acme-corp"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/6 px-6 py-3.5 text-sm font-medium text-white/86 transition hover:border-white/20 hover:bg-white/9"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-white/12 bg-white/6 px-6 py-3 text-sm font-medium text-white/86 transition hover:border-white/20 hover:bg-white/9"
               >
                 <PlayCircle className="h-4 w-4 text-cyan-300" />
                 Open live demo
@@ -226,7 +226,7 @@ export default function IndexRoute() {
               {highlights.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2"
+                  className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-black/20 px-3 py-2"
                 >
                   <Icon className="h-4 w-4 text-cyan-300" />
                   <span>{label}</span>
@@ -236,9 +236,9 @@ export default function IndexRoute() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-cyan-400/8 via-transparent to-emerald-300/8 blur-2xl" />
-            <div className="relative overflow-hidden rounded-4xl border border-white/6 bg-white/3 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-5">
-              <div className="rounded-3xl border border-white/5 bg-linear-surface/95 p-4 sm:p-5">
+            <div className="absolute -inset-4 rounded-xl bg-linear-to-br from-cyan-400/8 via-transparent to-emerald-300/8 blur-2xl" />
+            <div className="relative overflow-hidden rounded-xl border border-white/6 bg-white/3 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-5">
+              <div className="rounded-lg border border-white/5 bg-linear-surface/95 p-4 sm:p-5">
                 <div className="flex items-center justify-between border-b border-white/8 pb-4">
                   <div>
                     <div className="text-sm font-medium text-white/90">Workspace pulse</div>
@@ -253,7 +253,7 @@ export default function IndexRoute() {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/5 bg-white/3 p-4">
+                    <div className="rounded-md border border-white/5 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-sm font-medium text-white/86">
@@ -276,7 +276,7 @@ export default function IndexRoute() {
                         ].map(([title, badge, tone]) => (
                           <div
                             key={title}
-                            className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-3 py-3"
+                            className="flex items-center justify-between rounded-md border border-white/8 bg-black/20 px-3 py-3"
                           >
                             <div>
                               <div className="text-sm text-white/90">{title}</div>
@@ -298,7 +298,7 @@ export default function IndexRoute() {
                       ].map(([value, label]) => (
                         <div
                           key={label}
-                          className="rounded-[1.15rem] border border-white/5 bg-white/3 p-4"
+                          className="rounded-md border border-white/5 bg-white/3 p-4"
                         >
                           <div className="text-2xl font-semibold tracking-tight text-white">
                             {value}
@@ -310,7 +310,7 @@ export default function IndexRoute() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-[1.25rem] border border-white/5 bg-white/3 p-4">
+                    <div className="rounded-md border border-white/5 bg-white/3 p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium text-white/88">Team inbox</div>
                         <Inbox className="h-4 w-4 text-cyan-300" />
@@ -323,7 +323,7 @@ export default function IndexRoute() {
                         ].map((item) => (
                           <div
                             key={item}
-                            className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3 text-white/72"
+                            className="rounded-md border border-white/8 bg-black/20 px-3 py-3 text-white/72"
                           >
                             {item}
                           </div>
@@ -331,7 +331,7 @@ export default function IndexRoute() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.25rem] border border-white/5 bg-linear-to-br from-cyan-300/8 via-white/2 to-emerald-300/8 p-4">
+                    <div className="rounded-md border border-white/5 bg-linear-to-br from-cyan-300/8 via-white/2 to-emerald-300/8 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-white/90">
                         <Bot className="h-4 w-4 text-emerald-200" />
                         AI assistant
@@ -361,7 +361,7 @@ export default function IndexRoute() {
               key={card.title}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: index * 0.06 }}
-              className="relative overflow-hidden rounded-[1.75rem] border border-white/6 bg-white/2 p-6"
+              className="relative overflow-hidden rounded-xl border border-white/6 bg-white/2 p-6"
             >
               <div
                 className={`absolute inset-x-0 top-0 h-24 bg-linear-to-br ${card.accent} blur-2xl`}
@@ -402,9 +402,9 @@ export default function IndexRoute() {
                 key={title}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: index * 0.05 }}
-                className="group rounded-[1.75rem] border border-white/6 bg-white/2 p-7 transition hover:border-white/10 hover:bg-white/4"
+                className="group rounded-xl border border-white/6 bg-white/2 p-7 transition hover:border-white/10 hover:bg-white/4"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-md border border-linear-accent/20 bg-linear-accent/10">
                   <Icon className="h-5 w-5 text-cyan-200" />
                 </div>
                 <h3 className="mt-5 text-2xl font-semibold tracking-tight text-white">
@@ -437,7 +437,7 @@ export default function IndexRoute() {
                   key={step.title}
                   {...fadeUp}
                   transition={{ ...fadeUp.transition, delay: index * 0.06 }}
-                  className="rounded-[1.75rem] border border-white/10 bg-[#081018] p-6"
+                  className="rounded-xl border border-white/10 bg-[#081018] p-6"
                 >
                   <div className="text-xs uppercase tracking-[0.26em] text-emerald-200/68">
                     {step.eyebrow}
@@ -463,7 +463,7 @@ export default function IndexRoute() {
         <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <motion.div
             {...fadeUp}
-            className="overflow-hidden rounded-4xl border border-white/6 bg-linear-to-br from-cyan-300/10 via-white/3 to-emerald-300/8 p-8 sm:p-10"
+            className="overflow-hidden rounded-xl border border-white/6 bg-linear-to-br from-cyan-300/10 via-white/3 to-emerald-300/8 p-8 sm:p-10"
           >
             <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
@@ -483,15 +483,15 @@ export default function IndexRoute() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Link
                   to="/signup"
-                  className="rounded-3xl border border-white/15 bg-white px-6 py-6 text-slate-950 transition hover:scale-[1.01]"
+                  className="rounded-xl border border-linear-accent/25 bg-linear-accent-light px-6 py-6 text-linear-text transition hover:border-linear-accent/40 hover:bg-linear-accent/15"
                 >
-                  <div className="text-sm font-medium uppercase tracking-[0.22em] text-slate-500">
+                  <div className="text-sm font-medium uppercase tracking-[0.22em] text-linear-text-tertiary">
                     Start free
                   </div>
                   <div className="mt-3 text-2xl font-semibold tracking-tight">
                     Create your workspace
                   </div>
-                  <div className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <div className="mt-3 flex items-center gap-2 text-sm font-medium text-linear-accent">
                     Get into the app
                     <ArrowRight className="h-4 w-4" />
                   </div>
@@ -499,7 +499,7 @@ export default function IndexRoute() {
 
                 <Link
                   to="/login"
-                  className="rounded-3xl border border-white/6 bg-black/15 px-6 py-6 text-white transition hover:border-white/12 hover:bg-black/22"
+                  className="rounded-xl border border-white/6 bg-white/3 px-6 py-6 text-white transition hover:border-white/12 hover:bg-white/6"
                 >
                   <div className="text-sm font-medium uppercase tracking-[0.22em] text-white/45">
                     Existing team

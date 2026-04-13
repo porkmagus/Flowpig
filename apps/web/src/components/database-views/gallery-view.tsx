@@ -73,12 +73,12 @@ export function GalleryView({
         {onAddClick && (
           <button
             onClick={onAddClick}
-            className="aspect-[4/5] rounded-xl border-2 border-dashed border-gray-300 hover:border-primary-400 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-3 group"
+            className="aspect-4/5 rounded-xl border-2 border-dashed border-linear-border hover:border-linear-accent/60 hover:bg-linear-surface transition-all flex flex-col items-center justify-center gap-3 group"
           >
-            <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-primary-100 flex items-center justify-center transition-colors">
-              <Plus className="w-6 h-6 text-gray-400 group-hover:text-primary-500" />
+            <div className="w-12 h-12 rounded-full bg-linear-surface group-hover:bg-linear-accent-light flex items-center justify-center transition-colors">
+              <Plus className="w-6 h-6 text-linear-text-tertiary group-hover:text-linear-accent" />
             </div>
-            <span className="text-sm text-gray-500 group-hover:text-primary-600 font-medium">
+            <span className="text-sm text-linear-text-secondary group-hover:text-linear-accent font-medium">
               New
             </span>
           </button>
@@ -93,10 +93,10 @@ export function GalleryView({
             <div
               key={row.id}
               onClick={() => onRowClick?.(row.id)}
-              className="group bg-white rounded-xl border border-gray-200 hover:border-primary-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
+              className="group bg-linear-elevated rounded-xl border border-linear-border hover:border-linear-accent/50 hover:shadow-elevation-1 transition-all cursor-pointer overflow-hidden"
             >
               {/* Card Image/Placeholder */}
-              <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+              <div className="aspect-4/3 bg-linear-surface relative overflow-hidden">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -108,7 +108,7 @@ export function GalleryView({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-10 h-10 text-gray-300" />
+                    <ImageIcon className="w-10 h-10 text-linear-text-tertiary" />
                   </div>
                 )}
                 
@@ -120,8 +120,8 @@ export function GalleryView({
               <div className="p-4">
                 {/* Title */}
                 <div className="flex items-start gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+                  <FileText className="w-4 h-4 text-linear-text-tertiary shrink-0 mt-0.5" />
+                  <h3 className="text-sm font-medium text-linear-text line-clamp-2 flex-1">
                     {title}
                   </h3>
                 </div>
@@ -157,7 +157,7 @@ export function GalleryView({
                               </span>
                             ))}
                             {formatted.length > 2 && (
-                              <span className="text-xs text-gray-400">+{formatted.length - 2}</span>
+                              <span className="text-xs text-linear-text-tertiary">+{formatted.length - 2}</span>
                             )}
                           </div>
                         );
@@ -182,8 +182,8 @@ export function GalleryView({
 
                       return (
                         <div key={propId} className="flex items-center gap-2 text-xs">
-                          <span className="text-gray-400">{property.name}:</span>
-                          <span className="text-gray-700 truncate">{formatted}</span>
+                          <span className="text-linear-text-tertiary">{property.name}:</span>
+                          <span className="text-linear-text truncate">{formatted}</span>
                         </div>
                       );
                     })}
@@ -196,9 +196,9 @@ export function GalleryView({
 
       {rows.length === 0 && (
         <div className="text-center py-16">
-          <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No items to display</p>
-          <p className="text-sm text-gray-400 mt-1">Add items to see them in gallery view</p>
+          <ImageIcon className="w-12 h-12 text-linear-text-tertiary mx-auto mb-3" />
+          <p className="text-linear-text-secondary">No items to display</p>
+          <p className="text-sm text-linear-text-tertiary mt-1">Add items to see them in gallery view</p>
         </div>
       )}
     </div>

@@ -40,11 +40,11 @@ export function AuthShell({
       </div>
 
       <div className="relative mx-auto grid min-h-screen max-w-7xl gap-10 px-5 py-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-8 lg:py-8">
-        <aside className="hidden overflow-hidden rounded-4xl border border-white/6 bg-linear-surface/3 p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between">
+        <aside className="hidden overflow-hidden rounded-xl border border-white/6 bg-linear-surface/30 p-8 backdrop-blur-xl lg:flex lg:flex-col lg:justify-between">
           <div>
             <Link to="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
-                <Layers className="h-5 w-5 text-cyan-200" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-linear-accent/30 bg-linear-accent/15">
+                <Layers className="h-5 w-5 text-linear-accent" />
               </div>
               <div>
                 <div className="text-base font-semibold tracking-tight">Flowpig</div>
@@ -53,7 +53,7 @@ export function AuthShell({
             </Link>
 
             <div className="mt-16 max-w-xl">
-              <div className="text-sm font-medium uppercase tracking-[0.26em] text-cyan-200/70">
+              <div className="text-sm font-medium uppercase tracking-[0.18em] text-linear-accent/80">
                 {asideEyebrow}
               </div>
               <h1 className="mt-4 text-5xl font-semibold leading-none tracking-[-0.05em] text-white">
@@ -66,10 +66,10 @@ export function AuthShell({
               {benefits.map(({ icon: Icon, title: benefitTitle, description }) => (
                 <div
                   key={benefitTitle}
-                  className="rounded-3xl border border-white/6 bg-black/15 p-5"
+                  className="rounded-lg border border-white/6 bg-black/20 p-5"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
-                    <Icon className="h-4 w-4 text-cyan-200" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md border border-linear-accent/20 bg-linear-accent/10">
+                    <Icon className="h-4 w-4 text-linear-accent" />
                   </div>
                   <div className="mt-4 text-lg font-medium tracking-tight text-white">
                     {benefitTitle}
@@ -82,12 +82,12 @@ export function AuthShell({
 
           <div className="mt-10 inline-flex items-center gap-2 text-sm font-medium text-white/70">
             Built for product, design, and engineering
-            <ChevronRight className="h-4 w-4 text-cyan-200" />
+            <ChevronRight className="h-4 w-4 text-linear-accent" />
           </div>
         </aside>
 
         <section className="flex min-h-[calc(100vh-3rem)] items-center">
-            <div className="w-full rounded-4xl border border-white/6 bg-linear-surface/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
+            <div className="w-full rounded-xl border border-white/6 bg-linear-surface/80 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
             <Link
               to="/"
               className="inline-flex items-center gap-2 text-sm text-white/48 transition hover:text-white/78"
@@ -98,8 +98,8 @@ export function AuthShell({
 
             <div className="mt-8 lg:hidden">
               <Link to="/" className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
-                  <Layers className="h-5 w-5 text-cyan-200" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-linear-accent/30 bg-linear-accent/15">
+                  <Layers className="h-5 w-5 text-linear-accent" />
                 </div>
                 <div>
                   <div className="text-base font-semibold tracking-tight">Flowpig</div>
