@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { createAuthClient } from 'better-auth/react';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 
 const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_AUTH_URL || 'http://localhost:5173/api/auth',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   fetchOptions: {
     credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   },
 });
 
@@ -56,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
+      callbackURL: window.location.origin + '/onboarding',
     });
 
     if (error) {
@@ -77,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       name,
+      callbackURL: window.location.origin + '/onboarding',
     });
 
     if (error) {
@@ -117,7 +122,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#2A2A2A] border-t-[#5E6AD2]" />
+      </div>
+    );
   }
 
   if (!user) {

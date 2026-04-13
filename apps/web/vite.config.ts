@@ -4,29 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [
-    tailwindcss({
-      config: {
-        content: [
-          "./src/**/*.{ts,tsx}",
-          "./src/app/**/*.{ts,tsx}",
-          "./src/components/**/*.{ts,tsx}",
-        ],
-        theme: {
-          extend: {
-            colors: {
-              'linear-bg': 'hsl(var(--color-linear-bg) / <alpha-value>)',
-              'linear-surface': 'hsl(var(--color-linear-surface) / <alpha-value>)',
-              'linear-elevated': 'hsl(var(--color-linear-elevated) / <alpha-value>)',
-              'linear-border': 'hsl(var(--color-linear-border) / <alpha-value>)',
-              'linear-text': 'hsl(var(--color-linear-text) / <alpha-value>)',
-              'linear-accent': 'hsl(var(--color-linear-accent) / <alpha-value>)',
-              'linear-accent-hover': 'hsl(var(--color-linear-accent-hover) / <alpha-value>)',
-              'linear-error': 'hsl(var(--color-linear-error) / <alpha-value>)',
-            },
-          },
-        },
-      },
-    }),
+    tailwindcss(),
     reactRouter()
   ],
   resolve: {

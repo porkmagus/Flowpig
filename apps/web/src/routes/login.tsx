@@ -19,7 +19,7 @@ export default function LoginRoute() {
 
     try {
       await login(email, password);
-      navigate('/acme-corp');
+      navigate('/onboarding');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -31,7 +31,7 @@ export default function LoginRoute() {
     container: {
       minHeight: '100vh',
       display: 'flex',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#0D0D0D',
     },
     leftPanel: {
       flex: 1,
@@ -39,109 +39,126 @@ export default function LoginRoute() {
       flexDirection: 'column' as const,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: '2rem',
-      background: 'linear-gradient(135deg, #5E6AD2 0%, #764ba2 100%)',
+      padding: '4rem',
+      background: 'linear-gradient(180deg, #1A1A1A 0%, #0D0D0D 100%)',
       color: 'white',
+      borderRight: '1px solid #2A2A2A',
     },
     rightPanel: {
       flex: 1,
       display: 'flex',
       flexDirection: 'column' as const,
       justifyContent: 'center',
-      padding: '2rem',
-      maxWidth: '480px',
+      padding: '4rem',
+      maxWidth: '440px',
+      margin: '0 auto',
     },
     logo: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem',
-      marginBottom: '2rem',
+      gap: '0.75rem',
+      marginBottom: '3rem',
     },
     logoIcon: {
-      width: '2rem',
-      height: '2rem',
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      borderRadius: '0.5rem',
+      width: '2.5rem',
+      height: '2.5rem',
+      backgroundColor: 'rgba(94,106,210,0.15)',
+      borderRadius: '0.75rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      border: '1px solid rgba(94,106,210,0.3)',
     },
     heading: {
-      fontSize: '1.875rem',
-      fontWeight: 700,
-      color: '#111827',
+      fontSize: '1.75rem',
+      fontWeight: 600,
+      color: '#FFFFFF',
       marginBottom: '0.5rem',
+      letterSpacing: '-0.02em',
     },
     subheading: {
-      fontSize: '1rem',
-      color: '#6b7280',
-      marginBottom: '1.5rem',
+      fontSize: '0.9375rem',
+      color: '#A0A0A0',
+      marginBottom: '2rem',
+      lineHeight: 1.6,
     },
     form: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '1rem',
+      gap: '1.25rem',
     },
     inputGroup: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '0.25rem',
+      gap: '0.5rem',
     },
     label: {
-      fontSize: '0.875rem',
+      fontSize: '0.8125rem',
       fontWeight: 500,
-      color: '#374151',
+      color: '#E0E0E0',
+      letterSpacing: '0.01em',
     },
     input: {
-      padding: '0.75rem 1rem',
+      padding: '0.875rem 1rem',
       borderRadius: '0.5rem',
-      border: '1px solid #d1d5db',
-      fontSize: '1rem',
+      border: '1px solid #2A2A2A',
+      backgroundColor: '#1A1A1A',
+      color: '#FFFFFF',
+      fontSize: '0.9375rem',
       outline: 'none',
+      transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
     },
     passwordWrapper: {
       position: 'relative' as const,
     },
     passwordToggle: {
       position: 'absolute' as const,
-      right: '0.75rem',
+      right: '0.875rem',
       top: '50%',
       transform: 'translateY(-50%)',
       background: 'none',
       border: 'none',
       cursor: 'pointer',
-      color: '#6b7280',
+      color: '#6E6E6E',
+      padding: '0.25rem',
+      transition: 'color 0.15s ease',
     },
     button: {
-      padding: '0.75rem 1rem',
+      padding: '0.875rem 1.25rem',
       backgroundColor: '#5E6AD2',
       color: 'white',
       borderRadius: '0.5rem',
       border: 'none',
-      fontSize: '1rem',
+      fontSize: '0.9375rem',
       fontWeight: 500,
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.5rem',
+      transition: 'background-color 0.15s ease, transform 0.1s ease',
+      letterSpacing: '0.01em',
+    },
+    buttonHover: {
+      backgroundColor: '#545EC4',
     },
     buttonDisabled: {
-      opacity: 0.7,
+      opacity: 0.6,
       cursor: 'not-allowed',
     },
     error: {
-      padding: '0.75rem',
-      backgroundColor: '#fef2f2',
-      color: '#dc2626',
+      padding: '0.875rem 1rem',
+      backgroundColor: 'rgba(209,59,59,0.12)',
+      color: '#D13B3B',
       borderRadius: '0.5rem',
       fontSize: '0.875rem',
+      border: '1px solid rgba(209,59,59,0.2)',
     },
     footer: {
-      marginTop: '1.5rem',
+      marginTop: '1.75rem',
       textAlign: 'center' as const,
       fontSize: '0.875rem',
-      color: '#6b7280',
+      color: '#6E6E6E',
     },
     link: {
       color: '#5E6AD2',
@@ -151,11 +168,15 @@ export default function LoginRoute() {
     backLink: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.25rem',
-      color: '#6b7280',
+      gap: '0.375rem',
+      color: '#6E6E6E',
       textDecoration: 'none',
       fontSize: '0.875rem',
-      marginBottom: '1.5rem',
+      marginBottom: '2rem',
+      transition: 'color 0.15s ease',
+    },
+    backLinkHover: {
+      color: '#A0A0A0',
     },
   };
 
@@ -165,14 +186,14 @@ export default function LoginRoute() {
       <div style={styles.leftPanel}>
         <div style={styles.logo}>
           <div style={styles.logoIcon}>
-            <Layers style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
+            <Layers style={{ width: '1.25rem', height: '1.25rem', color: '#5E6AD2' }} />
           </div>
-          <span style={{ fontSize: '1.5rem', fontWeight: 600 }}>Flowpig</span>
+          <span style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.01em' }}>Flowpig</span>
         </div>
-        <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.25rem', fontWeight: 600, marginBottom: '1rem', textAlign: 'center', letterSpacing: '-0.02em' }}>
           Welcome back
         </h2>
-        <p style={{ fontSize: '1.125rem', opacity: 0.9, textAlign: 'center', maxWidth: '400px' }}>
+        <p style={{ fontSize: '1rem', color: '#A0A0A0', textAlign: 'center', maxWidth: '420px', lineHeight: 1.6 }}>
           Sign in to continue building amazing products with your team.
         </p>
       </div>
@@ -180,7 +201,7 @@ export default function LoginRoute() {
       {/* Right Panel */}
       <div style={styles.rightPanel}>
         <Link to="/" style={styles.backLink}>
-          <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
+          <ArrowLeft style={{ width: '0.875rem', height: '0.875rem' }} />
           Back to home
         </Link>
 
@@ -201,6 +222,7 @@ export default function LoginRoute() {
               style={styles.input}
               placeholder="you@example.com"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -214,11 +236,14 @@ export default function LoginRoute() {
                 style={{ ...styles.input, width: '100%' }}
                 placeholder="Enter your password"
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.passwordToggle}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#A0A0A0')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#6E6E6E')}
               >
                 {showPassword ? <EyeOff style={{ width: '1rem', height: '1rem' }} /> : <Eye style={{ width: '1rem', height: '1rem' }} />}
               </button>
@@ -232,10 +257,16 @@ export default function LoginRoute() {
               ...styles.button,
               ...(isLoading ? styles.buttonDisabled : {}),
             }}
+            onMouseEnter={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#545EC4';
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#5E6AD2';
+            }}
           >
             {isLoading ? (
               <>
-                <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                <Loader2 style={{ width: '0.9375rem', height: '0.9375rem', animation: 'spin 1s linear infinite' }} />
                 Signing in...
               </>
             ) : (

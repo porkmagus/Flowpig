@@ -3,7 +3,7 @@ import { RootErrorBoundary } from '~/components/error-boundary';
 
 export default function RootRoute() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0D0D0D]">
       <Outlet />
     </div>
   );
