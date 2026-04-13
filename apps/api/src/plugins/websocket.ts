@@ -42,11 +42,11 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
   await fastify.register(websocket);
 
   // WebSocket route
-  fastify.get('/ws', { websocket: true }, (connection, req: FastifyRequest) => {
+  fastify.get('/ws', { websocket: true }, (socket, _req: FastifyRequest) => {
     const clientId = Math.random().toString(36).substring(7);
     
     const client: Client = {
-      socket: connection.socket,
+      socket,
       userId: '', // Will be set after auth
       subscriptions: new Set(),
     };
@@ -56,7 +56,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
     console.log(`WebSocket client connected: ${clientId}`);
 
     // Handle messages
-    connection.socket.on('message', async (rawMessage: Buffer) => {
+    socket.on('message', async (rawMessage: Buffer) => {
       try {
         const message = JSON.parse(rawMessage.toString());
 
@@ -75,24 +75,24 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
                 if (session?.user?.id) {
                   client.userId = session.user.id;
                   // Send auth success
-                  connection.socket.send(JSON.stringify({
+                  socket.send(JSON.stringify({
                     type: 'auth_success',
                     userId: client.userId,
                   }));
                 } else {
-                  connection.socket.send(JSON.stringify({
+                  socket.send(JSON.stringify({
                     type: 'auth_error',
                     error: 'Invalid session',
                   }));
                 }
               } else {
-                connection.socket.send(JSON.stringify({
+                socket.send(JSON.stringify({
                   type: 'auth_error',
                   error: 'Invalid session',
                 }));
               }
             } catch (error) {
-              connection.socket.send(JSON.stringify({
+              socket.send(JSON.stringify({
                 type: 'auth_error',
                 error: 'Authentication failed',
               }));
@@ -115,7 +115,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
                 client.workspaceId = message.workspaceId;
                 client.subscriptions.add(`workspace:${message.workspaceId}`);
                 
-                connection.socket.send(JSON.stringify({
+                socket.send(JSON.stringify({
                   type: 'subscribed',
                   workspaceId: message.workspaceId,
                 }));
@@ -126,7 +126,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
           case 'unsubscribe':
             if (message.workspaceId) {
               client.subscriptions.delete(`workspace:${message.workspaceId}`);
-              connection.socket.send(JSON.stringify({
+              socket.send(JSON.stringify({
                 type: 'unsubscribed',
                 workspaceId: message.workspaceId,
               }));
@@ -134,7 +134,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
             break;
 
           case 'ping':
-            connection.socket.send(JSON.stringify({ type: 'pong' }));
+            socket.send(JSON.stringify({ type: 'pong' }));
             break;
 
           case 'presence':
@@ -232,14 +232,14 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
             break;
 
           default:
-            connection.socket.send(JSON.stringify({
+            socket.send(JSON.stringify({
               type: 'error',
               error: 'Unknown message type',
             }));
         }
       } catch (error) {
         console.error('WebSocket message error:', error);
-        connection.socket.send(JSON.stringify({
+        socket.send(JSON.stringify({
           type: 'error',
           error: 'Invalid message format',
         }));
@@ -247,7 +247,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
     });
 
     // Handle disconnect
-    connection.socket.on('close', () => {
+    socket.on('close', () => {
       console.log(`WebSocket client disconnected: ${clientId}`);
       
       // Remove from page viewers
@@ -261,7 +261,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
     });
 
     // Send welcome message
-    connection.socket.send(JSON.stringify({
+    socket.send(JSON.stringify({
       type: 'connected',
       clientId,
     }));
