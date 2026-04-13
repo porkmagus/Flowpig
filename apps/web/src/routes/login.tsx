@@ -32,6 +32,9 @@ const benefits = [
   },
 ];
 
+const DEMO_EMAIL = 'test@flowpig.dev';
+const DEMO_PASSWORD = 'testpassword123';
+
 export default function LoginRoute() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -40,6 +43,11 @@ export default function LoginRoute() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  function fillDemo() {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,6 +147,23 @@ export default function LoginRoute() {
             )}
           </button>
         </form>
+
+        <div className="relative my-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-linear-border" />
+          <span className="text-xs text-linear-text-tertiary">or</span>
+          <div className="h-px flex-1 bg-linear-border" />
+        </div>
+
+        <button
+          type="button"
+          onClick={fillDemo}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-linear-border bg-linear-surface px-4 py-2.5 text-sm font-medium text-linear-text-secondary transition hover:border-linear-border-hover hover:text-linear-text"
+        >
+          Try demo account
+        </button>
+        <p className="mt-2 text-center text-xs text-linear-text-tertiary">
+          {DEMO_EMAIL} - testpassword123
+        </p>
       </div>
     </AuthShell>
   );

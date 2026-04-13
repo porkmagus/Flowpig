@@ -71,14 +71,20 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
               });
 
               if (response.ok) {
-                const session = await response.json();
-                client.userId = session.user.id;
-                
-                // Send auth success
-                connection.socket.send(JSON.stringify({
-                  type: 'auth_success',
-                  userId: client.userId,
-                }));
+                const session = await response.json() as { user?: { id: string } };
+                if (session?.user?.id) {
+                  client.userId = session.user.id;
+                  // Send auth success
+                  connection.socket.send(JSON.stringify({
+                    type: 'auth_success',
+                    userId: client.userId,
+                  }));
+                } else {
+                  connection.socket.send(JSON.stringify({
+                    type: 'auth_error',
+                    error: 'Invalid session',
+                  }));
+                }
               } else {
                 connection.socket.send(JSON.stringify({
                   type: 'auth_error',
@@ -141,7 +147,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
               if (oldPage) {
                 const oldPageKey = `${oldPage.type}:${oldPage.id}`;
                 pageViewers.get(oldPageKey)?.delete(clientId);
-                broadcastPagePresence(oldPage.type, oldPage.id, workspaceId);
+                if (client.workspaceId) broadcastPagePresence(oldPage.type, oldPage.id, client.workspaceId);
               }
               
               // Add to new page viewers
@@ -151,7 +157,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
                   pageViewers.set(pageKey, new Set());
                 }
                 pageViewers.get(pageKey)?.add(clientId);
-                broadcastPagePresence(message.page.type, message.page.id, workspaceId);
+                if (client.workspaceId) broadcastPagePresence(message.page.type, message.page.id, client.workspaceId);
               }
             }
             
