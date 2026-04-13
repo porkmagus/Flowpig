@@ -621,7 +621,7 @@ export default function IssuesList() {
                     <button
                       onClick={() => toggleIssueSelection(issue.id)}
                       className={cn(
-                        "flex-shrink-0 w-4 h-4 rounded border transition-colors",
+                        "shrink-0 w-4 h-4 rounded border transition-colors",
                         selectedIssues.has(issue.id)
                           ? "bg-linear-accent border-linear-accent text-white"
                           : "border-linear-border hover:border-linear-accent"
@@ -635,7 +635,7 @@ export default function IssuesList() {
                   <PriorityIcon priority={issue.priority} />
 
                   {/* Issue identifier */}
-                  <div className="flex-shrink-0 text-xs font-medium text-linear-text-tertiary w-14">
+                  <div className="shrink-0 text-xs font-medium text-linear-text-tertiary w-14">
                     {issue.identifier}
                   </div>
 
@@ -676,7 +676,7 @@ export default function IssuesList() {
 
                   {/* Labels */}
                   {issue.labels.length > 0 && (
-                    <div className="flex-shrink-0 flex gap-1">
+                    <div className="shrink-0 flex gap-1">
                       {issue.labels.slice(0, 2).map(label => (
                         <Badge
                           key={label.id}
@@ -696,17 +696,17 @@ export default function IssuesList() {
 
                   {/* Assignee */}
                   {issue.assignee ? (
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-linear-accent text-white flex items-center justify-center text-[10px] font-medium">
+                    <div className="shrink-0 w-6 h-6 rounded-full bg-linear-accent text-white flex items-center justify-center text-[10px] font-medium">
                       {issue.assignee.name?.[0]?.toUpperCase() || '?'}
                     </div>
                   ) : (
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full border border-dashed border-linear-border" />
+                    <div className="shrink-0 w-6 h-6 rounded-full border border-dashed border-linear-border" />
                   )}
 
                   {/* State badge */}
                   <Badge
                     variant="outline"
-                    className="flex-shrink-0 text-[10px] px-1.5 py-0 h-5"
+                    className="shrink-0 text-[10px] px-1.5 py-0 h-5"
                     style={{
                       borderColor: issue.workflowState?.color + '40' || '#E6E6E6',
                       backgroundColor: (issue.workflowState?.color || '#6E6E6E') + '15',
@@ -718,7 +718,7 @@ export default function IssuesList() {
 
                   {/* Comments */}
                   {issue.commentCount > 0 && (
-                    <div className="flex-shrink-0 text-xs text-linear-text-tertiary flex items-center gap-1">
+                    <div className="shrink-0 text-xs text-linear-text-tertiary flex items-center gap-1">
                       <span>{issue.commentCount}</span>
                     </div>
                   )}

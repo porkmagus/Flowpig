@@ -31,7 +31,7 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#05070b] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-linear-bg text-white">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-40 -top-32 h-96 w-96 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="absolute -right-32 top-48 h-88 w-88 rounded-full bg-indigo-500/12 blur-3xl" />
@@ -87,7 +87,7 @@ export function AuthShell({
         </aside>
 
         <section className="flex min-h-[calc(100vh-3rem)] items-center">
-            <div className="w-full rounded-4xl border border-white/6 bg-[#0b1016]/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
+            <div className="w-full rounded-4xl border border-white/6 bg-linear-surface/92 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8 lg:p-10">
             <Link
               to="/"
               className="inline-flex items-center gap-2 text-sm text-white/48 transition hover:text-white/78"

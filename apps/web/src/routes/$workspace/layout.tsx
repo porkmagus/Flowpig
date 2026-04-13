@@ -239,7 +239,7 @@ export default function WorkspaceLayout() {
         {/* Main content */}
         <main className={cn(
           "flex-1",
-          isNotesSection ? 'ml-[26rem]' : 'ml-56'
+          isNotesSection ? 'ml-104' : 'ml-56'
         )}>
           {/* Top bar */}
           <header className="h-12 bg-linear-elevated border-b border-linear-border flex items-center justify-between px-4 sticky top-0 z-30">

@@ -150,7 +150,7 @@ function NotificationItem({
       )}
 
       {/* Icon */}
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${colorClass.split(' ')[0]}`}>
+      <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${colorClass.split(' ')[0]}`}>
         {icon}
       </div>
 
@@ -189,7 +189,7 @@ function NotificationItem({
           </Link>
 
           {/* Time and actions */}
-          <div className="flex-shrink-0 flex flex-col items-end gap-2">
+          <div className="shrink-0 flex flex-col items-end gap-2">
             <span className="text-xs text-linear-text-tertiary">
               {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
             </span>

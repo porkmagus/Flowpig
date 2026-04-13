@@ -131,7 +131,7 @@ const fadeUp = {
 
 export default function IndexRoute() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#05070b] text-white">
+    <div className="min-h-screen overflow-x-hidden bg-linear-bg text-white">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -142,7 +142,7 @@ export default function IndexRoute() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-size-[88px_88px] opacity-[0.06]" />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#05070b]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-linear-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
@@ -238,7 +238,7 @@ export default function IndexRoute() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-cyan-400/8 via-transparent to-emerald-300/8 blur-2xl" />
             <div className="relative overflow-hidden rounded-4xl border border-white/6 bg-white/3 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-5">
-              <div className="rounded-3xl border border-white/5 bg-[#0b1016]/95 p-4 sm:p-5">
+              <div className="rounded-3xl border border-white/5 bg-linear-surface/95 p-4 sm:p-5">
                 <div className="flex items-center justify-between border-b border-white/8 pb-4">
                   <div>
                     <div className="text-sm font-medium text-white/90">Workspace pulse</div>

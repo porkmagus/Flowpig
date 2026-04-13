@@ -33,7 +33,7 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "Starting API Server (Terminal 1)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 
-$apiProcess = Start-Process powershell -ArgumentList "-Command", "cd F:\flowpigdev\apps\api; npx tsx src\server.ts" -WindowStyle Normal -PassThru
+Start-Process powershell -ArgumentList "-Command", "cd F:\flowpigdev\apps\api; npx tsx src\server.ts" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
 
@@ -42,7 +42,7 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "Starting Web Dev Server (Terminal 2)" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 
-$webProcess = Start-Process powershell -ArgumentList "-Command", "cd F:\flowpigdev\apps\web; npm run dev" -WindowStyle Normal -PassThru
+Start-Process powershell -ArgumentList "-Command", "cd F:\flowpigdev\apps\web; npm run dev" -WindowStyle Normal
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
