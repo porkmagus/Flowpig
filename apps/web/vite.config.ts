@@ -1,13 +1,13 @@
 import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
-    tsconfigPaths(),
-    tailwindcss(),
-    reactRouter()
+    tsconfigPaths() as unknown as PluginOption,
+    tailwindcss() as unknown as PluginOption,
+    reactRouter() as unknown as PluginOption,
   ],
   server: {
     host: "0.0.0.0",
