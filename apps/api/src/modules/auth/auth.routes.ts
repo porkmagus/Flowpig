@@ -68,7 +68,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     try {
       const req = new Request(url, init);
       const response = await auth.handler(req);
-      
+
       for (const [key, value] of response.headers.entries()) {
         if (key === 'set-cookie') {
           const cookies = Array.isArray(value) ? value : [value];
@@ -79,12 +79,16 @@ export default async function authRoutes(fastify: FastifyInstance) {
           reply.header(key, value);
         }
       }
-      
+
       const responseBody = await response.text();
-      return reply.status(response.status).send(responseBody);
+      if (response.status >= 500 && !responseBody) {
+        console.error('Auth handler returned empty 500 for', request.method, request.url);
+      }
+      return reply.status(response.status).send(responseBody || { error: 'Auth handler error' });
     } catch (error) {
-      console.error('Auth handler error:', error);
-      reply.status(500).send({ error: 'Internal server error' });
+      console.error('Auth handler exception:', error);
+      const message = error instanceof Error ? error.message : String(error);
+      reply.status(500).send({ error: 'Internal server error', message });
     }
   });
 }
