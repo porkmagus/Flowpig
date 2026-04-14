@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   Bot,
   Eye,
@@ -8,8 +8,9 @@ import {
   GitBranch,
   Loader2,
 } from 'lucide-react';
+import { AuthProviderButtons } from '~/components/auth-provider-buttons';
 import { AuthShell } from '~/components/auth-shell';
-import { useAuth } from '~/lib/auth-client';
+import { useAuth, type SocialProvider } from '~/lib/auth-client';
 
 const benefits = [
   {
@@ -37,12 +38,17 @@ const DEMO_PASSWORD = 'testpassword123';
 
 export default function LoginRoute() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, loginWithProvider, authProviders, isProvidersLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [socialLoadingProvider, setSocialLoadingProvider] = useState<SocialProvider | null>(null);
+  const inviteToken = searchParams.get('invite')?.trim();
+  const redirectPath = inviteToken ? `/invite/${inviteToken}` : '/onboarding';
+  const inviteQuery = inviteToken ? `?invite=${encodeURIComponent(inviteToken)}` : '';
 
   function fillDemo() {
     setEmail(DEMO_EMAIL);
@@ -55,8 +61,8 @@ export default function LoginRoute() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/onboarding');
+      await login(email, password, redirectPath);
+      navigate(redirectPath);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credential') || msg.toLowerCase().includes('password')) {
@@ -71,6 +77,19 @@ export default function LoginRoute() {
     }
   }
 
+  async function handleProviderLogin(provider: SocialProvider) {
+    setError('');
+    setSocialLoadingProvider(provider);
+
+    try {
+      await loginWithProvider(provider, redirectPath);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || 'Social sign-in failed. Please try again.');
+      setSocialLoadingProvider(null);
+    }
+  }
+
   return (
     <AuthShell
       title="Sign in to your workspace"
@@ -82,7 +101,7 @@ export default function LoginRoute() {
       footer={
         <>
           Don&apos;t have an account?{' '}
-          <Link to="/signup" className="font-medium text-linear-accent hover:text-linear-accent-hover">
+          <Link to={`/signup${inviteQuery}`} className="font-medium text-linear-accent hover:text-linear-accent-hover">
             Create one
           </Link>
         </>
@@ -134,7 +153,7 @@ export default function LoginRoute() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || socialLoadingProvider !== null}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-linear-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-linear-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? (
@@ -154,10 +173,19 @@ export default function LoginRoute() {
           <div className="h-px flex-1 bg-linear-border" />
         </div>
 
+        <AuthProviderButtons
+          actionLabel="Continue"
+          providers={authProviders}
+          isLoading={isProvidersLoading}
+          activeProvider={socialLoadingProvider}
+          onSelect={handleProviderLogin}
+        />
+
         <button
           type="button"
           onClick={fillDemo}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-linear-border bg-linear-surface px-4 py-2.5 text-sm font-medium text-linear-text-secondary transition hover:border-linear-border-hover hover:text-linear-text"
+          disabled={isLoading || socialLoadingProvider !== null}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-linear-border bg-linear-surface px-4 py-2.5 text-sm font-medium text-linear-text-secondary transition hover:border-linear-border-hover hover:text-linear-text disabled:cursor-not-allowed disabled:opacity-60"
         >
           Try demo account
         </button>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Settings,
@@ -26,8 +26,10 @@ import {
   CheckCircle2,
   ExternalLink,
   AlertTriangle,
+  Copy,
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
+import { useAuth } from '~/lib/auth-client';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -42,17 +44,61 @@ interface WorkspaceSettings {
   description: string | null;
   color: string;
   icon: string | null;
+  ownerId: string;
   settings: {
     defaultIssueState?: string;
     allowGuests?: boolean;
     requireApproval?: boolean;
+    appearance?: {
+      theme?: 'light' | 'dark' | 'system';
+    };
+    notifications?: {
+      emailEnabled?: boolean;
+      desktopEnabled?: boolean;
+      issueAssigned?: boolean;
+      issueMentioned?: boolean;
+      issueCommented?: boolean;
+      cycleUpdates?: boolean;
+      weeklyDigest?: boolean;
+    };
+  };
+}
+
+interface WorkspaceMemberRecord {
+  id: string;
+  userId: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'GUEST';
+  joinedAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  };
+}
+
+interface PendingInvitationRecord {
+  id: string;
+  email: string;
+  role: 'ADMIN' | 'MEMBER' | 'GUEST';
+  status: 'PENDING';
+  createdAt: string;
+  expiresAt: string;
+  acceptUrl: string;
+  invitedBy: {
+    id: string;
+    name: string | null;
+    email: string;
   };
 }
 
 export default function SettingsPage() {
   const { workspace } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('general');
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['workspace-settings', workspace],
@@ -62,7 +108,7 @@ export default function SettingsPage() {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to load workspace');
-      return response.json();
+      return response.json() as Promise<{ workspace: WorkspaceSettings }>;
     },
   });
 
@@ -77,15 +123,83 @@ export default function SettingsPage() {
           body: JSON.stringify(updates),
         }
       );
-      if (!response.ok) throw new Error('Failed to update workspace');
-      return response.json();
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.message || 'Failed to update workspace');
+      return payload as { workspace: WorkspaceSettings };
+    },
+    onSuccess: (result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-settings'] });
+      setFeedback({ type: 'success', message: 'Workspace settings saved.' });
+      if (variables.slug && result.workspace.slug !== workspace) {
+        navigate(`/${result.workspace.slug}/settings`, { replace: true });
+      }
+    },
+    onError: (error) => {
+      setFeedback({ type: 'error', message: error.message });
+    },
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/export`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || 'Failed to export workspace');
+      }
+
+      const blob = await response.blob();
+      const header = response.headers.get('Content-Disposition') || '';
+      const match = header.match(/filename="([^"]+)"/i);
+      const filename = match?.[1] || `${workspace}-export.json`;
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-settings', workspace] });
+      setFeedback({ type: 'success', message: 'Workspace export downloaded.' });
+    },
+    onError: (error) => {
+      setFeedback({ type: 'error', message: error.message });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (confirmation: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ confirmation }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || 'Failed to delete workspace');
+      }
+    },
+    onSuccess: () => {
+      if (typeof window !== 'undefined') {
+        const lastWorkspace = window.localStorage.getItem('flowpig:last-workspace');
+        if (lastWorkspace === workspace) {
+          window.localStorage.removeItem('flowpig:last-workspace');
+        }
+      }
+      navigate('/onboarding', { replace: true });
+    },
+    onError: (error) => {
+      setFeedback({ type: 'error', message: error.message });
     },
   });
 
   const workspaceData: WorkspaceSettings | undefined = data?.workspace;
+  const canDeleteWorkspace = !!workspaceData && user?.id === workspaceData.ownerId;
 
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
@@ -111,6 +225,16 @@ export default function SettingsPage() {
           <p className="text-sm text-linear-text-secondary mt-0.5">
             Manage your workspace configuration
           </p>
+          {feedback && (
+            <div className={cn(
+              'mt-4 rounded-lg px-3 py-2 text-sm',
+              feedback.type === 'success'
+                ? 'border border-linear-accent/30 bg-linear-accent-light text-linear-text'
+                : 'border border-linear-error/30 bg-linear-error/10 text-linear-error'
+            )}>
+              {feedback.message}
+            </div>
+          )}
         </div>
       </FadeIn>
 
@@ -156,14 +280,25 @@ export default function SettingsPage() {
                 isUpdating={updateMutation.isPending}
               />
             )}
-            {activeTab === 'notifications' && (
-              <NotificationSettings />
+            {activeTab === 'notifications' && workspaceData && (
+              <NotificationSettings
+                workspace={workspaceData}
+                onUpdate={(updates) => updateMutation.mutate(updates)}
+                isUpdating={updateMutation.isPending}
+              />
             )}
             {activeTab === 'integrations' && (
               <IntegrationSettings />
             )}
-            {activeTab === 'data' && (
-              <DataSettings />
+            {activeTab === 'data' && workspaceData && (
+              <DataSettings
+                workspace={workspaceData}
+                canDelete={canDeleteWorkspace}
+                onExport={() => exportMutation.mutate()}
+                isExporting={exportMutation.isPending}
+                onDelete={(confirmation) => deleteMutation.mutate(confirmation)}
+                isDeleting={deleteMutation.isPending}
+              />
             )}
             {activeTab === 'billing' && (
               <BillingSettings workspaceId={workspace || ''} />
@@ -192,7 +327,16 @@ function GeneralSettings({
   isUpdating: boolean;
 }) {
   const [name, setName] = useState(workspace.name);
+  const [slug, setSlug] = useState(workspace.slug);
   const [description, setDescription] = useState(workspace.description || '');
+
+  useEffect(() => {
+    setName(workspace.name);
+    setSlug(workspace.slug);
+    setDescription(workspace.description || '');
+  }, [workspace]);
+
+  const isDirty = name !== workspace.name || slug !== workspace.slug || description !== (workspace.description || '');
 
   return (
     <Card>
@@ -222,8 +366,8 @@ function GeneralSettings({
             <span className="text-sm text-linear-text-secondary">flowpig.app/</span>
             <input
               type="text"
-              value={workspace.slug}
-              disabled
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               className="flex-1 bg-transparent text-sm text-linear-text focus:outline-none"
             />
           </div>
@@ -244,8 +388,8 @@ function GeneralSettings({
 
         <div className="pt-2">
           <Button 
-            onClick={() => onUpdate({ name, description })}
-            disabled={isUpdating}
+            onClick={() => onUpdate({ name: name.trim(), slug: slug.trim(), description: description.trim() || '' })}
+            disabled={isUpdating || !name.trim() || !slug.trim() || !isDirty}
             className="gap-1.5"
           >
             {isUpdating ? (
@@ -262,43 +406,296 @@ function GeneralSettings({
 }
 
 function MemberSettings({ workspace }: { workspace?: string }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'ADMIN' | 'MEMBER' | 'GUEST'>('MEMBER');
+  const [message, setMessage] = useState<string | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['workspace-members', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/members`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to load members');
+      return response.json() as Promise<{ members: WorkspaceMemberRecord[] }>;
+    },
+    enabled: !!workspace,
+  });
+
+  const members = data?.members || [];
+  const canManageInvites = members.some(
+    (member) => member.userId === user?.id && ['OWNER', 'ADMIN'].includes(member.role)
+  );
+
+  const { data: invitationData, isLoading: isInvitationsLoading } = useQuery({
+    queryKey: ['workspace-invitations', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/invitations`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to load invitations');
+      return response.json() as Promise<{ invitations: PendingInvitationRecord[] }>;
+    },
+    enabled: !!workspace && canManageInvites,
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          role: inviteRole,
+        }),
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.message || json.error || 'Failed to send invitation');
+      }
+
+      return json as {
+        status: 'member-added' | 'invitation-created';
+        message?: string;
+        invitation?: {
+          acceptUrl?: string;
+        };
+      };
+    },
+    onSuccess: (result) => {
+      setInviteEmail('');
+      setInviteRole('MEMBER');
+      setInviteLink(result.invitation?.acceptUrl ?? null);
+      setMessage(
+        result.status === 'member-added'
+          ? 'Member added to the workspace.'
+          : result.message || 'Invitation created.'
+      );
+      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspace] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
+    },
+  });
+
+  const revokeInvitationMutation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/invitations/${invitationId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.message || json.error || 'Failed to revoke invitation');
+      }
+
+      return json as { message?: string };
+    },
+    onSuccess: (result) => {
+      setInviteLink(null);
+      setMessage(result.message || 'Invitation revoked.');
+      queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
+    },
+  });
+
+  const invitations = invitationData?.invitations || [];
+
+  function copyInviteLink(acceptUrl: string) {
+    void navigator.clipboard.writeText(acceptUrl);
+    setInviteLink(acceptUrl);
+    setMessage('Invite link copied.');
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Member Settings</CardTitle>
-        <CardDescription>
-          Manage who has access to this workspace
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
-          <div>
-            <h3 className="font-medium text-linear-text text-sm">Allow Guest Access</h3>
-            <p className="text-xs text-linear-text-secondary">Let external users join with limited permissions</p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" defaultChecked />
-            <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-linear-surface after:border-linear-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
-          </label>
-        </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Member Settings</CardTitle>
+          <CardDescription>
+            Manage workspace access, invite teammates, and verify current membership.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {message && (
+            <div className="rounded-md border border-linear-accent/30 bg-linear-accent-light px-3 py-2 text-sm text-linear-text">
+              {message}
+              {inviteLink && (
+                <div className="mt-2 text-xs text-linear-text-secondary">
+                  Share this invite link until email delivery is wired up:{' '}
+                  <a
+                    href={inviteLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-linear-accent hover:text-linear-accent-hover"
+                  >
+                    {inviteLink}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
 
-        <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
-          <div>
-            <h3 className="font-medium text-linear-text text-sm">Require Approval</h3>
-            <p className="text-xs text-linear-text-secondary">New members must be approved by an admin</p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-linear-surface after:border-linear-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
-          </label>
-        </div>
+          {canManageInvites ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+                <Input
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="teammate@company.com"
+                  type="email"
+                />
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'MEMBER' | 'GUEST')}
+                  className="h-10 rounded-lg border border-linear-border bg-linear-surface px-3 text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
+                >
+                  <option value="MEMBER">Member</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="GUEST">Guest</option>
+                </select>
+                <Button
+                  onClick={() => {
+                    setMessage(null);
+                    setInviteLink(null);
+                    inviteMutation.mutate();
+                  }}
+                  disabled={inviteMutation.isPending || !inviteEmail.trim()}
+                  className="gap-1.5"
+                >
+                  {inviteMutation.isPending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  Invite
+                </Button>
+              </div>
 
-        <Button variant="outline" className="w-full gap-1.5">
-          <Plus className="w-3.5 h-3.5" />
-          Invite member
-        </Button>
-      </CardContent>
-    </Card>
+              {inviteMutation.error && (
+                <div className="rounded-md border border-linear-error/30 bg-linear-error/10 px-3 py-2 text-sm text-linear-error">
+                  {inviteMutation.error.message}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="rounded-md border border-linear-border bg-linear-surface px-3 py-3 text-sm text-linear-text-secondary">
+              Only workspace owners and admins can manage invitations.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Current Members</CardTitle>
+          <CardDescription>
+            {members.length} member{members.length === 1 ? '' : 's'} currently have access.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading members...
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between rounded-lg border border-linear-border bg-linear-surface px-3 py-3"
+                >
+                  <div>
+                    <div className="font-medium text-sm text-linear-text">
+                      {member.user.name || member.user.email}
+                    </div>
+                    <div className="text-xs text-linear-text-secondary">
+                      {member.user.email}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-linear-text-secondary">
+                    <Badge variant="outline">{member.role}</Badge>
+                    <span>Joined {new Date(member.joinedAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {canManageInvites && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pending Invitations</CardTitle>
+            <CardDescription>
+              Review open invites, copy links, and revoke requests that should no longer stay active.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isInvitationsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading invitations...
+              </div>
+            ) : invitations.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-linear-border bg-linear-surface px-3 py-4 text-sm text-linear-text-secondary">
+                No pending invitations.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col gap-3 rounded-lg border border-linear-border bg-linear-surface px-3 py-3 lg:flex-row lg:items-center lg:justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 text-sm font-medium text-linear-text">
+                        {invitation.email}
+                        <Badge variant="outline">{invitation.role}</Badge>
+                      </div>
+                      <div className="mt-1 text-xs text-linear-text-secondary">
+                        Invited by {invitation.invitedBy.name || invitation.invitedBy.email} · Expires{' '}
+                        {new Date(invitation.expiresAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyInviteLink(invitation.acceptUrl)}
+                        className="gap-1.5"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy link
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revokeInvitationMutation.mutate(invitation.id)}
+                        disabled={revokeInvitationMutation.isPending}
+                        className="gap-1.5 border-linear-error/30 text-linear-error hover:bg-linear-error/10 hover:text-linear-error"
+                      >
+                        {revokeInvitationMutation.isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                        Revoke
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 
@@ -317,7 +714,14 @@ function AppearanceSettings({
   ];
 
   const [selectedColor, setSelectedColor] = useState(workspace.color);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(workspace.settings.appearance?.theme || 'system');
+
+  useEffect(() => {
+    setSelectedColor(workspace.color);
+    setTheme(workspace.settings.appearance?.theme || 'system');
+  }, [workspace]);
+
+  const isDirty = selectedColor !== workspace.color || theme !== (workspace.settings.appearance?.theme || 'system');
 
   return (
     <div className="space-y-4">
@@ -346,8 +750,15 @@ function AppearanceSettings({
           </div>
           <div className="mt-4">
             <Button
-              onClick={() => onUpdate({ color: selectedColor })}
-              disabled={isUpdating || selectedColor === workspace.color}
+              onClick={() => onUpdate({
+                color: selectedColor,
+                settings: {
+                  appearance: {
+                    theme,
+                  },
+                },
+              })}
+              disabled={isUpdating || !isDirty}
               className="gap-1.5"
             >
               {isUpdating ? (
@@ -355,7 +766,7 @@ function AppearanceSettings({
               ) : (
                 <Save className="w-3.5 h-3.5" />
               )}
-              Save color
+              Save appearance
             </Button>
           </div>
         </CardContent>
@@ -413,9 +824,36 @@ function AppearanceSettings({
   );
 }
 
-function NotificationSettings() {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [desktopNotifications, setDesktopNotifications] = useState(true);
+function NotificationSettings({
+  workspace,
+  onUpdate,
+  isUpdating,
+}: {
+  workspace: WorkspaceSettings;
+  onUpdate: (updates: Partial<WorkspaceSettings>) => void;
+  isUpdating: boolean;
+}) {
+  const defaults = {
+    emailEnabled: workspace.settings.notifications?.emailEnabled ?? true,
+    desktopEnabled: workspace.settings.notifications?.desktopEnabled ?? true,
+    issueAssigned: workspace.settings.notifications?.issueAssigned ?? true,
+    issueMentioned: workspace.settings.notifications?.issueMentioned ?? true,
+    issueCommented: workspace.settings.notifications?.issueCommented ?? true,
+    cycleUpdates: workspace.settings.notifications?.cycleUpdates ?? false,
+    weeklyDigest: workspace.settings.notifications?.weeklyDigest ?? true,
+  };
+
+  const [preferences, setPreferences] = useState(defaults);
+
+  useEffect(() => {
+    setPreferences(defaults);
+  }, [workspace]);
+
+  const isDirty = JSON.stringify(preferences) !== JSON.stringify(defaults);
+
+  const togglePreference = (key: keyof typeof preferences) => {
+    setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <Card>
@@ -426,12 +864,33 @@ function NotificationSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          {[
+            { key: 'emailEnabled', label: 'Email delivery', desc: 'Send email when notifications are enabled.' },
+            { key: 'desktopEnabled', label: 'Desktop alerts', desc: 'Show browser notifications for active workspace events.' },
+          ].map((pref) => (
+            <button
+              key={pref.key}
+              onClick={() => togglePreference(pref.key as keyof typeof preferences)}
+              className={cn(
+                'rounded-lg border p-3 text-left transition-colors',
+                preferences[pref.key as keyof typeof preferences]
+                  ? 'border-linear-accent/30 bg-linear-accent-light'
+                  : 'border-linear-border bg-linear-surface hover:border-linear-border-hover'
+              )}
+            >
+              <div className="text-sm font-medium text-linear-text">{pref.label}</div>
+              <div className="mt-1 text-xs text-linear-text-secondary">{pref.desc}</div>
+            </button>
+          ))}
+        </div>
+
         {[
-          { id: 'issueAssigned', label: 'Issue Assigned', desc: 'When someone assigns you an issue', default: true },
-          { id: 'issueMentioned', label: 'Mentioned', desc: 'When someone mentions you in a comment', default: true },
-          { id: 'issueCommented', label: 'New Comments', desc: 'When someone comments on an issue you follow', default: true },
-          { id: 'cycleUpdates', label: 'Cycle Updates', desc: 'Updates about active sprint cycles', default: false },
-          { id: 'weeklyDigest', label: 'Weekly Digest', desc: 'Weekly summary of your workspace activity', default: true },
+          { id: 'issueAssigned', label: 'Issue Assigned', desc: 'When someone assigns you an issue' },
+          { id: 'issueMentioned', label: 'Mentioned', desc: 'When someone mentions you in a comment' },
+          { id: 'issueCommented', label: 'New Comments', desc: 'When someone comments on an issue you follow' },
+          { id: 'cycleUpdates', label: 'Cycle Updates', desc: 'Updates about active sprint cycles' },
+          { id: 'weeklyDigest', label: 'Weekly Digest', desc: 'Weekly summary of your workspace activity' },
         ].map((pref) => (
           <div key={pref.id} className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
             <div>
@@ -441,13 +900,28 @@ function NotificationSettings() {
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
                 type="checkbox" 
-                defaultChecked={pref.default}
+                checked={preferences[pref.id as keyof typeof preferences]}
+                onChange={() => togglePreference(pref.id as keyof typeof preferences)}
                 className="sr-only peer"
               />
               <div className="w-9 h-5 bg-linear-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-linear-surface after:border-linear-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-linear-accent"></div>
             </label>
           </div>
         ))}
+        <div>
+          <Button
+            onClick={() => onUpdate({ settings: { notifications: preferences } })}
+            disabled={isUpdating || !isDirty}
+            className="gap-1.5"
+          >
+            {isUpdating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            Save preferences
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -498,7 +972,27 @@ function IntegrationSettings() {
   );
 }
 
-function DataSettings() {
+function DataSettings({
+  workspace,
+  canDelete,
+  onExport,
+  isExporting,
+  onDelete,
+  isDeleting,
+}: {
+  workspace: WorkspaceSettings;
+  canDelete: boolean;
+  onExport: () => void;
+  isExporting: boolean;
+  onDelete: (confirmation: string) => void;
+  isDeleting: boolean;
+}) {
+  const [confirmation, setConfirmation] = useState('');
+
+  useEffect(() => {
+    setConfirmation('');
+  }, [workspace.id]);
+
   return (
     <div className="space-y-4">
       <Card>
@@ -514,7 +1008,9 @@ function DataSettings() {
               <h3 className="font-medium text-linear-text text-sm">Export Data</h3>
               <p className="text-xs text-linear-text-secondary">Download all your workspace data in JSON format</p>
             </div>
-            <Button variant="outline" size="sm">Export JSON</Button>
+            <Button variant="outline" size="sm" onClick={onExport} disabled={isExporting}>
+              {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Export JSON'}
+            </Button>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-linear-surface rounded-lg">
@@ -522,7 +1018,7 @@ function DataSettings() {
               <h3 className="font-medium text-linear-text text-sm">Import Data</h3>
               <p className="text-xs text-linear-text-secondary">Import from Linear, Jira, GitHub Issues, or CSV</p>
             </div>
-            <Button variant="outline" size="sm">Import</Button>
+            <Button variant="outline" size="sm" disabled>Coming soon</Button>
           </div>
         </CardContent>
       </Card>
@@ -535,17 +1031,33 @@ function DataSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-3 bg-priority-urgent/5 rounded-lg">
+          <div className="space-y-3 rounded-lg bg-priority-urgent/5 p-3">
             <div>
               <h3 className="font-medium text-priority-urgent text-sm">Delete workspace</h3>
               <p className="text-xs text-priority-urgent/70">
-                Permanently delete this workspace and all its data
+                Permanently delete this workspace and all its data. Type <span className="font-semibold">{workspace.slug}</span> to confirm.
               </p>
             </div>
-            <Button variant="destructive" size="sm">
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Delete
-            </Button>
+            <Input
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              placeholder={`Type ${workspace.slug}`}
+              disabled={!canDelete || isDeleting}
+            />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-priority-urgent/70">
+                {canDelete ? 'Only the workspace owner can delete this workspace.' : 'You must be the workspace owner to delete this workspace.'}
+              </span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete(confirmation)}
+                disabled={!canDelete || isDeleting || confirmation.trim() !== workspace.slug}
+              >
+                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 mr-1.5" />}
+                Delete
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -635,6 +1147,7 @@ function BillingSettings({ workspaceId }: { workspaceId: string }) {
   const limits = data?.limits;
   const invoices: any[] = data?.invoices || [];
   const currentPlan = billing?.plan || 'FREE';
+  const stripeConfigured = data?.stripeConfigured ?? false;
 
   return (
     <div className="space-y-6">
@@ -661,6 +1174,12 @@ function BillingSettings({ workspaceId }: { workspaceId: string }) {
         </CardHeader>
         {usage && limits && (
           <CardContent className="space-y-3">
+            {!stripeConfigured && (
+              <div className="flex items-center gap-2 rounded-md border border-linear-warning/30 bg-linear-warning-light p-3 text-sm text-linear-warning">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                Billing is not configured on this server yet. Add Stripe environment variables to enable upgrades.
+              </div>
+            )}
             {billing?.cancelAtPeriodEnd && (
               <div className="flex items-center gap-2 p-3 rounded-md bg-linear-warning-light border border-linear-warning/30 text-sm text-linear-warning">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -745,7 +1264,7 @@ function BillingSettings({ workspaceId }: { workspaceId: string }) {
               {plan.cta && !isCurrent && (
                 <Button
                   size="sm"
-                  disabled={!!isUpgrading}
+                  disabled={!!isUpgrading || !stripeConfigured}
                   onClick={() => handleUpgrade(plan.id)}
                   className="w-full gap-1.5"
                 >

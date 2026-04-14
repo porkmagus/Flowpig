@@ -3,18 +3,25 @@ import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { CreateIssueSchema, UpdateIssueSchema } from '@flowpigdev/contracts';
 
+type IssueState = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'CANCELLED';
+
 export default async function issueRoutes(fastify: FastifyInstance) {
   // List issues in workspace
   fastify.get('/', { 
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
-    const { state, priority, assigneeId, teamId, search, page = '1', limit = '50' } = 
+    const { state, priority, assigneeId, assignee, teamId, team, projectId, search, sort = 'createdAt', order = 'desc', page = '1', limit = '50' } = 
       request.query as { 
         state?: string; 
         priority?: string; 
         assigneeId?: string;
+        assignee?: string;
         teamId?: string;
+        team?: string;
+        projectId?: string;
         search?: string;
+        sort?: string;
+        order?: 'asc' | 'desc';
         page?: string;
         limit?: string;
       };
@@ -28,10 +35,30 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       deletedAt: null,
     };
 
-    if (state) where.state = state;
-    if (priority) where.priority = priority;
-    if (assigneeId) where.assigneeId = assigneeId;
-    if (teamId) where.teamId = teamId;
+    if (state) {
+      const states = state.split(',').map((value) => value.trim()).filter(Boolean);
+      where.state = states.length > 1 ? { in: states } : states[0];
+    }
+
+    if (priority) {
+      const priorities = priority.split(',').map((value) => value.trim()).filter(Boolean);
+      where.priority = priorities.length > 1 ? { in: priorities } : priorities[0];
+    }
+
+    if (assigneeId || assignee) {
+      const assigneeValues = (assigneeId || assignee || '').split(',').map((value) => value.trim()).filter(Boolean);
+      where.assigneeId = assigneeValues.length > 1 ? { in: assigneeValues } : assigneeValues[0];
+    }
+
+    if (teamId || team) {
+      const teamValues = (teamId || team || '').split(',').map((value) => value.trim()).filter(Boolean);
+      where.teamId = teamValues.length > 1 ? { in: teamValues } : teamValues[0];
+    }
+
+    if (projectId) {
+      const projectValues = projectId.split(',').map((value) => value.trim()).filter(Boolean);
+      where.projectId = projectValues.length > 1 ? { in: projectValues } : projectValues[0];
+    }
 
     if (search) {
       where.OR = [
@@ -39,6 +66,10 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         { identifier: { contains: search, mode: 'insensitive' } },
       ];
     }
+
+    const allowedSortFields = new Set(['createdAt', 'updatedAt', 'priority', 'dueDate', 'title']);
+    const sortField = allowedSortFields.has(sort) ? sort : 'createdAt';
+    const sortOrder = order === 'asc' ? 'asc' : 'desc';
 
     const [issues, total] = await Promise.all([
       fastify.prisma.issue.findMany({
@@ -53,8 +84,14 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           team: {
             select: { id: true, name: true, key: true, color: true },
           },
+          project: {
+            select: { id: true, name: true },
+          },
+          cycle: {
+            select: { id: true, number: true, isActive: true },
+          },
           workflowState: {
-            select: { id: true, name: true, key: true, color: true },
+            select: { id: true, name: true, key: true, color: true, category: true },
           },
           labels: {
             select: { id: true, name: true, color: true },
@@ -63,7 +100,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
             select: { comments: { where: { deletedAt: null } } },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortField]: sortOrder },
         skip,
         take: limitNum,
       }),
@@ -84,6 +121,8 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         assignee: issue.assignee,
         creator: issue.creator,
         team: issue.team,
+        project: issue.project,
+        cycle: issue.cycle,
         workflowState: issue.workflowState,
         labels: issue.labels,
         commentCount: issue._count.comments,
@@ -119,6 +158,12 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         team: {
           select: { id: true, name: true, key: true, color: true },
         },
+        project: {
+          select: { id: true, name: true },
+        },
+        cycle: {
+          select: { id: true, number: true, name: true, isActive: true },
+        },
         workflowState: {
           select: { id: true, name: true, key: true, color: true, category: true },
         },
@@ -129,7 +174,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           where: { deletedAt: null },
           include: {
             creator: {
-              select: { id: true, name: true, image: true },
+              select: { id: true, name: true, email: true, image: true },
             },
             reactions: {
               where: { deletedAt: null },
@@ -144,6 +189,22 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         },
         subscriptions: {
           where: { userId: (request as any).user!.id },
+        },
+        relations: {
+          where: { deletedAt: null },
+          include: {
+            relatedIssue: {
+              select: { id: true, identifier: true, title: true, state: true },
+            },
+          },
+        },
+        relatedTo: {
+          where: { deletedAt: null },
+          include: {
+            issue: {
+              select: { id: true, identifier: true, title: true, state: true },
+            },
+          },
         },
       },
     });
@@ -166,6 +227,13 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         assignee: issue.assignee,
         creator: issue.creator,
         team: issue.team,
+        project: issue.project,
+        cycle: issue.cycle ? {
+          id: issue.cycle.id,
+          number: issue.cycle.number,
+          name: issue.cycle.name,
+          isActive: issue.cycle.isActive,
+        } : null,
         workflowState: issue.workflowState,
         labels: issue.labels,
         comments: issue.comments.map(comment => ({
@@ -176,6 +244,22 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           creator: comment.creator,
           reactions: comment.reactions,
         })),
+        relatedIssues: [
+          ...issue.relations.map((relation) => ({
+            id: relation.relatedIssue.id,
+            identifier: relation.relatedIssue.identifier,
+            title: relation.relatedIssue.title,
+            state: relation.relatedIssue.state,
+            type: relation.type.toLowerCase(),
+          })),
+          ...issue.relatedTo.map((relation) => ({
+            id: relation.issue.id,
+            identifier: relation.issue.identifier,
+            title: relation.issue.title,
+            state: relation.issue.state,
+            type: relation.type.toLowerCase(),
+          })),
+        ],
         isSubscribed: issue.subscriptions.length > 0,
       },
     };
@@ -194,7 +278,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { title, description, teamId, priority, assigneeId, labelIds, dueDate } = parseResult.data;
+    const { title, description, teamId, projectId, cycleId, priority, assigneeId, labelIds, dueDate } = parseResult.data;
     const userId = (request as any).user!.id;
     const workspaceId = request.workspace!.id;
 
@@ -209,6 +293,36 @@ export default async function issueRoutes(fastify: FastifyInstance) {
 
     if (!team) {
       return reply.status(400).send({ error: 'Invalid team' });
+    }
+
+    if (projectId) {
+      const project = await fastify.prisma.project.findFirst({
+        where: {
+          id: projectId,
+          workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!project) {
+        return reply.status(400).send({ error: 'Invalid project' });
+      }
+    }
+
+    if (cycleId) {
+      const cycle = await fastify.prisma.cycle.findFirst({
+        where: {
+          id: cycleId,
+          workspaceId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!cycle) {
+        return reply.status(400).send({ error: 'Invalid cycle' });
+      }
     }
 
     // Get next issue number for this team
@@ -237,6 +351,8 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         description: description || {},
         workspaceId,
         teamId,
+        projectId: projectId || null,
+        cycleId: cycleId || null,
         creatorId: userId,
         priority: priority || 'NO_PRIORITY',
         assigneeId: assigneeId || null,
@@ -312,7 +428,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { title, description, state, priority, assigneeId, labelIds, workflowStateId, dueDate } = parseResult.data;
+    const { title, description, state, priority, projectId, cycleId, assigneeId, labelIds, workflowStateId, dueDate } = parseResult.data;
 
     // Check if issue exists and user has access
     const existingIssue = await fastify.prisma.issue.findFirst({
@@ -327,12 +443,44 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Issue not found' });
     }
 
+    if (projectId) {
+      const project = await fastify.prisma.project.findFirst({
+        where: {
+          id: projectId,
+          workspaceId: request.workspace!.id,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!project) {
+        return reply.status(400).send({ error: 'Invalid project' });
+      }
+    }
+
+    if (cycleId) {
+      const cycle = await fastify.prisma.cycle.findFirst({
+        where: {
+          id: cycleId,
+          workspaceId: request.workspace!.id,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!cycle) {
+        return reply.status(400).send({ error: 'Invalid cycle' });
+      }
+    }
+
     // Build update data
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (state !== undefined) updateData.state = state;
     if (priority !== undefined) updateData.priority = priority;
+    if (projectId !== undefined) updateData.projectId = projectId || null;
+    if (cycleId !== undefined) updateData.cycleId = cycleId || null;
     if (assigneeId !== undefined) updateData.assigneeId = assigneeId;
     if (workflowStateId !== undefined) updateData.workflowStateId = workflowStateId;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
@@ -461,7 +609,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       assigneeId: userId,
       deletedAt: null,
       archivedAt: null,
-      state: { not: 'CANCELLED' },
+      state: { not: 'CANCELLED' as IssueState },
     };
 
     // Fetch all assigned issues

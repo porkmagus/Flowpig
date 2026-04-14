@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { getApiBaseUrl } from '../../lib/env.js';
+import { getConfiguredAuthProviders } from '../../plugins/auth.js';
 
 function addContentTypeParser(fastify: FastifyInstance) {
   // Better Auth expects access to the raw request body for its own parsing.
@@ -9,8 +10,40 @@ function addContentTypeParser(fastify: FastifyInstance) {
   });
 }
 
+function getAuthRequestBody(request: FastifyRequest) {
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    return undefined;
+  }
+
+  const body = request.body;
+  if (body == null) {
+    return undefined;
+  }
+
+  if (Buffer.isBuffer(body)) {
+    return body.toString('utf8');
+  }
+
+  if (body instanceof Uint8Array) {
+    return Buffer.from(body).toString('utf8');
+  }
+
+  if (typeof body === 'string') {
+    return body;
+  }
+
+  return JSON.stringify(body);
+}
+
 export default async function authRoutes(fastify: FastifyInstance) {
   addContentTypeParser(fastify);
+
+  fastify.get('/providers', async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.send({
+      emailPassword: true,
+      social: getConfiguredAuthProviders(),
+    });
+  });
 
   // This plugin is mounted at `/auth`, so match the remaining path only once.
   fastify.all('/*', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -18,7 +51,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const url = new URL(request.url, getApiBaseUrl());
 
     const headers = new Headers(request.headers as Record<string, string>);
-    const rawBody = request.body as Buffer | undefined;
+    const rawBody = getAuthRequestBody(request);
+    headers.delete('content-length');
+    headers.delete('host');
+
+    if (rawBody && !headers.has('content-type')) {
+      headers.set('content-type', 'application/json');
+    }
     
     const init: RequestInit = {
       method: request.method,

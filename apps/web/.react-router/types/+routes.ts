@@ -20,6 +20,11 @@ type Pages = {
   "/signup": {
     params: {};
   };
+  "/invite/:token": {
+    params: {
+      "token": string;
+    };
+  };
   "/onboarding": {
     params: {};
   };
@@ -92,6 +97,11 @@ type Pages = {
       "databaseId": string;
     };
   };
+  "/:workspace/initiatives": {
+    params: {
+      "workspace": string;
+    };
+  };
   "/:workspace/projects": {
     params: {
       "workspace": string;
@@ -128,7 +138,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/login" | "/signup" | "/onboarding" | "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
+    page: "/" | "/login" | "/signup" | "/invite/:token" | "/onboarding" | "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/initiatives" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
   };
   "../routes/index.tsx": {
     id: "../routes/index";
@@ -142,13 +152,17 @@ type RouteFiles = {
     id: "../routes/signup";
     page: "/signup";
   };
+  "../routes/invite.$token.tsx": {
+    id: "../routes/invite.$token";
+    page: "/invite/:token";
+  };
   "../routes/onboarding.tsx": {
     id: "../routes/onboarding";
     page: "/onboarding";
   };
   "../routes/$workspace/layout.tsx": {
     id: "../routes/$workspace/layout";
-    page: "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
+    page: "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/initiatives" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
   };
   "../routes/$workspace/index.tsx": {
     id: "../routes/$workspace/index";
@@ -202,6 +216,10 @@ type RouteFiles = {
     id: "../routes/$workspace/databases.$databaseId";
     page: "/:workspace/databases/:databaseId";
   };
+  "../routes/$workspace/initiatives.tsx": {
+    id: "../routes/$workspace/initiatives";
+    page: "/:workspace/initiatives";
+  };
   "../routes/$workspace/projects.tsx": {
     id: "../routes/$workspace/projects";
     page: "/:workspace/projects";
@@ -233,6 +251,7 @@ type RouteModules = {
   "../routes/index": unknown;
   "../routes/login": unknown;
   "../routes/signup": unknown;
+  "../routes/invite.$token": unknown;
   "../routes/onboarding": unknown;
   "../routes/$workspace/layout": unknown;
   "../routes/$workspace/index": unknown;
@@ -248,6 +267,7 @@ type RouteModules = {
   "../routes/$workspace/team": unknown;
   "../routes/$workspace/databases": unknown;
   "../routes/$workspace/databases.$databaseId": unknown;
+  "../routes/$workspace/initiatives": unknown;
   "../routes/$workspace/projects": unknown;
   "../routes/$workspace/projects.$projectId": unknown;
   "../routes/$workspace/roadmap": unknown;

@@ -3,6 +3,19 @@ import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { broadcastNotificationCreated } from '../../plugins/websocket.js';
 
+type NotificationType =
+  | 'ISSUE_ASSIGNED'
+  | 'ISSUE_UPDATED'
+  | 'ISSUE_COMMENTED'
+  | 'ISSUE_COMPLETED'
+  | 'NOTE_SHARED'
+  | 'NOTE_COMMENTED'
+  | 'CYCLE_STARTED'
+  | 'CYCLE_ENDING'
+  | 'MENTION'
+  | 'WORKSPACE_INVITE'
+  | 'BILLING';
+
 // Notification service
 export async function createNotification(
   fastify: FastifyInstance,
@@ -18,7 +31,7 @@ export async function createNotification(
     metadata,
   }: {
     userId: string;
-    type: string;
+    type: NotificationType;
     title: string;
     content: string;
     workspaceId?: string;
@@ -27,7 +40,7 @@ export async function createNotification(
     actorId?: string;
     metadata?: Record<string, any>;
   }
-) {
+): Promise<void> {
   const notification = await fastify.prisma.notification.create({
     data: {
       userId,
@@ -41,20 +54,6 @@ export async function createNotification(
       metadata: metadata || {},
       isRead: false,
     },
-    include: {
-      workspace: {
-        select: { id: true, name: true, slug: true },
-      },
-      issue: {
-        select: { id: true, identifier: true, title: true },
-      },
-      note: {
-        select: { id: true, title: true, slug: true },
-      },
-      actor: {
-        select: { id: true, name: true, image: true },
-      },
-    },
   });
 
   // Broadcast via WebSocket
@@ -63,15 +62,14 @@ export async function createNotification(
     type: notification.type,
     title: notification.title,
     content: notification.content,
-    workspace: notification.workspace,
-    issue: notification.issue,
-    note: notification.note,
-    actor: notification.actor,
+    workspaceId: notification.workspaceId,
+    issueId: notification.issueId,
+    noteId: notification.noteId,
+    actorId: notification.actorId,
+    metadata: notification.metadata,
     createdAt: notification.createdAt.toISOString(),
     isRead: notification.isRead,
   });
-
-  return notification;
 }
 
 // Notify issue subscribers
@@ -89,7 +87,7 @@ export async function notifyIssueSubscribers(
   }: {
     issueId: string;
     excludeUserId?: string;
-    type: string;
+    type: NotificationType;
     title: string;
     content: string;
     workspaceId: string;
@@ -133,7 +131,7 @@ export async function notifyWorkspaceMembers(
   }: {
     workspaceId: string;
     excludeUserId?: string;
-    type: string;
+    type: NotificationType;
     title: string;
     content: string;
     actorId: string;

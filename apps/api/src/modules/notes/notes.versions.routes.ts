@@ -2,6 +2,33 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
+type JsonFieldInput = JsonValueInput | null;
+type JsonValueInput = string | number | boolean | JsonFieldInput[] | { [key: string]: JsonFieldInput };
+
+function toJsonFieldInput(value: unknown): JsonFieldInput {
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => toJsonFieldInput(entry));
+  }
+  if (typeof value === 'object') {
+    const record: { [key: string]: JsonFieldInput } = {};
+    for (const [key, entry] of Object.entries(value)) {
+      record[key] = toJsonFieldInput(entry);
+    }
+    return record;
+  }
+
+  return {};
+}
+
+function toJsonInput(value: unknown): JsonValueInput {
+  const normalized = toJsonFieldInput(value);
+  return normalized === null ? { type: 'doc', content: [] } : normalized;
+}
+
 export default async function noteVersionRoutes(fastify: FastifyInstance) {
   // Get version history for a note
   fastify.get('/:noteId/versions', {
@@ -250,7 +277,7 @@ export default async function noteVersionRoutes(fastify: FastifyInstance) {
       data: {
         noteId: note.id,
         title: note.title,
-        content: note.content,
+        content: toJsonInput(note.content),
         emoji: note.emoji,
         coverImage: note.coverImage,
         editedById: userId,
@@ -263,7 +290,7 @@ export default async function noteVersionRoutes(fastify: FastifyInstance) {
       where: { id: note.id },
       data: {
         title: version.title,
-        content: version.content,
+        content: toJsonInput(version.content),
         emoji: version.emoji,
         coverImage: version.coverImage,
         lastEditedById: userId,
@@ -275,7 +302,7 @@ export default async function noteVersionRoutes(fastify: FastifyInstance) {
       data: {
         noteId: note.id,
         title: version.title,
-        content: version.content,
+        content: toJsonInput(version.content),
         emoji: version.emoji,
         coverImage: version.coverImage,
         editedById: userId,

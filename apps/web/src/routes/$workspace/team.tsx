@@ -1,30 +1,21 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { API_URL } from '~/lib/api';
+import { useAuth } from '~/lib/auth-client';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
 import { 
   Users, 
   Plus, 
-  Settings,
   Mail,
   Shield,
-  UserMinus,
+  Copy,
+  Loader2,
+  Trash2,
   X,
-  Check
+  Check,
 } from 'lucide-react';
-
-interface TeamMember {
-  id: string;
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  };
-  role?: string;
-}
 
 interface WorkspaceMember {
   id: string;
@@ -39,12 +30,30 @@ interface WorkspaceMember {
   };
 }
 
+interface PendingInvitation {
+  id: string;
+  email: string;
+  role: 'ADMIN' | 'MEMBER' | 'GUEST';
+  status: 'PENDING';
+  createdAt: string;
+  expiresAt: string;
+  acceptUrl: string;
+  invitedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+}
+
 export default function TeamRoute() {
   const { workspace } = useParams();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
 
   const { data: membersData, isLoading } = useQuery({
     queryKey: ['workspace-members', workspace],
@@ -70,6 +79,26 @@ export default function TeamRoute() {
     },
   });
 
+  const canManageInvites = (membersData?.members as WorkspaceMember[] | undefined)?.some(
+    (member) => member.userId === user?.id && ['OWNER', 'ADMIN'].includes(member.role)
+  ) ?? false;
+
+  const { data: invitationsData, isLoading: isInvitationsLoading } = useQuery({
+    queryKey: ['workspace-invitations', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/invitations`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load invitations');
+      }
+
+      return response.json() as Promise<{ invitations: PendingInvitation[] }>;
+    },
+    enabled: !!workspace && canManageInvites,
+  });
+
   const inviteMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
       const response = await fetch(
@@ -82,17 +111,59 @@ export default function TeamRoute() {
         }
       );
       if (!response.ok) throw new Error('Failed to send invitation');
-      return response.json();
+      return response.json() as Promise<{
+        status: 'member-added' | 'invitation-created';
+        message?: string;
+        invitation?: {
+          acceptUrl?: string;
+        };
+      }>;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       setShowInviteModal(false);
       setInviteEmail('');
+      setInviteRole('MEMBER');
+      setInviteLink(result.invitation?.acceptUrl ?? null);
+      setInviteMessage(
+        result.status === 'member-added'
+          ? 'Member added to the workspace.'
+          : result.message || 'Invitation created.'
+      );
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspace] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
+    },
+  });
+
+  const revokeInvitationMutation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/invitations/${invitationId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.message || json.error || 'Failed to revoke invitation');
+      }
+
+      return json as { message?: string };
+    },
+    onSuccess: (result) => {
+      setInviteLink(null);
+      setInviteMessage(result.message || 'Invitation revoked.');
+      queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
     },
   });
 
   const members: WorkspaceMember[] = membersData?.members || [];
   const teams = teamsData?.teams || [];
+  const invitations = invitationsData?.invitations || [];
+
+  function copyInviteLink(acceptUrl: string) {
+    void navigator.clipboard.writeText(acceptUrl);
+    setInviteLink(acceptUrl);
+    setInviteMessage('Invite link copied.');
+  }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -128,14 +199,39 @@ export default function TeamRoute() {
             {members.length} member{members.length !== 1 ? 's' : ''} in this workspace
           </p>
         </div>
-        <button 
-          onClick={() => setShowInviteModal(true)}
-          className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Invite member
-        </button>
+        {canManageInvites && (
+          <button 
+            onClick={() => {
+              setInviteMessage(null);
+              setInviteLink(null);
+              setShowInviteModal(true);
+            }}
+            className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Invite member
+          </button>
+        )}
       </div>
+
+      {inviteMessage && (
+        <div className="mb-6 rounded-lg border border-linear-accent/30 bg-linear-accent-light px-4 py-3 text-sm text-linear-text">
+          <div>{inviteMessage}</div>
+          {inviteLink && (
+            <div className="mt-2 text-xs text-linear-text-secondary">
+              Share this invite link until email delivery is wired up:{' '}
+              <a
+                href={inviteLink}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-linear-accent hover:text-linear-accent-hover"
+              >
+                {inviteLink}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
@@ -162,6 +258,82 @@ export default function TeamRoute() {
           <div className="text-sm text-linear-text-secondary">Teams</div>
         </div>
       </div>
+
+      {canManageInvites && (
+        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden mb-8">
+          <div className="flex items-center justify-between p-4 border-b border-linear-border bg-linear-elevated/40">
+            <div>
+              <h2 className="font-semibold text-linear-text">Pending Invitations</h2>
+              <p className="mt-1 text-sm text-linear-text-secondary">
+                Track open invites, copy access links, and revoke stale requests.
+              </p>
+            </div>
+            <div className="text-sm text-linear-text-tertiary">
+              {invitations.length} pending
+            </div>
+          </div>
+
+          <div className="p-4">
+            {isInvitationsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading invitations...
+              </div>
+            ) : invitations.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-linear-border bg-linear-elevated/30 px-4 py-5 text-sm text-linear-text-secondary">
+                No pending invites right now.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col gap-3 rounded-xl border border-linear-border bg-linear-elevated/30 px-4 py-4 lg:flex-row lg:items-center lg:justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 text-sm font-medium text-linear-text">
+                        <Mail className="w-4 h-4 text-linear-accent" />
+                        {invitation.email}
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${getRoleBadgeColor(invitation.role)}`}>
+                          {invitation.role}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-xs text-linear-text-secondary">
+                        Invited by {invitation.invitedBy.name || invitation.invitedBy.email} · Expires{' '}
+                        {new Date(invitation.expiresAt).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyInviteLink(invitation.acceptUrl)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-linear-border px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-linear-surface hover:text-linear-text"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copy link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => revokeInvitationMutation.mutate(invitation.id)}
+                        disabled={revokeInvitationMutation.isPending}
+                        className="inline-flex items-center gap-2 rounded-lg border border-linear-error/30 px-3 py-2 text-sm text-linear-error transition-colors hover:bg-linear-error/10 disabled:opacity-60"
+                      >
+                        {revokeInvitationMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Members List */}
       {isLoading ? (

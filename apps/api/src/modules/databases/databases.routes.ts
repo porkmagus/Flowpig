@@ -2,6 +2,41 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
+type JsonInput = string | number | boolean | null | JsonInput[] | { [key: string]: JsonInput };
+type DatabasePropertyType =
+  | 'TITLE'
+  | 'TEXT'
+  | 'NUMBER'
+  | 'SELECT'
+  | 'MULTI_SELECT'
+  | 'STATUS'
+  | 'DATE'
+  | 'PERSON'
+  | 'CHECKBOX'
+  | 'URL'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'FORMULA'
+  | 'RELATION'
+  | 'ROLLUP'
+  | 'FILE';
+
+type CreatePropertyInput = {
+  name: string;
+  type: DatabasePropertyType;
+  config?: JsonInput;
+  order?: number;
+};
+
+function isRelationValue(value: unknown): value is { rowIds: string[] } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Array.isArray((value as { rowIds?: unknown }).rowIds)
+  );
+}
+
 export default async function databaseRoutes(fastify: FastifyInstance) {
   // List databases in workspace
   fastify.get('/', {
@@ -46,11 +81,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
     const { name, description, properties } = request.body as {
       name: string;
       description?: string;
-      properties?: Array<{
-        name: string;
-        type: string;
-        config?: any;
-      }>;
+      properties?: CreatePropertyInput[];
     };
 
     // Create database
@@ -64,7 +95,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
     });
 
     // Create default properties if none provided
-    const defaultProperties = properties || [
+    const defaultProperties: CreatePropertyInput[] = properties || [
       { name: 'Name', type: 'TITLE', order: 0 },
       { name: 'Status', type: 'STATUS', order: 1 },
       { name: 'Assignee', type: 'PERSON', order: 2 },
@@ -327,7 +358,9 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
         },
       });
 
-      const relatedRowIds: string[] = relationCell?.value?.rowIds || [];
+      const relatedRowIds = isRelationValue(relationCell?.value)
+        ? relationCell.value.rowIds
+        : [];
 
       if (relatedRowIds.length === 0) {
         rollups[property.name] = rollupFunction === 'COUNT' ? 0 : null;

@@ -8,9 +8,6 @@ const authClient = createAuthClient({
   basePath: '/auth',
   fetchOptions: {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   },
 });
 
@@ -21,11 +18,39 @@ interface User {
   image: string | null;
 }
 
+export type SocialProvider = 'github' | 'google';
+
+export interface AuthProviders {
+  github: boolean;
+  google: boolean;
+}
+
+const defaultAuthProviders: AuthProviders = {
+  github: false,
+  google: false,
+};
+
+function toAbsoluteCallbackUrl(callbackPath: string) {
+  return new URL(callbackPath, window.location.origin).toString();
+}
+
+function mapUser(user: User) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name || null,
+    image: user.image || null,
+  };
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  authProviders: AuthProviders;
+  isProvidersLoading: boolean;
+  login: (email: string, password: string, callbackPath?: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, callbackPath?: string) => Promise<void>;
+  loginWithProvider: (provider: SocialProvider, callbackPath?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -34,34 +59,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authProviders, setAuthProviders] = useState<AuthProviders>(defaultAuthProviders);
+  const [isProvidersLoading, setIsProvidersLoading] = useState(true);
 
   useEffect(() => {
-    checkSession();
+    void initializeAuth();
   }, []);
 
-  async function checkSession() {
+  async function initializeAuth() {
     try {
-      const { data, error } = await authClient.getSession();
-      if (data?.user) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name || null,
-          image: data.user.image || null,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to check session:', error);
+      await Promise.all([checkSession(), loadAuthProviders()]);
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function login(email: string, password: string) {
+  async function checkSession() {
+    try {
+      const { data, error } = await authClient.getSession();
+      if (data?.user) {
+        setUser(mapUser(data.user));
+      }
+    } catch (error) {
+      console.error('Failed to check session:', error);
+    }
+  }
+
+  async function loadAuthProviders() {
+    try {
+      const response = await fetch(`${API_URL}/auth/providers`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load auth providers');
+      }
+
+      const data = await response.json() as { social?: Partial<AuthProviders> };
+      setAuthProviders({
+        github: Boolean(data.social?.github),
+        google: Boolean(data.social?.google),
+      });
+    } catch (error) {
+      console.error('Failed to load auth providers:', error);
+      setAuthProviders(defaultAuthProviders);
+    } finally {
+      setIsProvidersLoading(false);
+    }
+  }
+
+  async function login(email: string, password: string, callbackPath = '/onboarding') {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: window.location.origin + '/onboarding',
+      callbackURL: toAbsoluteCallbackUrl(callbackPath),
     });
 
     if (error) {
@@ -69,21 +120,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data?.user) {
-      setUser({
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name || null,
-        image: data.user.image || null,
-      });
+      setUser(mapUser(data.user));
     }
   }
 
-  async function signup(email: string, password: string, name: string) {
+  async function signup(email: string, password: string, name: string, callbackPath = '/onboarding') {
     const { data, error } = await authClient.signUp.email({
       email,
       password,
       name,
-      callbackURL: window.location.origin + '/onboarding',
+      callbackURL: toAbsoluteCallbackUrl(callbackPath),
     });
 
     if (error) {
@@ -91,12 +137,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data?.user) {
-      setUser({
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name || null,
-        image: data.user.image || null,
-      });
+      setUser(mapUser(data.user));
+    }
+  }
+
+  async function loginWithProvider(provider: SocialProvider, callbackPath = '/onboarding') {
+    if (!authProviders[provider]) {
+      throw new Error(`${provider[0].toUpperCase()}${provider.slice(1)} sign-in is not configured on this server.`);
+    }
+
+    const { error } = await authClient.signIn.social({
+      provider,
+      callbackURL: toAbsoluteCallbackUrl(callbackPath),
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Social sign-in failed');
     }
   }
 
@@ -106,7 +162,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        authProviders,
+        isProvidersLoading,
+        login,
+        signup,
+        loginWithProvider,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

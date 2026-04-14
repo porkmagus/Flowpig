@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { AnimatedPage, AnimatedList, AnimatedItem } from '@flowpigdev/ui';
 import { useAuth } from '~/lib/auth-client';
 import { API_URL } from '~/lib/api';
-import { ArrowRight, Loader2, CheckCircle2, Plus, Layout, Users } from 'lucide-react';
+import { ArrowRight, Loader2, CheckCircle2, Plus, Layout, Search, Users } from 'lucide-react';
+
+const LAST_WORKSPACE_KEY = 'flowpig:last-workspace';
 
 interface Workspace {
   id: string;
@@ -179,6 +181,64 @@ const styles = {
     fontSize: '0.8125rem',
     color: '#6E6E6E',
   },
+  searchInput: {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    borderRadius: '0.75rem',
+    border: '1px solid #2A2A2A',
+    backgroundColor: '#0D0D0D',
+    color: '#FFFFFF',
+    fontSize: '0.9375rem',
+    outline: 'none',
+    marginBottom: '1rem',
+  },
+  recentWorkspaceCard: {
+    marginBottom: '1rem',
+    padding: '1rem',
+    borderRadius: '0.875rem',
+    border: '1px solid rgba(94,106,210,0.22)',
+    background: 'linear-gradient(135deg, rgba(94,106,210,0.14), rgba(13,18,30,0.88))',
+  },
+  recentWorkspaceMeta: {
+    fontSize: '0.75rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.18em',
+    color: '#AAB2FF',
+    marginBottom: '0.45rem',
+  },
+  recentWorkspaceTitle: {
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: '#FFFFFF',
+    marginBottom: '0.35rem',
+  },
+  recentWorkspaceSubtitle: {
+    fontSize: '0.875rem',
+    color: '#A0A0A0',
+    lineHeight: 1.5,
+  },
+  recentWorkspaceButton: {
+    marginTop: '0.875rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.65rem 0.95rem',
+    borderRadius: '0.625rem',
+    border: '1px solid rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#FFFFFF',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+  },
+  emptyState: {
+    borderRadius: '0.75rem',
+    border: '1px dashed #2A2A2A',
+    padding: '1rem',
+    color: '#8A8A8A',
+    fontSize: '0.875rem',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
   footer: {
     marginTop: '2rem',
     paddingTop: '2rem',
@@ -205,6 +265,8 @@ export default function OnboardingRoute() {
   const [showCreate, setShowCreate] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [recentWorkspaceSlug, setRecentWorkspaceSlug] = useState<string | null>(null);
 
   // Fetch user's workspaces on mount
   useEffect(() => {
@@ -212,6 +274,12 @@ export default function OnboardingRoute() {
       fetchWorkspaces();
     }
   }, [isAuthLoading, user]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setRecentWorkspaceSlug(window.localStorage.getItem(LAST_WORKSPACE_KEY));
+    }
+  }, []);
 
   async function fetchWorkspaces() {
     try {
@@ -251,6 +319,9 @@ export default function OnboardingRoute() {
 
       if (response.ok) {
         const data = await response.json();
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(LAST_WORKSPACE_KEY, data.workspace.slug);
+        }
         navigate(`/${data.workspace.slug}`);
       }
     } catch (error) {
@@ -259,6 +330,27 @@ export default function OnboardingRoute() {
       setIsCreating(false);
     }
   }
+
+  function openWorkspace(slug: string) {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LAST_WORKSPACE_KEY, slug);
+    }
+    navigate(`/${slug}`);
+  }
+
+  const filteredWorkspaces = workspaces.filter((workspace) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return true;
+    }
+
+    return [workspace.name, workspace.slug, workspace.description || '']
+      .join(' ')
+      .toLowerCase()
+      .includes(query);
+  });
+
+  const recentWorkspace = workspaces.find((workspace) => workspace.slug === recentWorkspaceSlug) || null;
 
   if (isAuthLoading || isLoading) {
     return (
@@ -334,13 +426,44 @@ export default function OnboardingRoute() {
           {/* Workspace list */}
           {workspaces.length > 0 && (
             <div style={styles.workspaceList}>
+              {!showCreate && recentWorkspace && (
+                <div style={styles.recentWorkspaceCard}>
+                  <div style={styles.recentWorkspaceMeta}>Pick up where you left off</div>
+                  <div style={styles.recentWorkspaceTitle}>{recentWorkspace.name}</div>
+                  <div style={styles.recentWorkspaceSubtitle}>
+                    Jump back into your most recently opened workspace instead of hunting through the full list.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openWorkspace(recentWorkspace.slug)}
+                    style={styles.recentWorkspaceButton}
+                  >
+                    Continue to {recentWorkspace.slug}
+                    <ArrowRight style={{ width: '0.875rem', height: '0.875rem' }} />
+                  </button>
+                </div>
+              )}
+
+              {!showCreate && (
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6E6E6E]" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search workspaces by name or slug"
+                    style={{ ...styles.searchInput, paddingLeft: '2.5rem' }}
+                  />
+                </div>
+              )}
+
               <AnimatedList className="space-y-2">
-              {workspaces.map((workspace) => (
+              {filteredWorkspaces.map((workspace) => (
                 <AnimatedItem key={workspace.id}>
                   <motion.button
                     whileHover={{ scale: 1.005, borderColor: '#3A3A3A' }}
                     whileTap={{ scale: 0.995 }}
-                    onClick={() => navigate(`/${workspace.slug}`)}
+                    onClick={() => openWorkspace(workspace.slug)}
                     style={styles.workspaceButton}
                   >
                     <div 
@@ -368,7 +491,10 @@ export default function OnboardingRoute() {
                 <motion.button
                   whileHover={{ scale: 1.005, borderColor: '#3A3A3A' }}
                   whileTap={{ scale: 0.995 }}
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowCreate(true);
+                  }}
                   style={styles.createWorkspaceButton}
                 >
                   <div style={styles.createIconWrapper}>
@@ -381,6 +507,12 @@ export default function OnboardingRoute() {
                 </motion.button>
               </AnimatedItem>
               </AnimatedList>
+
+              {!showCreate && filteredWorkspaces.length === 0 && (
+                <div style={styles.emptyState}>
+                  No workspaces match "{searchQuery}". Try a different name or create a new workspace.
+                </div>
+              )}
             </div>
           )}
 

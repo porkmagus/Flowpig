@@ -3,6 +3,49 @@ import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { CreateNoteSchema, UpdateNoteSchema } from '@flowpigdev/contracts';
 
+type JsonFieldInput = JsonValueInput | null;
+type JsonValueInput = string | number | boolean | JsonFieldInput[] | { [key: string]: JsonFieldInput };
+
+type NoteTreeItem = {
+  id: string;
+  title: string;
+  slug: string;
+  emoji: string | null;
+  parentId: string | null;
+  updatedAt: Date;
+  _count: {
+    children: number;
+  };
+};
+
+type NoteTreeNode = NoteTreeItem & {
+  children: NoteTreeNode[];
+};
+
+function toJsonFieldInput(value: unknown): JsonFieldInput {
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => toJsonFieldInput(entry));
+  }
+  if (typeof value === 'object') {
+    const record: { [key: string]: JsonFieldInput } = {};
+    for (const [key, entry] of Object.entries(value)) {
+      record[key] = toJsonFieldInput(entry);
+    }
+    return record;
+  }
+
+  return {};
+}
+
+function toJsonInput(value: unknown): JsonValueInput {
+  const normalized = toJsonFieldInput(value);
+  return normalized === null ? { type: 'doc', content: [] } : normalized;
+}
+
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -338,7 +381,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
         data: {
           noteId: existingNote.id,
           title: existingNote.title,
-          content: existingNote.content,
+          content: toJsonInput(existingNote.content),
           emoji: existingNote.emoji,
           coverImage: existingNote.coverImage,
           editedById: existingNote.lastEditedById || existingNote.createdById,
@@ -455,7 +498,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
         select: { id: true, title: true, slug: true, emoji: true, parentId: true },
       });
 
-      if (!parent || parent.deletedAt) break;
+      if (!parent) break;
 
       breadcrumbs.unshift(parent);
       currentParentId = parent.parentId;
@@ -494,10 +537,12 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     });
 
     // Build tree structure
-    const noteMap = new Map(notes.map(n => ({ ...n, children: [] as typeof notes })));
-    const rootNotes: typeof notes = [];
+    const noteMap = new Map<string, NoteTreeNode>(
+      notes.map((note) => [note.id, { ...note, children: [] }]),
+    );
+    const rootNotes: NoteTreeNode[] = [];
 
-    notes.forEach(note => {
+    notes.forEach((note) => {
       const node = noteMap.get(note.id)!;
       if (note.parentId) {
         const parent = noteMap.get(note.parentId);
@@ -520,7 +565,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
         parentId: n.parentId,
         updatedAt: n.updatedAt.toISOString(),
         childCount: n._count.children,
-        children: n.children.map((c: any) => ({
+        children: n.children.map((c) => ({
           id: c.id,
           title: c.title,
           slug: c.slug,
@@ -570,16 +615,16 @@ export default async function noteRoutes(fastify: FastifyInstance) {
       }
 
       // Check for circular reference
-      let currentId = parentId;
+      let currentId: string | null = parentId;
       while (currentId) {
         if (currentId === note.id) {
           return reply.status(400).send({ error: 'Cannot move note to its own descendant' });
         }
-        const ancestor = await fastify.prisma.note.findUnique({
+        const ancestor: { parentId: string | null } | null = await fastify.prisma.note.findUnique({
           where: { id: currentId },
           select: { parentId: true },
         });
-        currentId = ancestor?.parentId || null;
+        currentId = ancestor?.parentId ?? null;
       }
     }
 

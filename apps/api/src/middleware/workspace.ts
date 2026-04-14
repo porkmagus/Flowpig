@@ -23,16 +23,30 @@ export async function extractWorkspace(
   const { workspaceId } = request.params as { workspaceId: string };
   
   if (!workspaceId) {
-    reply.status(400).send({ error: 'Workspace ID is required' });
+    reply.status(400).send({ error: 'Workspace identifier is required' });
     return;
   }
 
-  // Check if user has access to this workspace
+  // Frontend routes are slug-based, while some internal callers still use IDs.
+  // Accept either form here so all workspace-scoped APIs resolve consistently.
   const member = await request.server.prisma.workspaceMember.findFirst({
     where: {
-      workspaceId,
       userId: (request as any).user?.id,
       deletedAt: null,
+      OR: [
+        {
+          workspace: {
+            id: workspaceId,
+            deletedAt: null,
+          },
+        },
+        {
+          workspace: {
+            slug: workspaceId,
+            deletedAt: null,
+          },
+        },
+      ],
     },
     include: {
       workspace: {

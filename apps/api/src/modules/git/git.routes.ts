@@ -50,6 +50,209 @@ export default async function gitIntegrationRoutes(fastify: FastifyInstance) {
     };
   });
 
+  fastify.get('/overview', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const workspaceId = request.workspace!.id;
+
+    const integration = await fastify.prisma.gitIntegration.findUnique({
+      where: { workspaceId },
+    });
+
+    if (!integration) {
+      return {
+        connected: false,
+        integration: null,
+        repositories: [],
+        summary: {
+          repositoryCount: 0,
+          openPullRequests: 0,
+          linkedBranches: 0,
+          linkedIssues: 0,
+          recentCommits: 0,
+        },
+      };
+    }
+
+    const [repositories, openPullRequests, branchLinks, linkedIssueIds, recentCommits] = await Promise.all([
+      fastify.prisma.gitRepository.findMany({
+        where: { integrationId: integration.id },
+        include: {
+          _count: {
+            select: { pullRequests: true },
+          },
+        },
+        orderBy: { fullName: 'asc' },
+      }),
+      fastify.prisma.gitPullRequest.count({
+        where: {
+          integrationId: integration.id,
+          state: 'OPEN',
+        },
+      }),
+      fastify.prisma.issueGitLink.findMany({
+        where: {
+          issue: {
+            workspaceId,
+            deletedAt: null,
+          },
+          branchName: { not: null },
+        },
+        select: {
+          issueId: true,
+          branchName: true,
+        },
+      }),
+      fastify.prisma.issueGitLink.findMany({
+        where: {
+          issue: {
+            workspaceId,
+            deletedAt: null,
+          },
+        },
+        select: {
+          issueId: true,
+        },
+      }),
+      fastify.prisma.gitCommit.count({
+        where: {
+          integrationId: integration.id,
+          createdAt: {
+            gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+          },
+        },
+      }),
+    ]);
+
+    return {
+      connected: integration.isActive,
+      integration: {
+        id: integration.id,
+        provider: integration.provider,
+        organization: integration.organization,
+        isActive: integration.isActive,
+        createdAt: integration.createdAt.toISOString(),
+        updatedAt: integration.updatedAt.toISOString(),
+      },
+      repositories: repositories.map((repository) => ({
+        id: repository.id,
+        name: repository.name,
+        fullName: repository.fullName,
+        url: repository.url,
+        defaultBranch: repository.defaultBranch,
+        isPrivate: repository.isPrivate,
+        pullRequestCount: repository._count.pullRequests,
+      })),
+      summary: {
+        repositoryCount: repositories.length,
+        openPullRequests,
+        linkedBranches: new Set(branchLinks.map((link) => link.branchName).filter(Boolean)).size,
+        linkedIssues: new Set(linkedIssueIds.map((link) => link.issueId)).size,
+        recentCommits,
+      },
+    };
+  });
+
+  fastify.get('/branches', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const workspaceId = request.workspace!.id;
+
+    const links = await fastify.prisma.issueGitLink.findMany({
+      where: {
+        issue: {
+          workspaceId,
+          deletedAt: null,
+        },
+        branchName: { not: null },
+      },
+      include: {
+        issue: {
+          select: {
+            id: true,
+            identifier: true,
+            title: true,
+            state: true,
+          },
+        },
+        pullRequest: {
+          include: {
+            repository: {
+              select: { fullName: true, url: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const branches = new Map<string, {
+      name: string;
+      linkedIssues: Array<{ id: string; identifier: string; title: string; state: string }>;
+      pullRequest: {
+        id: string;
+        number: number;
+        title: string;
+        url: string;
+        state: string;
+        repository: { fullName: string; url: string } | null;
+      } | null;
+      updatedAt: string;
+    }>();
+
+    for (const link of links) {
+      const branchName = link.branchName;
+      if (!branchName) {
+        continue;
+      }
+
+      const existing = branches.get(branchName);
+      const linkedIssue = {
+        id: link.issue.id,
+        identifier: link.issue.identifier,
+        title: link.issue.title,
+        state: link.issue.state,
+      };
+
+      if (existing) {
+        if (!existing.linkedIssues.some((issue) => issue.id === linkedIssue.id)) {
+          existing.linkedIssues.push(linkedIssue);
+        }
+
+        if (!existing.pullRequest && link.pullRequest) {
+          existing.pullRequest = {
+            id: link.pullRequest.id,
+            number: link.pullRequest.number,
+            title: link.pullRequest.title,
+            url: link.pullRequest.url,
+            state: link.pullRequest.state,
+            repository: link.pullRequest.repository,
+          };
+        }
+
+        continue;
+      }
+
+      branches.set(branchName, {
+        name: branchName,
+        linkedIssues: [linkedIssue],
+        pullRequest: link.pullRequest ? {
+          id: link.pullRequest.id,
+          number: link.pullRequest.number,
+          title: link.pullRequest.title,
+          url: link.pullRequest.url,
+          state: link.pullRequest.state,
+          repository: link.pullRequest.repository,
+        } : null,
+        updatedAt: link.createdAt.toISOString(),
+      });
+    }
+
+    return {
+      branches: [...branches.values()].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
+    };
+  });
+
   // Generate suggested branch name for issue
   fastify.get('/branch-suggestion/:issueId', {
     preHandler: [requireAuth, extractWorkspace],
@@ -378,13 +581,19 @@ export default async function gitIntegrationRoutes(fastify: FastifyInstance) {
         const pr = payload.pull_request || payload.merge_request;
         
         // Update or create PR
+        const prState: 'OPEN' | 'CLOSED' | 'MERGED' = pr.merged
+          ? 'MERGED'
+          : pr.state === 'closed'
+            ? 'CLOSED'
+            : 'OPEN';
+
         const prData = {
           integrationId: integration.id,
           externalId: pr.id.toString(),
           number: pr.number,
           title: pr.title,
           description: pr.body,
-          state: pr.merged ? 'MERGED' : pr.state === 'closed' ? 'CLOSED' : 'OPEN',
+          state: prState,
           url: pr.html_url || pr.web_url,
           branchName: pr.head?.ref || pr.source_branch,
           baseBranch: pr.base?.ref || pr.target_branch,

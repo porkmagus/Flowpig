@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   Bot,
   CheckCircle2,
@@ -9,8 +9,9 @@ import {
   Target,
   Users,
 } from 'lucide-react';
+import { AuthProviderButtons } from '~/components/auth-provider-buttons';
 import { AuthShell } from '~/components/auth-shell';
-import { useAuth } from '~/lib/auth-client';
+import { useAuth, type SocialProvider } from '~/lib/auth-client';
 
 const benefits = [
   {
@@ -35,7 +36,8 @@ const benefits = [
 
 export default function SignupRoute() {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { signup, loginWithProvider, authProviders, isProvidersLoading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,6 +45,10 @@ export default function SignupRoute() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [socialLoadingProvider, setSocialLoadingProvider] = useState<SocialProvider | null>(null);
+  const inviteToken = searchParams.get('invite')?.trim();
+  const redirectPath = inviteToken ? `/invite/${inviteToken}` : '/onboarding';
+  const inviteQuery = inviteToken ? `?invite=${encodeURIComponent(inviteToken)}` : '';
 
   const passwordStrength = (() => {
     if (password.length === 0) return null;
@@ -73,9 +79,9 @@ export default function SignupRoute() {
     setIsLoading(true);
 
     try {
-      await signup(email, password, name.trim());
+      await signup(email, password, name.trim(), redirectPath);
       setIsSuccess(true);
-      setTimeout(() => navigate('/onboarding'), 1500);
+      setTimeout(() => navigate(redirectPath), 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist')) {
@@ -90,6 +96,19 @@ export default function SignupRoute() {
     }
   }
 
+  async function handleProviderSignup(provider: SocialProvider) {
+    setError('');
+    setSocialLoadingProvider(provider);
+
+    try {
+      await loginWithProvider(provider, redirectPath);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || 'Social sign-up failed. Please try again.');
+      setSocialLoadingProvider(null);
+    }
+  }
+
   return (
     <AuthShell
       title="Create your account"
@@ -101,7 +120,7 @@ export default function SignupRoute() {
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-linear-accent hover:text-linear-accent-hover">
+          <Link to={`/login${inviteQuery}`} className="font-medium text-linear-accent hover:text-linear-accent-hover">
             Sign in
           </Link>
         </>
@@ -187,7 +206,7 @@ export default function SignupRoute() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || socialLoadingProvider !== null}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-linear-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-linear-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? (
@@ -200,6 +219,20 @@ export default function SignupRoute() {
             )}
           </button>
         </form>
+
+        <div className="relative my-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-linear-border" />
+          <span className="text-xs text-linear-text-tertiary">or</span>
+          <div className="h-px flex-1 bg-linear-border" />
+        </div>
+
+        <AuthProviderButtons
+          actionLabel="Continue"
+          providers={authProviders}
+          isLoading={isProvidersLoading}
+          activeProvider={socialLoadingProvider}
+          onSelect={handleProviderSignup}
+        />
       </div>
     </AuthShell>
   );

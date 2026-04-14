@@ -30,15 +30,13 @@ import {
   Plus,
   ChevronDown,
   History,
-  GitPullRequest,
-  GitCommit,
-  ExternalLink,
   CornerUpRight,
   Loader2
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
 import { cn } from '~/lib/utils';
+import { GitIntegrationPanel } from '~/components/git-integration';
 import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
 import { Input } from '~/components/ui/input';
@@ -91,7 +89,6 @@ interface Issue {
     category: string;
   } | null;
   comments: Comment[];
-  gitLinks: GitLink[];
   relatedIssues: RelatedIssue[];
 }
 
@@ -100,7 +97,7 @@ interface Comment {
   content: string;
   createdAt: string;
   updatedAt: string;
-  user: {
+  creator: {
     id: string;
     name: string | null;
     email: string;
@@ -115,21 +112,12 @@ interface Reaction {
   userId: string;
 }
 
-interface GitLink {
-  id: string;
-  type: 'branch' | 'pr' | 'commit';
-  title: string;
-  url: string;
-  status?: string;
-  number?: number;
-}
-
 interface RelatedIssue {
   id: string;
   identifier: string;
   title: string;
   state: string;
-  type: 'blocks' | 'blocked_by' | 'relates_to' | 'duplicates';
+  type: 'blocks' | 'blocked_by' | 'relates_to' | 'duplicates' | 'duplicated_by';
 }
 
 interface Label {
@@ -194,7 +182,17 @@ export default function IssueDetail() {
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as {
+        members: Array<{
+          user: {
+            id: string;
+            name: string | null;
+            email: string;
+            image: string | null;
+          };
+        }>;
+      };
+      return payload.members.map((member) => member.user);
     },
   });
 
@@ -205,7 +203,8 @@ export default function IssueDetail() {
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { teams: any[] };
+      return payload.teams || [];
     },
   });
 
@@ -216,7 +215,8 @@ export default function IssueDetail() {
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { projects: any[] };
+      return payload.projects || [];
     },
   });
 
@@ -227,7 +227,8 @@ export default function IssueDetail() {
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json().catch(() => ({ labels: [] })) as { labels?: any[] };
+      return payload.labels || [];
     },
   });
 
@@ -353,6 +354,10 @@ export default function IssueDetail() {
   const copyIssueLink = () => {
     navigator.clipboard.writeText(window.location.href);
   };
+
+  const teamIssueNumber = issue?.team && issue.identifier.startsWith(`${issue.team.key}-`)
+    ? Number.parseInt(issue.identifier.split('-')[1] || '0', 10)
+    : 0;
 
   const selectedPriority = priorities.find(p => p.id === issue?.priority);
   const PriorityIcon = selectedPriority?.icon || CircleDot;
@@ -496,7 +501,7 @@ export default function IssueDetail() {
               {[
                 { id: 'comments', label: 'Comments', count: issue.comments?.length || 0 },
                 { id: 'activity', label: 'Activity', icon: History },
-                { id: 'git', label: 'Git', count: issue.gitLinks?.length || 0, icon: GitBranch },
+                { id: 'git', label: 'Git', icon: GitBranch },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -564,12 +569,12 @@ export default function IssueDetail() {
                     {issue.comments?.map((comment: Comment) => (
                       <div key={comment.id} className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-linear-surface border border-linear-border flex items-center justify-center text-xs font-medium text-linear-text-secondary shrink-0">
-                          {comment.user.name?.[0]?.toUpperCase() || comment.user.email[0].toUpperCase()}
+                          {comment.creator.name?.[0]?.toUpperCase() || comment.creator.email[0].toUpperCase()}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-sm text-linear-text">
-                              {comment.user.name || comment.user.email}
+                              {comment.creator.name || comment.creator.email}
                             </span>
                             <span className="text-xs text-linear-text-tertiary">
                               {new Date(comment.createdAt).toLocaleDateString()}
@@ -639,38 +644,13 @@ export default function IssueDetail() {
               )}
 
               {activeTab === 'git' && (
-                <div className="space-y-3">
-                  {issue.gitLinks?.length === 0 ? (
-                    <p className="text-sm text-linear-text-secondary text-center py-4">
-                      No git links yet
-                    </p>
-                  ) : (
-                    issue.gitLinks?.map((link: GitLink) => (
-                      <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-linear-surface rounded-lg hover:bg-linear-border transition-colors"
-                      >
-                        {link.type === 'pr' ? (
-                          <GitPullRequest className="w-4 h-4 text-linear-accent" />
-                        ) : link.type === 'commit' ? (
-                          <GitCommit className="w-4 h-4 text-linear-accent" />
-                        ) : (
-                          <GitBranch className="w-4 h-4 text-linear-accent" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-linear-text">{link.title}</p>
-                          {link.number && (
-                            <p className="text-xs text-linear-text-secondary">#{link.number}</p>
-                          )}
-                        </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-linear-text-tertiary" />
-                      </a>
-                    ))
-                  )}
-                </div>
+                <GitIntegrationPanel
+                  workspace={workspace || ''}
+                  issueId={issue.id}
+                  teamKey={issue.team?.key || ''}
+                  issueNumber={teamIssueNumber}
+                  issueTitle={issue.title}
+                />
               )}
             </div>
           </div>
@@ -838,6 +818,45 @@ export default function IssueDetail() {
             </div>
           </div>
 
+          {(issue.project || issue.cycle) && (
+            <div className="bg-linear-elevated rounded-lg border border-linear-border p-3 space-y-3">
+              {issue.project && (
+                <div>
+                  <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+                    Project
+                  </label>
+                  <Link
+                    to={`/${workspace}/projects/${issue.project.id}`}
+                    className="flex items-center gap-2 text-sm text-linear-text hover:text-linear-accent transition-colors"
+                  >
+                    <FolderKanban className="w-4 h-4 text-linear-text-tertiary" />
+                    {issue.project.name}
+                  </Link>
+                </div>
+              )}
+
+              {issue.cycle && (
+                <div>
+                  <label className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2 block">
+                    Cycle
+                  </label>
+                  <Link
+                    to={`/${workspace}/cycles/${issue.cycle.id}`}
+                    className="flex items-center gap-2 text-sm text-linear-text hover:text-linear-accent transition-colors"
+                  >
+                    <Layers className="w-4 h-4 text-linear-text-tertiary" />
+                    <span>{issue.cycle.name || `Cycle ${issue.cycle.number}`}</span>
+                    {issue.cycle.isActive && (
+                      <Badge variant="success" className="text-[10px] px-1.5 py-0 h-4">
+                        Active
+                      </Badge>
+                    )}
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Related issues */}
           {issue.relatedIssues && issue.relatedIssues.length > 0 && (
             <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
@@ -853,7 +872,9 @@ export default function IssueDetail() {
                   >
                     {related.type === 'blocks' && <CornerUpRight className="w-3.5 h-3.5 text-priority-urgent" />}
                     {related.type === 'blocked_by' && <CornerUpRight className="w-3.5 h-3.5 text-priority-urgent rotate-180" />}
-                    {related.type === 'relates_to' && <LinkIcon className="w-3.5 h-3.5 text-linear-text-tertiary" />}
+                    {(related.type === 'relates_to' || related.type === 'duplicates' || related.type === 'duplicated_by') && (
+                      <LinkIcon className="w-3.5 h-3.5 text-linear-text-tertiary" />
+                    )}
                     <span className="text-linear-text-tertiary">{related.identifier}</span>
                     <span className="truncate">{related.title}</span>
                   </Link>

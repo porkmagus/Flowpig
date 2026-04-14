@@ -20,8 +20,28 @@ export interface AuthenticatedRequest extends FastifyRequest {
   };
 }
 
+function getSocialProviderConfig(clientId?: string, clientSecret?: string) {
+  if (!clientId || !clientSecret) {
+    return undefined;
+  }
+
+  return {
+    clientId,
+    clientSecret,
+  };
+}
+
+export function getConfiguredAuthProviders() {
+  return {
+    github: Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
+    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+  };
+}
+
 export const authPlugin = fp(async (fastify: FastifyInstance) => {
   const trustedOrigins = getTrustedOrigins();
+  const github = getSocialProviderConfig(process.env.GITHUB_CLIENT_ID, process.env.GITHUB_CLIENT_SECRET);
+  const google = getSocialProviderConfig(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
 
   const auth = betterAuth({
     database: prismaAdapter(prisma, { provider: 'postgresql' }),
@@ -35,14 +55,8 @@ export const authPlugin = fp(async (fastify: FastifyInstance) => {
       autoSignIn: true,
     },
     socialProviders: {
-      github: process.env.GITHUB_CLIENT_ID ? {
-        clientId: process.env.GITHUB_CLIENT_ID,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      } : undefined,
-      google: process.env.GOOGLE_CLIENT_ID ? {
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      } : undefined,
+      github,
+      google,
     },
     session: {
       expiresIn: 60 * 60 * 24 * 7,

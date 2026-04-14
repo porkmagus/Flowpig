@@ -4,6 +4,7 @@ export default [
   index("../routes/index.tsx"),
   route("login", "../routes/login.tsx"),
   route("signup", "../routes/signup.tsx"),
+  route("invite/:token", "../routes/invite.$token.tsx"),
   route("onboarding", "../routes/onboarding.tsx"),
   route(":workspace", "../routes/$workspace/layout.tsx", [
     index("../routes/$workspace/index.tsx"),
@@ -19,6 +20,7 @@ export default [
     route("team", "../routes/$workspace/team.tsx"),
     route("databases", "../routes/$workspace/databases.tsx"),
     route("databases/:databaseId", "../routes/$workspace/databases.$databaseId.tsx"),
+    route("initiatives", "../routes/$workspace/initiatives.tsx"),
     route("projects", "../routes/$workspace/projects.tsx"),
     route("projects/:projectId", "../routes/$workspace/projects.$projectId.tsx"),
     route("roadmap", "../routes/$workspace/roadmap.tsx"),

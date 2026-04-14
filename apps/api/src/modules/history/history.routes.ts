@@ -2,6 +2,47 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
+type JsonFieldInput = JsonValueInput | null;
+type JsonValueInput = string | number | boolean | JsonFieldInput[] | { [key: string]: JsonFieldInput };
+
+function buildSnapshot(note: {
+  title: string;
+  content: unknown;
+  emoji: string | null;
+  coverImage?: string | null;
+}) {
+  return {
+    title: note.title,
+    content: note.content,
+    emoji: note.emoji,
+    coverImage: note.coverImage ?? null,
+  };
+}
+
+function toJsonFieldInput(value: unknown): JsonFieldInput {
+  if (value === null) return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => toJsonFieldInput(entry));
+  }
+  if (typeof value === 'object') {
+    const record: { [key: string]: JsonFieldInput } = {};
+    for (const [key, entry] of Object.entries(value)) {
+      record[key] = toJsonFieldInput(entry);
+    }
+    return record;
+  }
+
+  return {};
+}
+
+function toJsonInput(value: unknown): JsonValueInput {
+  const normalized = toJsonFieldInput(value);
+  return normalized === null ? { type: 'doc', content: [] } : normalized;
+}
+
 export default async function historyRoutes(fastify: FastifyInstance) {
   // Get note history (versions)
   fastify.get('/notes/:noteId/history', {
@@ -18,86 +59,62 @@ export default async function historyRoutes(fastify: FastifyInstance) {
     // Verify note exists and is in workspace
     const note = await fastify.prisma.note.findFirst({
       where: { id: noteId, workspaceId, deletedAt: null },
+      include: {
+        creator: { select: { id: true, name: true } },
+        lastEditor: { select: { id: true, name: true } },
+      },
     });
 
     if (!note) {
       return reply.status(404).send({ error: 'Note not found' });
     }
 
-    // Get activities for this note
-    const [activities, total] = await Promise.all([
-      fastify.prisma.activity.findMany({
-        where: {
-          workspaceId,
-          issueId: null, // Note activities don't have issueId
-          createdAt: { gte: note.createdAt },
-          OR: [
-            // Comment activities on this note
-            {
-              type: { in: ['COMMENT_ADDED', 'COMMENT_UPDATED'] },
-            },
-            // Or we could have a separate NoteActivity model
-          ],
-        },
+    const [storedVersions, totalStoredVersions] = await Promise.all([
+      fastify.prisma.noteVersion.findMany({
+        where: { noteId: note.id },
         include: {
-          actor: { select: { id: true, name: true, image: true } },
+          editedBy: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limitNum,
       }),
-      fastify.prisma.activity.count({
-        where: {
-          workspaceId,
-          issueId: null,
-          createdAt: { gte: note.createdAt },
-        },
-      }),
+      fastify.prisma.noteVersion.count({ where: { noteId: note.id } }),
     ]);
 
-    // For now, return synthetic versions based on edit history
-    // In a full implementation, you'd have a NoteVersion table with snapshots
     const versions = [
       {
         id: `current-${note.id}`,
         version: 1,
         createdAt: note.updatedAt.toISOString(),
         createdBy: {
-          id: note.lastEditedById,
-          name: 'Current Version',
+          id: note.lastEditor.id,
+          name: note.lastEditor.name || note.creator.name || 'Current version',
         },
         isCurrent: true,
-        snapshot: {
-          title: note.title,
-          content: note.content,
-          emoji: note.emoji,
-        },
+        snapshot: buildSnapshot(note),
       },
+      ...storedVersions.map((version, index) => ({
+        id: version.id,
+        version: index + 2,
+        createdAt: version.createdAt.toISOString(),
+        createdBy: {
+          id: version.editedBy.id,
+          name: version.editedBy.name || 'Unknown editor',
+        },
+        isCurrent: false,
+        snapshot: buildSnapshot(version),
+        changeDescription: version.editReason || 'Saved note version',
+      })),
     ];
-
-    // Add placeholder versions based on activities
-    let versionNum = 2;
-    activities.forEach(activity => {
-      if (versionNum <= 10) { // Limit synthetic versions
-        versions.push({
-          id: `v${activity.id}`,
-          version: versionNum++,
-          createdAt: activity.createdAt.toISOString(),
-          createdBy: activity.actor,
-          isCurrent: false,
-          snapshot: null, // Would have actual snapshot in full impl
-          changeDescription: activity.description,
-        });
-      }
-    });
 
     return {
       versions,
       meta: {
         page: pageNum,
         limit: limitNum,
-        total,
-        hasMore: skip + versions.length < total,
+        total: totalStoredVersions + 1,
+        hasMore: skip + storedVersions.length < totalStoredVersions,
       },
     };
   });
@@ -111,6 +128,10 @@ export default async function historyRoutes(fastify: FastifyInstance) {
 
     const note = await fastify.prisma.note.findFirst({
       where: { id: noteId, workspaceId, deletedAt: null },
+      include: {
+        creator: { select: { id: true, name: true } },
+        lastEditor: { select: { id: true, name: true } },
+      },
     });
 
     if (!note) {
@@ -124,7 +145,10 @@ export default async function historyRoutes(fastify: FastifyInstance) {
           id: `current-${note.id}`,
           version: 1,
           createdAt: note.updatedAt.toISOString(),
-          createdBy: { id: note.lastEditedById },
+          createdBy: {
+            id: note.lastEditor.id,
+            name: note.lastEditor.name || note.creator.name || null,
+          },
           isCurrent: true,
           note: {
             title: note.title,
@@ -156,25 +180,40 @@ export default async function historyRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Note not found' });
     }
 
-    // In full implementation, fetch from NoteVersion and restore
-    // For now, just update the timestamp to show activity
+    let updateData: {
+      updatedAt?: Date;
+      lastEditedById: string;
+      title?: string;
+      content?: JsonValueInput;
+      emoji?: string | null;
+      coverImage?: string | null;
+    } = {
+      lastEditedById: userId,
+    };
+
+    if (!versionId.startsWith('current')) {
+      const version = await fastify.prisma.noteVersion.findFirst({
+        where: { id: versionId, noteId: note.id },
+      });
+
+      if (!version) {
+        return reply.status(404).send({ error: 'Version not found' });
+      }
+
+      updateData = {
+        ...updateData,
+        title: version.title,
+        content: toJsonInput(version.content),
+        emoji: version.emoji,
+        coverImage: version.coverImage,
+      };
+    } else {
+      updateData.updatedAt = new Date();
+    }
+
     const updatedNote = await fastify.prisma.note.update({
       where: { id: noteId },
-      data: {
-        updatedAt: new Date(),
-        lastEditedById: userId,
-      },
-    });
-
-    // Create restore activity
-    await fastify.prisma.activity.create({
-      data: {
-        workspaceId,
-        actorId: userId,
-        type: 'ISSUE_UPDATED', // Reuse or add NOTE_RESTORED
-        description: 'Restored note to previous version',
-        metadata: { noteId, versionId, action: 'restore' },
-      },
+      data: updateData,
     });
 
     return {

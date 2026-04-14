@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* Theme configuration */
 @theme {
   /* Font family */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Manrope', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Sora', 'Manrope', 'Segoe UI Variable', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, monospace;
   
   /* Linear-style colors — dark scheme matching landing page */
@@ -33,16 +35,21 @@
 
 html {
   font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss01' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
-  background-color: #0D0D0D;
+  background-color: #05070b;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #0D0D0D;
+  background:
+    radial-gradient(circle at top left, rgba(94, 106, 210, 0.12), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(34, 211, 160, 0.08), transparent 28%),
+    #05070b;
   color: var(--color-linear-text);
   min-height: 100vh;
   overflow-x: hidden;
@@ -52,7 +59,16 @@ body {
   min-height: 100vh;
 }
 
+::selection {
+  background-color: rgba(94, 106, 210, 0.28);
+  color: #ffffff;
+}
+
 /* Utility classes */
+.font-display {
+  font-family: var(--font-display);
+}
+
 .glass {
   background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);

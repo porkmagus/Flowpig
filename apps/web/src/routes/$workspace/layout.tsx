@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, Link, useParams, useLocation, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -40,6 +41,8 @@ interface NavItem {
   label: string;
   badge?: string;
 }
+
+const LAST_WORKSPACE_KEY = 'flowpig:last-workspace';
 
 function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
   const Icon = item.icon;
@@ -97,6 +100,12 @@ export default function WorkspaceLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const createIssueModal = useCreateIssueModal();
+
+  useEffect(() => {
+    if (workspace && typeof window !== 'undefined') {
+      window.localStorage.setItem(LAST_WORKSPACE_KEY, workspace);
+    }
+  }, [workspace]);
 
   // Get unread notification count for sidebar badge
   const { data: unreadCountData } = useQuery({
@@ -157,19 +166,23 @@ export default function WorkspaceLayout() {
         >
           {/* Workspace header */}
           <div className="px-3 py-3 border-b border-linear-border">
-            <motion.div 
+            <motion.button 
+              type="button"
+              onClick={() => navigate('/onboarding')}
               className="flex items-center gap-2.5 p-1.5 rounded-md hover:bg-linear-surface cursor-pointer transition-colors"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
+              title="Switch workspace"
             >
               <div className="w-6 h-6 bg-linear-accent rounded-md flex items-center justify-center">
                 <Layers className="w-3.5 h-3.5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-medium text-sm text-linear-text truncate capitalize">{workspace}</h2>
+                <p className="text-[11px] text-linear-text-tertiary">Switch workspace</p>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-linear-text-tertiary" />
-            </motion.div>
+            </motion.button>
           </div>
 
           {/* Search */}

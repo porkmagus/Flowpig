@@ -1,58 +1,21 @@
-import { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import { API_URL } from '~/lib/api';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedPage } from '@flowpigdev/ui';
+import { API_URL } from '~/lib/api';
 import {
-  ChevronLeft,
-  FolderKanban,
-  Plus,
-  Edit3,
-  MoreHorizontal,
-  Target,
-  Calendar,
-  Users,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  Layers,
-  Flag,
   ArrowUpRight,
-  X,
-  Check,
-  ChevronDown,
+  Calendar,
+  CheckCircle2,
+  ChevronLeft,
+  Clock,
+  Edit3,
+  FolderKanban,
+  Layers,
+  Plus,
+  Target,
 } from 'lucide-react';
-
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  slug: string;
-  emoji: string | null;
-  color: string | null;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
-  startDate: string | null;
-  targetDate: string | null;
-  progress: number;
-  createdAt: string;
-  updatedAt: string;
-  leadId: string | null;
-  lead: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-  teamId: string | null;
-  team: {
-    id: string;
-    name: string;
-    key: string;
-    color: string;
-  } | null;
-  initiatives: Initiative[];
-  issues: Issue[];
-}
 
 interface Initiative {
   id: string;
@@ -61,6 +24,7 @@ interface Initiative {
   description: string | null;
   status: string;
   progress: number;
+  targetDate?: string | null;
 }
 
 interface Issue {
@@ -76,13 +40,45 @@ interface Issue {
   } | null;
 }
 
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  'PLANNED': { label: 'Planned', color: 'text-linear-text-secondary', bg: 'bg-linear-elevated' },
-  'IN_PROGRESS': { label: 'In Progress', color: 'text-blue-600', bg: 'bg-blue-100' },
-  'PAUSED': { label: 'Paused', color: 'text-yellow-600', bg: 'bg-yellow-100' },
-  'COMPLETED': { label: 'Completed', color: 'text-green-600', bg: 'bg-green-100' },
-  'CANCELLED': { label: 'Cancelled', color: 'text-red-600', bg: 'bg-red-100' },
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  slug: string;
+  emoji: string | null;
+  color: string | null;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+  startDate: string | null;
+  targetDate: string | null;
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+  lead: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  } | null;
+  initiatives: Initiative[];
+  issues: Issue[];
+}
+
+const statusConfig: Record<Project['status'], { label: string; color: string; bg: string }> = {
+  PLANNED: { label: 'Planned', color: 'text-linear-text-secondary', bg: 'bg-linear-elevated' },
+  IN_PROGRESS: { label: 'In Progress', color: 'text-sky-500', bg: 'bg-sky-500/10' },
+  PAUSED: { label: 'Paused', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  COMPLETED: { label: 'Completed', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  CANCELLED: { label: 'Cancelled', color: 'text-rose-500', bg: 'bg-rose-500/10' },
 };
+
+const initiativeStatusOptions = [
+  'DISCOVERY',
+  'PLANNED',
+  'IN_PROGRESS',
+  'PAUSED',
+  'LAUNCHED',
+  'COMPLETED',
+  'CANCELLED',
+] as const;
 
 export default function ProjectDetailRoute() {
   const { workspace, projectId } = useParams();
@@ -91,45 +87,47 @@ export default function ProjectDetailRoute() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [editStatus, setEditStatus] = useState('');
+  const [editStatus, setEditStatus] = useState<Project['status']>('PLANNED');
   const [showAddInitiative, setShowAddInitiative] = useState(false);
+  const [initiativeName, setInitiativeName] = useState('');
+  const [initiativeDescription, setInitiativeDescription] = useState('');
+  const [initiativeStatus, setInitiativeStatus] = useState<(typeof initiativeStatusOptions)[number]>('PLANNED');
 
   const { data, isLoading } = useQuery({
     queryKey: ['project', workspace, projectId],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/projects/${projectId}`,
-        { credentials: 'include' }
-      );
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/projects/${projectId}`, {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to load project');
-      return response.json();
+      return response.json() as Promise<{ project: Project }>;
     },
+    enabled: !!workspace && !!projectId,
   });
 
-  const project: Project | undefined = data?.project;
+  const project = data?.project;
 
-  // Initialize edit state
-  useMemo(() => {
-    if (project) {
-      setEditName(project.name);
-      setEditDescription(project.description || '');
-      setEditStatus(project.status);
-    }
+  useEffect(() => {
+    if (!project) return;
+    setEditName(project.name);
+    setEditDescription(project.description || '');
+    setEditStatus(project.status);
   }, [project]);
 
   const updateMutation = useMutation({
-    mutationFn: async (updates: Partial<Project>) => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/projects/${projectId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(updates),
-        }
-      );
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: editName.trim(),
+          description: editDescription.trim() || '',
+          status: editStatus,
+        }),
+      });
       if (!response.ok) throw new Error('Failed to update project');
-      return response.json();
+      return response.json() as Promise<{ project: Project }>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', workspace, projectId] });
@@ -138,19 +136,49 @@ export default function ProjectDetailRoute() {
     },
   });
 
+  const createInitiativeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/initiatives`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: initiativeName.trim(),
+          description: initiativeDescription.trim() || undefined,
+          status: initiativeStatus,
+          projectId,
+        }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || 'Failed to create initiative');
+      }
+      return response.json() as Promise<{ initiative: Initiative }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project', workspace, projectId] });
+      queryClient.invalidateQueries({ queryKey: ['initiatives', workspace] });
+      setShowAddInitiative(false);
+      setInitiativeName('');
+      setInitiativeDescription('');
+      setInitiativeStatus('PLANNED');
+      setActiveTab('initiatives');
+    },
+  });
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-primary-500 rounded-full animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-linear-accent/30 border-t-primary-500" />
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="text-center py-16">
+      <div className="py-16 text-center">
         <h2 className="text-xl font-semibold text-linear-text">Project not found</h2>
-        <Link to={`/${workspace}/projects`} className="text-linear-accent hover:text-linear-accent mt-4 inline-block">
+        <Link to={`/${workspace}/projects`} className="mt-4 inline-block text-linear-accent hover:text-linear-accent">
           Back to projects
         </Link>
       </div>
@@ -158,59 +186,131 @@ export default function ProjectDetailRoute() {
   }
 
   const status = statusConfig[project.status];
-  const completedIssues = project.issues?.filter((i) => i.state === 'DONE').length || 0;
-  const totalIssues = project.issues?.length || 0;
+  const completedIssues = project.issues.filter((issue) => issue.state === 'DONE').length;
+  const totalIssues = project.issues.length;
 
   return (
-    <AnimatedPage className="max-w-6xl mx-auto">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-linear-text-secondary mb-6">
+    <AnimatedPage className="mx-auto max-w-6xl">
+      <AnimatePresence>
+        {showAddInitiative && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setShowAddInitiative(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+              className="w-full max-w-lg rounded-xl bg-linear-surface p-6 shadow-xl"
+            >
+              <h2 className="mb-4 text-xl font-semibold text-linear-text">Link A New Initiative</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Initiative name</label>
+                  <input
+                    value={initiativeName}
+                    onChange={(event) => setInitiativeName(event.target.value)}
+                    className="w-full rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
+                    placeholder="e.g. Self-serve onboarding"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Status</label>
+                  <select
+                    value={initiativeStatus}
+                    onChange={(event) => setInitiativeStatus(event.target.value as (typeof initiativeStatusOptions)[number])}
+                    className="w-full rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
+                  >
+                    {initiativeStatusOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option.replaceAll('_', ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Description</label>
+                  <textarea
+                    value={initiativeDescription}
+                    onChange={(event) => setInitiativeDescription(event.target.value)}
+                    rows={4}
+                    className="w-full resize-none rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
+                    placeholder="What outcome should this initiative drive?"
+                  />
+                </div>
+                {createInitiativeMutation.error && (
+                  <div className="rounded-lg border border-linear-error/30 bg-linear-error/10 px-3 py-2 text-sm text-linear-error">
+                    {createInitiativeMutation.error.message}
+                  </div>
+                )}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowAddInitiative(false)}
+                    className="px-4 py-2 text-linear-text-secondary hover:text-linear-text"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => createInitiativeMutation.mutate()}
+                    disabled={!initiativeName.trim() || createInitiativeMutation.isPending}
+                    className="rounded-lg bg-linear-accent px-4 py-2 font-medium text-white transition-colors hover:bg-linear-accent/80 disabled:opacity-50"
+                  >
+                    {createInitiativeMutation.isPending ? 'Creating...' : 'Create initiative'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="mb-6 flex items-center gap-2 text-sm text-linear-text-secondary">
         <Link to={`/${workspace}/projects`} className="hover:text-linear-text-secondary">
           Projects
         </Link>
-        <ChevronLeft className="w-4 h-4 rotate-180" />
-        <span className="text-linear-text font-medium">{project.name}</span>
+        <ChevronLeft className="h-4 w-4 rotate-180" />
+        <span className="font-medium text-linear-text">{project.name}</span>
       </div>
 
-      {/* Header */}
       <div className="mb-8">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           {isEditing ? (
             <div className="flex-1 space-y-4">
               <input
                 type="text"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="text-3xl font-bold border-b-2 border-linear-border focus:border-linear-accent outline-none bg-transparent w-full"
+                onChange={(event) => setEditName(event.target.value)}
+                className="w-full border-b-2 border-linear-border bg-transparent text-3xl font-bold outline-none focus:border-linear-accent"
                 placeholder="Project name"
               />
               <textarea
                 value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40 resize-none"
-                rows={2}
-                placeholder="Description (optional)"
+                onChange={(event) => setEditDescription(event.target.value)}
+                className="w-full resize-none rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
+                rows={3}
+                placeholder="Description"
               />
               <div className="flex items-center gap-2">
                 <select
                   value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className="px-3 py-2 border border-linear-border rounded-lg text-sm"
+                  onChange={(event) => setEditStatus(event.target.value as Project['status'])}
+                  className="rounded-lg border border-linear-border px-3 py-2 text-sm"
                 >
-                  <option value="PLANNED">Planned</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="PAUSED">Paused</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
+                  {Object.keys(statusConfig).map((option) => (
+                    <option key={option} value={option}>
+                      {option.replaceAll('_', ' ')}
+                    </option>
+                  ))}
                 </select>
                 <button
-                  onClick={() => updateMutation.mutate({
-                    name: editName,
-                    description: editDescription,
-                    status: editStatus as any,
-                  })}
-                  disabled={updateMutation.isPending}
-                  className="bg-linear-accent hover:bg-linear-accent/80 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium"
+                  onClick={() => updateMutation.mutate()}
+                  disabled={updateMutation.isPending || !editName.trim()}
+                  className="rounded-lg bg-linear-accent px-4 py-2 font-medium text-white disabled:opacity-50"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Save'}
                 </button>
@@ -221,7 +321,7 @@ export default function ProjectDetailRoute() {
                     setEditDescription(project.description || '');
                     setEditStatus(project.status);
                   }}
-                  className="text-linear-text-secondary hover:text-linear-text px-4 py-2"
+                  className="px-4 py-2 text-linear-text-secondary hover:text-linear-text"
                 >
                   Cancel
                 </button>
@@ -232,39 +332,29 @@ export default function ProjectDetailRoute() {
               <div className="flex items-start gap-4">
                 <span className="text-4xl">{project.emoji || '📁'}</span>
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-3">
                     <h1 className="text-3xl font-bold text-linear-text">{project.name}</h1>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${status.bg} ${status.color}`}>
+                    <span className={`rounded px-2 py-1 text-xs font-medium ${status.bg} ${status.color}`}>
                       {status.label}
                     </span>
-                    {project.team && (
-                      <span
-                        className="px-2 py-0.5 rounded text-xs font-medium text-white"
-                        style={{ backgroundColor: project.team.color }}
-                      >
-                        {project.team.key}
-                      </span>
-                    )}
                   </div>
-                  {project.description && (
-                    <p className="text-linear-text-secondary max-w-2xl">{project.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-linear-text-secondary">
+                  {project.description && <p className="max-w-2xl text-linear-text-secondary">{project.description}</p>}
+                  <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-linear-text-secondary">
                     {project.startDate && (
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="h-4 w-4" />
                         Started {new Date(project.startDate).toLocaleDateString()}
                       </span>
                     )}
                     {project.targetDate && (
                       <span className="flex items-center gap-1">
-                        <Target className="w-4 h-4" />
+                        <Target className="h-4 w-4" />
                         Target {new Date(project.targetDate).toLocaleDateString()}
                       </span>
                     )}
                     {project.lead && (
                       <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
+                        <FolderKanban className="h-4 w-4" />
                         Lead: {project.lead.name || 'Unassigned'}
                       </span>
                     )}
@@ -273,113 +363,88 @@ export default function ProjectDetailRoute() {
               </div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 text-linear-text-secondary hover:text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
+                className="rounded-lg p-2 text-linear-text-secondary transition-colors hover:bg-linear-elevated hover:text-linear-text-secondary"
               >
-                <Edit3 className="w-5 h-5" />
+                <Edit3 className="h-5 w-5" />
               </button>
             </>
           )}
         </div>
 
-        {/* Progress */}
-        <div className="mt-6 bg-linear-surface rounded-xl border border-linear-border p-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mt-6 rounded-xl border border-linear-border bg-linear-surface p-4">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-linear-text-secondary">Progress</span>
             <span className="text-sm font-bold text-linear-text">{project.progress}%</span>
           </div>
-          <div className="w-full bg-linear-elevated rounded-full h-2">
-            <div
-              className="bg-linear-accent h-2 rounded-full transition-all"
-              style={{ width: `${project.progress}%` }}
-            />
+          <div className="h-2 w-full rounded-full bg-linear-elevated">
+            <div className="h-2 rounded-full bg-linear-accent transition-all" style={{ width: `${project.progress}%` }} />
           </div>
-          <div className="flex items-center gap-6 mt-3 text-sm text-linear-text-secondary">
+          <div className="mt-3 flex flex-wrap items-center gap-6 text-sm text-linear-text-secondary">
             <span className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               {completedIssues} completed
             </span>
             <span className="flex items-center gap-1">
-              <Layers className="w-4 h-4" />
+              <Layers className="h-4 w-4" />
               {totalIssues} total issues
             </span>
             <span className="flex items-center gap-1">
-              <Target className="w-4 h-4" />
-              {project.initiatives?.length || 0} initiatives
+              <Target className="h-4 w-4" />
+              {project.initiatives.length} initiative{project.initiatives.length === 1 ? '' : 's'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 bg-linear-elevated p-1 rounded-lg mb-6">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'overview'
-              ? 'bg-linear-surface text-linear-text shadow-sm'
-              : 'text-linear-text-secondary hover:text-linear-text'
-          }`}
-        >
-          <FolderKanban className="w-4 h-4" />
-          Overview
-        </button>
-        <button
-          onClick={() => setActiveTab('issues')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'issues'
-              ? 'bg-linear-surface text-linear-text shadow-sm'
-              : 'text-linear-text-secondary hover:text-linear-text'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          Issues ({totalIssues})
-        </button>
-        <button
-          onClick={() => setActiveTab('initiatives')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'initiatives'
-              ? 'bg-linear-surface text-linear-text shadow-sm'
-              : 'text-linear-text-secondary hover:text-linear-text'
-          }`}
-        >
-          <Target className="w-4 h-4" />
-          Initiatives ({project.initiatives?.length || 0})
-        </button>
+      <div className="mb-6 flex items-center gap-1 rounded-lg bg-linear-elevated p-1">
+        {[
+          { id: 'overview', label: 'Overview', icon: FolderKanban },
+          { id: 'issues', label: `Issues (${totalIssues})`, icon: Layers },
+          { id: 'initiatives', label: `Initiatives (${project.initiatives.length})`, icon: Target },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as 'overview' | 'issues' | 'initiatives')}
+            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? 'bg-linear-surface text-linear-text shadow-sm'
+                : 'text-linear-text-secondary hover:text-linear-text'
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Content */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Initiatives Section */}
-          <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
-            <div className="flex items-center justify-between mb-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-linear-border bg-linear-surface p-5">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-linear-text">Initiatives</h3>
               <button
                 onClick={() => setShowAddInitiative(true)}
-                className="p-1 text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-linear-elevated rounded"
+                className="rounded p-1 text-linear-text-tertiary transition-colors hover:bg-linear-elevated hover:text-linear-text-secondary"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4" />
               </button>
             </div>
-            {project.initiatives?.length === 0 ? (
-              <p className="text-linear-text-tertiary text-sm">No initiatives yet</p>
+            {project.initiatives.length === 0 ? (
+              <p className="text-sm text-linear-text-tertiary">No initiatives linked yet.</p>
             ) : (
               <div className="space-y-3">
-                {project.initiatives?.map((initiative) => (
+                {project.initiatives.map((initiative) => (
                   <Link
                     key={initiative.id}
-                    to={`/${workspace}/initiatives/${initiative.slug}`}
-                    className="block p-3 bg-linear-elevated/50 rounded-lg hover:bg-linear-elevated transition-colors"
+                    to={`/${workspace}/initiatives?initiativeId=${initiative.id}`}
+                    className="block rounded-lg bg-linear-elevated/50 p-3 transition-colors hover:bg-linear-elevated"
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1 flex items-center justify-between">
                       <span className="font-medium text-linear-text">{initiative.name}</span>
                       <span className="text-sm text-linear-text-secondary">{initiative.progress}%</span>
                     </div>
-                    <div className="w-full bg-linear-elevated rounded-full h-1">
-                      <div
-                        className="bg-linear-accent h-1 rounded-full"
-                        style={{ width: `${initiative.progress}%` }}
-                      />
+                    <div className="h-1 w-full rounded-full bg-linear-elevated">
+                      <div className="h-1 rounded-full bg-linear-accent" style={{ width: `${initiative.progress}%` }} />
                     </div>
                   </Link>
                 ))}
@@ -387,34 +452,35 @@ export default function ProjectDetailRoute() {
             )}
           </div>
 
-          {/* Recent Issues */}
-          <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
-            <div className="flex items-center justify-between mb-4">
+          <div className="rounded-xl border border-linear-border bg-linear-surface p-5">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-linear-text">Recent Issues</h3>
               <Link
                 to={`/${workspace}/issues?projectId=${project.id}`}
-                className="text-sm text-linear-accent hover:text-linear-accent flex items-center gap-1"
+                className="flex items-center gap-1 text-sm text-linear-accent hover:text-linear-accent"
               >
                 View all
-                <ArrowUpRight className="w-3 h-3" />
+                <ArrowUpRight className="h-3 w-3" />
               </Link>
             </div>
-            {project.issues?.length === 0 ? (
-              <p className="text-linear-text-tertiary text-sm">No issues yet</p>
+            {project.issues.length === 0 ? (
+              <p className="text-sm text-linear-text-tertiary">No issues linked yet.</p>
             ) : (
               <div className="space-y-2">
-                {project.issues?.slice(0, 5).map((issue) => (
+                {project.issues.slice(0, 5).map((issue) => (
                   <Link
                     key={issue.id}
-                    to={`/${workspace}/issues/${issue.identifier}`}
-                    className="flex items-center gap-3 p-2 hover:bg-linear-elevated/50 rounded-lg transition-colors"
+                    to={`/${workspace}/issues/${issue.id}`}
+                    className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-linear-elevated/50"
                   >
                     <span className="text-sm text-linear-text-secondary">{issue.identifier}</span>
-                    <span className="flex-1 text-sm text-linear-text truncate">{issue.title}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      issue.state === 'DONE' ? 'bg-emerald-500/10 text-emerald-400' :
-                      issue.state === 'IN_PROGRESS' ? 'bg-sky-500/10 text-sky-400' :
-                      'bg-linear-elevated text-linear-text-secondary'
+                    <span className="flex-1 truncate text-sm text-linear-text">{issue.title}</span>
+                    <span className={`rounded px-2 py-0.5 text-xs ${
+                      issue.state === 'DONE'
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : issue.state === 'IN_PROGRESS'
+                          ? 'bg-sky-500/10 text-sky-400'
+                          : 'bg-linear-elevated text-linear-text-secondary'
                     }`}>
                       {issue.state}
                     </span>
@@ -427,34 +493,38 @@ export default function ProjectDetailRoute() {
       )}
 
       {activeTab === 'issues' && (
-        <div className="bg-linear-surface rounded-xl border border-linear-border overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-linear-border bg-linear-surface">
           <div className="divide-y divide-linear-border">
-            {project.issues?.length === 0 ? (
+            {project.issues.length === 0 ? (
               <div className="p-8 text-center">
-                <Layers className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
-                <p className="text-linear-text-secondary">No issues in this project yet</p>
+                <Layers className="mx-auto mb-4 h-12 w-12 text-linear-text-tertiary" />
+                <p className="text-linear-text-secondary">No issues in this project yet.</p>
               </div>
             ) : (
-              project.issues?.map((issue) => (
+              project.issues.map((issue) => (
                 <Link
                   key={issue.id}
-                  to={`/${workspace}/issues/${issue.identifier}`}
-                  className="flex items-center gap-4 p-4 hover:bg-linear-elevated/50 transition-colors"
+                  to={`/${workspace}/issues/${issue.id}`}
+                  className="flex items-center gap-4 p-4 transition-colors hover:bg-linear-elevated/50"
                 >
-                  <span className="text-sm text-linear-text-secondary w-20">{issue.identifier}</span>
+                  <span className="w-20 text-sm text-linear-text-secondary">{issue.identifier}</span>
                   <span className="flex-1 font-medium text-linear-text">{issue.title}</span>
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    issue.priority === 'URGENT' ? 'bg-red-500/10 text-red-400' :
-                    issue.priority === 'HIGH' ? 'bg-orange-500/10 text-orange-400' :
-                    issue.priority === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400' :
-                    issue.priority === 'LOW' ? 'bg-sky-500/10 text-sky-400' :
-                    'bg-linear-elevated text-linear-text-secondary'
+                  <span className={`rounded px-2 py-1 text-xs ${
+                    issue.priority === 'URGENT'
+                      ? 'bg-red-500/10 text-red-400'
+                      : issue.priority === 'HIGH'
+                        ? 'bg-orange-500/10 text-orange-400'
+                        : issue.priority === 'MEDIUM'
+                          ? 'bg-amber-500/10 text-amber-400'
+                          : issue.priority === 'LOW'
+                            ? 'bg-sky-500/10 text-sky-400'
+                            : 'bg-linear-elevated text-linear-text-secondary'
                   }`}>
                     {issue.priority}
                   </span>
                   {issue.assignee && (
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-elevated text-xs">
                         {(issue.assignee.name || '?').charAt(0).toUpperCase()}
                       </div>
                     </div>
@@ -467,40 +537,53 @@ export default function ProjectDetailRoute() {
       )}
 
       {activeTab === 'initiatives' && (
-        <div className="bg-linear-surface rounded-xl border border-linear-border p-5">
-          <div className="flex items-center justify-between mb-6">
+        <div className="rounded-xl border border-linear-border bg-linear-surface p-5">
+          <div className="mb-6 flex items-center justify-between">
             <h3 className="font-semibold text-linear-text">Initiatives</h3>
-            <button className="flex items-center gap-2 bg-linear-accent hover:bg-linear-accent/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-              <Plus className="w-4 h-4" />
+            <button
+              onClick={() => setShowAddInitiative(true)}
+              className="flex items-center gap-2 rounded-lg bg-linear-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-linear-accent/80"
+            >
+              <Plus className="h-4 w-4" />
               Add Initiative
             </button>
           </div>
-          {project.initiatives?.length === 0 ? (
-            <div className="text-center py-12">
-              <Target className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
-              <p className="text-linear-text-secondary mb-4">No initiatives for this project yet</p>
-              <button className="text-linear-accent hover:text-linear-accent font-medium">
-                Create first initiative
+          {project.initiatives.length === 0 ? (
+            <div className="py-12 text-center">
+              <Target className="mx-auto mb-4 h-12 w-12 text-linear-text-tertiary" />
+              <p className="mb-4 text-linear-text-secondary">No initiative is connected to this project yet.</p>
+              <button onClick={() => setShowAddInitiative(true)} className="font-medium text-linear-accent hover:text-linear-accent">
+                Create the first initiative
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {project.initiatives?.map((initiative) => (
-                <div key={initiative.id} className="border border-linear-border rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {project.initiatives.map((initiative) => (
+                <Link
+                  key={initiative.id}
+                  to={`/${workspace}/initiatives?initiativeId=${initiative.id}`}
+                  className="rounded-xl border border-linear-border p-4 transition-colors hover:bg-linear-elevated/50"
+                >
+                  <div className="mb-3 flex items-center justify-between">
                     <h4 className="font-medium text-linear-text">{initiative.name}</h4>
                     <span className="text-sm font-medium text-linear-text-secondary">{initiative.progress}%</span>
                   </div>
                   {initiative.description && (
-                    <p className="text-sm text-linear-text-secondary mb-3">{initiative.description}</p>
+                    <p className="mb-3 text-sm text-linear-text-secondary">{initiative.description}</p>
                   )}
-                  <div className="w-full bg-linear-elevated rounded-full h-2">
-                    <div
-                      className="bg-linear-accent h-2 rounded-full"
-                      style={{ width: `${initiative.progress}%` }}
-                    />
+                  <div className="mb-3 h-2 w-full rounded-full bg-linear-elevated">
+                    <div className="h-2 rounded-full bg-linear-accent" style={{ width: `${initiative.progress}%` }} />
                   </div>
-                </div>
+                  <div className="flex items-center gap-3 text-xs text-linear-text-secondary">
+                    <span>{initiative.status.replaceAll('_', ' ')}</span>
+                    {initiative.targetDate && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(initiative.targetDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </Link>
               ))}
             </div>
           )}
@@ -509,3 +592,4 @@ export default function ProjectDetailRoute() {
     </AnimatedPage>
   );
 }
+

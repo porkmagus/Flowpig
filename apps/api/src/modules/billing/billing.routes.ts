@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
+import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { prisma } from '@flowpigdev/db';
 
 const PLAN_LIMITS = {
@@ -43,9 +44,9 @@ export default async function billingRoutes(fastify: FastifyInstance) {
   // GET current billing status & usage
   fastify.get(
     '/',
-    { preHandler: [requireAuth] },
-    async (request: AuthenticatedRequest, reply: FastifyReply) => {
-      const { workspaceId } = request.params as { workspaceId: string };
+    { preHandler: [requireAuth, extractWorkspace] },
+    async (request: WorkspaceRequest, reply: FastifyReply) => {
+      const workspaceId = request.workspace!.id;
 
       const billing = await getOrCreateBilling(workspaceId);
       const invoices = await prisma.invoice.findMany({
@@ -90,9 +91,10 @@ export default async function billingRoutes(fastify: FastifyInstance) {
   // POST create Stripe checkout session to upgrade plan
   fastify.post(
     '/checkout',
-    { preHandler: [requireAuth] },
-    async (request: AuthenticatedRequest, reply: FastifyReply) => {
-      const { workspaceId } = request.params as { workspaceId: string };
+    { preHandler: [requireAuth, extractWorkspace] },
+    async (request: WorkspaceRequest, reply: FastifyReply) => {
+      const workspaceId = request.workspace!.id;
+      const workspaceSlug = request.workspace!.slug;
       const { plan, interval = 'monthly' } = request.body as {
         plan: 'PRO' | 'ENTERPRISE';
         interval?: 'monthly' | 'yearly';
@@ -135,8 +137,8 @@ export default async function billingRoutes(fastify: FastifyInstance) {
         customer: billing.stripeCustomerId || undefined,
         line_items: [{ price: priceId, quantity: 1 }],
         metadata: { workspaceId, plan },
-        success_url: `${appUrl}/${workspaceId}/settings?billing=success`,
-        cancel_url: `${appUrl}/${workspaceId}/settings?billing=cancel`,
+        success_url: `${appUrl}/${workspaceSlug}/settings?billing=success`,
+        cancel_url: `${appUrl}/${workspaceSlug}/settings?billing=cancel`,
       });
 
       return reply.send({ url: session.url });
@@ -146,9 +148,10 @@ export default async function billingRoutes(fastify: FastifyInstance) {
   // POST create Stripe customer portal session
   fastify.post(
     '/portal',
-    { preHandler: [requireAuth] },
-    async (request: AuthenticatedRequest, reply: FastifyReply) => {
-      const { workspaceId } = request.params as { workspaceId: string };
+    { preHandler: [requireAuth, extractWorkspace] },
+    async (request: WorkspaceRequest, reply: FastifyReply) => {
+      const workspaceId = request.workspace!.id;
+      const workspaceSlug = request.workspace!.slug;
 
       const stripeKey = process.env.STRIPE_SECRET_KEY;
       if (!stripeKey) {
@@ -170,7 +173,7 @@ export default async function billingRoutes(fastify: FastifyInstance) {
 
       const session = await stripe.billingPortal.sessions.create({
         customer: billing.stripeCustomerId,
-        return_url: `${appUrl}/${workspaceId}/settings`,
+        return_url: `${appUrl}/${workspaceSlug}/settings`,
       });
 
       return reply.send({ url: session.url });
@@ -183,7 +186,7 @@ export async function stripeWebhookRoute(fastify: FastifyInstance) {
   fastify.addContentTypeParser(
     'application/json',
     { parseAs: 'buffer' },
-    async (_request, body) => body
+    async (_request: FastifyRequest, body: Buffer) => body
   );
 
   fastify.post(

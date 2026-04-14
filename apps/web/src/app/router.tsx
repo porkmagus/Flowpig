@@ -22,6 +22,7 @@ import InboxPage from '~/routes/$workspace/inbox';
 import AnalyticsPage from '~/routes/$workspace/analytics';
 import DatabasesList from '~/routes/$workspace/databases';
 import DatabaseDetail from '~/routes/$workspace/databases.$databaseId';
+import InitiativesList from '~/routes/$workspace/initiatives';
 import ProjectsList from '~/routes/$workspace/projects';
 import ProjectDetail from '~/routes/$workspace/projects.$projectId';
 
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
               { path: 'settings', element: <SettingsPage /> },
               { path: 'databases', element: <DatabasesList /> },
               { path: 'databases/:databaseId', element: <DatabaseDetail /> },
+              { path: 'initiatives', element: <InitiativesList /> },
               { path: 'projects', element: <ProjectsList /> },
               { path: 'projects/:projectId', element: <ProjectDetail /> },
             ],

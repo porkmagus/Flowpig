@@ -126,7 +126,8 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { teams: Team[] };
+      return payload.teams || [];
     },
     enabled: isOpen,
   });
@@ -138,7 +139,8 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { members: Array<{ user: User }> };
+      return payload.members.map((member) => member.user);
     },
     enabled: isOpen,
   });
@@ -150,7 +152,8 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { projects: Project[] };
+      return payload.projects || [];
     },
     enabled: isOpen,
   });
@@ -162,7 +165,8 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json() as { cycles: Cycle[] };
+      return payload.cycles || [];
     },
     enabled: isOpen,
   });
@@ -174,7 +178,8 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
       });
       if (!response.ok) return [];
-      return response.json();
+      const payload = await response.json().catch(() => ({ labels: [] })) as { labels?: Label[] };
+      return payload.labels || [];
     },
     enabled: isOpen,
   });

@@ -1,7 +1,7 @@
-import { useParams, Link, useNavigate } from 'react-router';
+import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
-import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
+import { AnimatedCard } from '~/components/ui/motion';
 import { 
   Inbox,
   Bell,
@@ -21,7 +21,7 @@ import {
   Folder,
   X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
 type NotificationFilter = 'all' | 'unread' | 'archive';
@@ -80,20 +80,6 @@ interface InboxData {
   };
 }
 
-const notificationIcons: Record<string, React.ReactNode> = {
-  ISSUE_ASSIGNED: <UserPlus className="w-4 h-4 text-sky-400" />,
-  ISSUE_UPDATED: <AlertCircle className="w-4 h-4 text-amber-400" />,
-  ISSUE_COMMENTED: <MessageSquare className="w-4 h-4 text-violet-400" />,
-  ISSUE_COMPLETED: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
-  NOTE_SHARED: <FileText className="w-4 h-4 text-sky-400" />,
-  NOTE_COMMENTED: <MessageSquare className="w-4 h-4 text-violet-400" />,
-  CYCLE_STARTED: <RotateCcw className="w-4 h-4 text-sky-400" />,
-  CYCLE_ENDING: <AlertCircle className="w-4 h-4 text-amber-400" />,
-  MENTION: <Bell className="w-4 h-4 text-red-400" />,
-  WORKSPACE_INVITE: <UserPlus className="w-4 h-4 text-emerald-400" />,
-  BILLING: <Folder className="w-4 h-4 text-amber-400" />,
-};
-
 const notificationColors: Record<string, string> = {
   ISSUE_ASSIGNED: 'bg-sky-500/10 text-sky-300 border-sky-500/20',
   ISSUE_UPDATED: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
@@ -107,6 +93,35 @@ const notificationColors: Record<string, string> = {
   WORKSPACE_INVITE: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
   BILLING: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
 };
+
+function getNotificationIcon(type: string) {
+  switch (type) {
+    case 'ISSUE_ASSIGNED':
+      return <UserPlus className="w-4 h-4 text-sky-400" />;
+    case 'ISSUE_UPDATED':
+      return <AlertCircle className="w-4 h-4 text-amber-400" />;
+    case 'ISSUE_COMMENTED':
+      return <MessageSquare className="w-4 h-4 text-violet-400" />;
+    case 'ISSUE_COMPLETED':
+      return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
+    case 'NOTE_SHARED':
+      return <FileText className="w-4 h-4 text-sky-400" />;
+    case 'NOTE_COMMENTED':
+      return <MessageSquare className="w-4 h-4 text-violet-400" />;
+    case 'CYCLE_STARTED':
+      return <RotateCcw className="w-4 h-4 text-sky-400" />;
+    case 'CYCLE_ENDING':
+      return <AlertCircle className="w-4 h-4 text-amber-400" />;
+    case 'MENTION':
+      return <Bell className="w-4 h-4 text-red-400" />;
+    case 'WORKSPACE_INVITE':
+      return <UserPlus className="w-4 h-4 text-emerald-400" />;
+    case 'BILLING':
+      return <Folder className="w-4 h-4 text-amber-400" />;
+    default:
+      return <Bell className="w-4 h-4 text-linear-text-secondary" />;
+  }
+}
 
 function NotificationItem({ 
   notification, 
@@ -133,7 +148,7 @@ function NotificationItem({
     return `/${workspace}`;
   };
 
-  const icon = notificationIcons[notification.type] || <Bell className="w-4 h-4 text-linear-text-secondary" />;
+  const icon = getNotificationIcon(notification.type);
   const colorClass = notificationColors[notification.type] || 'bg-linear-elevated/50 text-linear-text-secondary border-linear-border';
 
   return (
@@ -293,7 +308,6 @@ function NotificationGroupSection({
 
 export default function InboxPage() {
   const { workspace } = useParams();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [hoveredId, setHoveredId] = useState<string | null>(null);

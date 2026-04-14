@@ -1,437 +1,288 @@
-import { useState } from 'react';
 import { useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { 
+import { useQuery } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
+import {
+  Activity,
+  AlertCircle,
+  CheckCircle2,
+  ExternalLink,
   GitBranch,
   GitPullRequest,
-  GitCommit,
   Link as LinkIcon,
-  ExternalLink,
-  CheckCircle2,
-  CircleDot,
-  AlertCircle,
-  Plus,
-  RefreshCw,
-  Copy,
-  ChevronDown,
-  Settings,
-  Trash2,
-  GitBranch as Bitbucket,
-  // Brand icons removed in v1.x - using alternatives
-  Loader2
+  Loader2,
+  Shield,
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
-import { cn } from '~/lib/utils';
-import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
 
-interface GitIntegration {
-  id: string;
-  provider: 'github' | 'gitlab' | 'bitbucket';
-  repository: string;
-  owner: string;
-  url: string;
-  defaultBranch: string;
-  isActive: boolean;
-  lastSyncedAt: string;
-  settings: {
-    autoLinkPRs: boolean;
-    autoLinkBranches: boolean;
-    autoLinkCommits: boolean;
-    generateBranchNames: boolean;
-  };
+interface GitStatus {
+  connected: boolean;
+  provider: string | null;
+  organization: string | null;
+  openPullRequests?: number;
 }
 
-interface PullRequest {
-  id: string;
-  number: number;
-  title: string;
-  url: string;
-  state: 'open' | 'closed' | 'merged';
-  author: {
+interface GitOverview {
+  connected: boolean;
+  integration: {
+    id: string;
+    provider: string;
+    organization: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+  repositories: Array<{
+    id: string;
     name: string;
-    avatar: string;
+    fullName: string;
+    url: string;
+    defaultBranch: string;
+    isPrivate: boolean;
+    pullRequestCount: number;
+  }>;
+  summary: {
+    repositoryCount: number;
+    openPullRequests: number;
+    linkedBranches: number;
+    linkedIssues: number;
+    recentCommits: number;
   };
-  branchName: string;
-  baseBranch: string;
-  createdAt: string;
-  updatedAt: string;
-  linkedIssues: Array<{
+}
+
+interface PullRequestsResponse {
+  pullRequests: Array<{
     id: string;
-    identifier: string;
+    number: number;
     title: string;
+    state: 'OPEN' | 'CLOSED' | 'MERGED';
+    url: string;
+    branchName: string;
+    draft: boolean;
+    author: {
+      name: string | null;
+      avatar: string | null;
+    };
+    repository: {
+      fullName: string;
+    } | null;
+    linkedIssues: Array<{
+      id: string;
+      identifier: string;
+      title: string;
+      state: string;
+    }>;
+    createdAt: string;
   }>;
 }
 
-interface Branch {
-  name: string;
-  isDefault: boolean;
-  isProtected: boolean;
-  lastCommit: {
-    message: string;
-    author: string;
-    date: string;
-    sha: string;
-  };
-  linkedIssues: Array<{
-    id: string;
-    identifier: string;
+interface BranchesResponse {
+  branches: Array<{
+    name: string;
+    linkedIssues: Array<{
+      id: string;
+      identifier: string;
+      title: string;
+      state: string;
+    }>;
+    pullRequest: {
+      id: string;
+      number: number;
+      title: string;
+      url: string;
+      state: string;
+      repository: {
+        fullName: string;
+        url: string;
+      } | null;
+    } | null;
+    updatedAt: string;
   }>;
 }
 
-const providerIcons = {
-  github: GitBranch,
-  gitlab: GitBranch,
-  bitbucket: Bitbucket,
-};
+function formatProvider(provider?: string | null) {
+  if (!provider) return 'Not connected';
+  return provider.charAt(0).toUpperCase() + provider.slice(1).toLowerCase();
+}
 
-const providerColors = {
-  github: '#24292e',
-  gitlab: '#fc6d26',
-  bitbucket: '#2684ff',
-};
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function SummaryCard({ title, value, subtitle, icon: Icon }: { title: string; value: string | number; subtitle: string; icon: LucideIcon }) {
+  return (
+    <Card>
+      <CardContent className="flex items-start justify-between p-5">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-linear-text-tertiary">{title}</p>
+          <p className="mt-1 text-2xl font-semibold text-linear-text">{value}</p>
+          <p className="mt-1 text-xs text-linear-text-secondary">{subtitle}</p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-accent/10 text-linear-accent"><Icon className="h-5 w-5" /></div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PullRequestStateBadge({ state }: { state: 'OPEN' | 'CLOSED' | 'MERGED' }) {
+  const className = state === 'OPEN' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : state === 'MERGED' ? 'border-sky-500/30 bg-sky-500/10 text-sky-300' : 'border-rose-500/30 bg-rose-500/10 text-rose-300';
+  return <span className={`rounded border px-2 py-0.5 text-[11px] font-medium ${className}`}>{state}</span>;
+}
 
 export default function GitIntegrationPage() {
   const { workspace } = useParams();
-  const queryClient = useQueryClient();
-  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
 
-  // Fetch integrations
-  const { data: integrations, isLoading } = useQuery({
-    queryKey: ['git-integrations', workspace],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/git-integrations`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) return [];
+  const { data: status, isLoading: isStatusLoading } = useQuery({
+    queryKey: ['workspace-git-status', workspace],
+    enabled: !!workspace,
+    queryFn: async (): Promise<GitStatus> => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/git/status`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load git status');
       return response.json();
     },
   });
 
-  // Fetch pull requests
-  const { data: pullRequests } = useQuery({
-    queryKey: ['git-pull-requests', workspace],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/git/pull-requests`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) return [];
+  const { data: overview, isLoading: isOverviewLoading, refetch: refetchOverview } = useQuery({
+    queryKey: ['workspace-git-overview', workspace],
+    enabled: !!workspace,
+    queryFn: async (): Promise<GitOverview> => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/git/overview`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load git overview');
       return response.json();
     },
   });
 
-  // Fetch branches
-  const { data: branches } = useQuery({
-    queryKey: ['git-branches', workspace],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/git/branches`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) return [];
+  const { data: pullRequests, isLoading: isPullRequestsLoading, refetch: refetchPullRequests } = useQuery({
+    queryKey: ['workspace-git-pull-requests', workspace],
+    enabled: !!workspace && !!overview?.connected,
+    queryFn: async (): Promise<PullRequestsResponse> => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/git/pull-requests?state=ALL&limit=12`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load pull requests');
       return response.json();
     },
   });
 
-  const syncMutation = useMutation({
-    mutationFn: async (integrationId: string) => {
-      const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/git-integrations/${integrationId}/sync`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to sync');
+  const { data: branches, isLoading: isBranchesLoading, refetch: refetchBranches } = useQuery({
+    queryKey: ['workspace-git-branches', workspace],
+    enabled: !!workspace && !!overview?.connected,
+    queryFn: async (): Promise<BranchesResponse> => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/git/branches`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load branch activity');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['git-pull-requests', workspace] });
-      queryClient.invalidateQueries({ queryKey: ['git-branches', workspace] });
-    },
   });
+
+  const isLoading = isStatusLoading || isOverviewLoading || (!!overview?.connected && (isPullRequestsLoading || isBranchesLoading));
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 text-linear-accent animate-spin" />
-      </div>
-    );
+    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-linear-accent" /></div>;
   }
-
-  const activeIntegration = integrations?.find((i: GitIntegration) => i.isActive);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <FadeIn>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-linear-text tracking-tight flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-linear-accent" />
-              Git Integration
-            </h1>
-            <p className="text-sm text-linear-text-secondary mt-0.5">
-              Link code changes to issues automatically
-            </p>
+            <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-linear-text"><GitBranch className="h-5 w-5 text-linear-accent" />Git Integration</h1>
+            <p className="mt-0.5 text-sm text-linear-text-secondary">Real workspace repository activity, linked branches, and pull request visibility.</p>
           </div>
-          <div className="flex items-center gap-2">
-            {activeIntegration && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => syncMutation.mutate(activeIntegration.id)}
-                disabled={syncMutation.isPending}
-              >
-                {syncMutation.isPending ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
-                )}
-                <span className="ml-1.5">Sync</span>
-              </Button>
-            )}
-            <Button size="sm" onClick={() => setShowAddModal(true)}>
-              <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Connect repo
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" className="w-full gap-1.5 lg:w-auto" onClick={() => { void refetchOverview(); void refetchPullRequests(); void refetchBranches(); }}><Activity className="h-3.5 w-3.5" />Refresh data</Button>
         </div>
       </FadeIn>
 
-      {/* Connected Repositories */}
-      {integrations?.length > 0 && (
-        <FadeIn delay={0.1}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Connected Repositories</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {integrations.map((integration: GitIntegration) => {
-                const Icon = providerIcons[integration.provider];
-                return (
-                  <div
-                    key={integration.id}
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                      integration.isActive
-                        ? "bg-linear-accent-light/50 border-linear-accent/30"
-                        : "bg-linear-surface border-linear-border"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: providerColors[integration.provider] }}
-                      >
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-linear-text">
-                          {integration.owner}/{integration.repository}
-                        </p>
-                        <p className="text-xs text-linear-text-secondary">
-                          {integration.defaultBranch} • Last synced {new Date(integration.lastSyncedAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={integration.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 hover:bg-linear-border rounded-lg transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4 text-linear-text-secondary" />
-                      </a>
-                      <button className="p-2 hover:bg-linear-border rounded-lg transition-colors">
-                        <Settings className="w-4 h-4 text-linear-text-secondary" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </FadeIn>
-      )}
-
-      {/* Pull Requests */}
-      <FadeIn delay={0.15}>
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <GitPullRequest className="w-4 h-4 text-linear-accent" />
-                Pull Requests
-              </CardTitle>
-              <Badge variant="secondary">{pullRequests?.length || 0}</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {pullRequests?.length === 0 ? (
-              <div className="text-center py-8">
-                <GitPullRequest className="w-10 h-10 text-linear-text-tertiary mx-auto mb-2" />
-                <p className="text-sm text-linear-text-secondary">No pull requests found</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pullRequests?.map((pr: PullRequest) => (
-                  <div
-                    key={pr.id}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-linear-surface hover:bg-linear-border/50 transition-colors"
-                  >
-                    {/* PR State Icon */}
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                      pr.state === 'merged' && "bg-linear-accent/20 text-linear-accent",
-                      pr.state === 'open' && "bg-linear-success/20 text-linear-success",
-                      pr.state === 'closed' && "text-priority-urgent"
-                    )}>
-                      {pr.state === 'merged' ? (
-                        <GitCommit className="w-4 h-4" />
-                      ) : pr.state === 'open' ? (
-                        <CircleDot className="w-4 h-4" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4" />
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={pr.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-linear-text hover:text-linear-accent transition-colors"
-                        >
-                          #{pr.number} {pr.title}
-                        </a>
-                        <Badge variant="outline" className="text-[10px]">
-                          {pr.branchName}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 mt-1 text-xs text-linear-text-secondary">
-                        <span>by {pr.author.name}</span>
-                        <span>•</span>
-                        <span>{new Date(pr.createdAt).toLocaleDateString()}</span>
-                      </div>
-
-                      {/* Linked Issues */}
-                      {pr.linkedIssues?.length > 0 && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <LinkIcon className="w-3 h-3 text-linear-accent" />
-                          {pr.linkedIssues.map((issue) => (
-                            <Badge
-                              key={issue.id}
-                              variant="accent"
-                              className="text-[10px] px-1.5 py-0 h-4"
-                            >
-                              {issue.identifier}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </FadeIn>
-
-      {/* Recent Branches */}
-      <FadeIn delay={0.2}>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <GitBranch className="w-4 h-4 text-linear-accent" />
-              Recent Branches
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {branches?.length === 0 ? (
-              <div className="text-center py-8">
-                <GitBranch className="w-10 h-10 text-linear-text-tertiary mx-auto mb-2" />
-                <p className="text-sm text-linear-text-secondary">No branches found</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {branches?.slice(0, 10).map((branch: Branch) => (
-                  <div
-                    key={branch.name}
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-linear-surface hover:bg-linear-border/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <GitBranch className="w-4 h-4 text-linear-text-tertiary" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-linear-text">
-                            {branch.name}
-                          </span>
-                          {branch.isDefault && (
-                            <Badge variant="success" className="text-[10px] px-1 py-0 h-4">
-                              default
-                            </Badge>
-                          )}
-                          {branch.isProtected && (
-                            <Badge variant="warning" className="text-[10px] px-1 py-0 h-4">
-                              protected
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-linear-text-tertiary mt-0.5 truncate max-w-sm">
-                          {branch.lastCommit.message}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-linear-text-secondary">
-                      {branch.linkedIssues?.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <LinkIcon className="w-3 h-3 text-linear-accent" />
-                          <span>{branch.linkedIssues.length}</span>
-                        </div>
-                      )}
-                      <span>{branch.lastCommit.sha.slice(0, 7)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </FadeIn>
-
-      {/* Empty State */}
-      {(!integrations || integrations.length === 0) && (
-        <FadeIn delay={0.1}>
-          <div className="text-center py-16 bg-linear-elevated rounded-lg border border-linear-border border-dashed">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-linear-surface flex items-center justify-center">
-              <GitBranch className="w-8 h-8 text-linear-text-tertiary" />
-            </div>
-            <h3 className="text-base font-medium text-linear-text mb-2">
-              Connect your repository
-            </h3>
-            <p className="text-sm text-linear-text-secondary max-w-md mx-auto mb-6">
-              Link GitHub, GitLab, or Bitbucket to automatically connect pull requests, 
-              branches, and commits to your issues.
-            </p>
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="w-3.5 h-3.5 mr-1.5" />
-              Connect repository
-            </Button>
+      {!overview?.connected ? (
+        <FadeIn delay={0.06}>
+          <div className="rounded-xl border border-dashed border-linear-border bg-linear-elevated px-6 py-10 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-linear-surface text-linear-text-tertiary"><GitBranch className="h-7 w-7" /></div>
+            <h2 className="mt-4 text-lg font-medium text-linear-text">No active git provider for this workspace</h2>
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-linear-text-secondary">The backend can already link issue branches and pull requests, but this workspace does not have an active provider installation yet. Once a provider is connected, this page will automatically show repository, branch, and PR activity.</p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-lg border border-linear-border bg-linear-surface px-4 py-3 text-sm text-linear-text-secondary"><Shield className="h-4 w-4 text-linear-accent" />Status: {formatProvider(status?.provider)}</div>
           </div>
         </FadeIn>
+      ) : (
+        <>
+          <StaggerContainer className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" delayChildren={0.04}>
+            <StaggerItem><SummaryCard title="Provider" value={formatProvider(overview.integration?.provider)} subtitle={overview.integration?.organization || 'Workspace installation'} icon={Shield} /></StaggerItem>
+            <StaggerItem><SummaryCard title="Repositories" value={overview.summary.repositoryCount} subtitle="Connected to this workspace" icon={GitBranch} /></StaggerItem>
+            <StaggerItem><SummaryCard title="Open PRs" value={overview.summary.openPullRequests} subtitle="Currently awaiting merge or review" icon={GitPullRequest} /></StaggerItem>
+            <StaggerItem><SummaryCard title="Linked Branches" value={overview.summary.linkedBranches} subtitle={`${overview.summary.recentCommits} commits seen in the last 30 days`} icon={LinkIcon} /></StaggerItem>
+          </StaggerContainer>
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+            <FadeIn delay={0.08}>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Connected Repositories</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {overview.repositories.length === 0 ? <p className="text-sm text-linear-text-secondary">The provider is active, but no repositories are registered yet.</p> : overview.repositories.map((repository) => (
+                    <div key={repository.id} className="flex items-center justify-between gap-3 rounded-lg bg-linear-surface px-4 py-3">
+                      <div className="min-w-0"><p className="truncate text-sm font-medium text-linear-text">{repository.fullName}</p><p className="mt-1 text-xs text-linear-text-secondary">Default branch: {repository.defaultBranch} · {repository.pullRequestCount} tracked PRs</p></div>
+                      <div className="flex items-center gap-2">{repository.isPrivate ? <Badge variant="outline">Private</Badge> : null}<a href={repository.url} target="_blank" rel="noreferrer" className="rounded-md p-2 text-linear-text-secondary transition-colors hover:bg-linear-border hover:text-linear-text"><ExternalLink className="h-4 w-4" /></a></div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </FadeIn>
+
+            <FadeIn delay={0.1}>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Workspace Health</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="rounded-lg bg-linear-surface px-4 py-3"><p className="text-xs uppercase tracking-[0.18em] text-linear-text-tertiary">Linked issues</p><p className="mt-1 text-2xl font-semibold text-linear-text">{overview.summary.linkedIssues}</p></div>
+                  <div className="rounded-lg bg-linear-surface px-4 py-3"><p className="text-xs uppercase tracking-[0.18em] text-linear-text-tertiary">Last integration update</p><p className="mt-1 text-sm text-linear-text-secondary">{overview.integration ? new Date(overview.integration.updatedAt).toLocaleString() : 'Never'}</p></div>
+                  <div className="rounded-lg border border-linear-border/70 px-4 py-3 text-sm leading-6 text-linear-text-secondary">Use the issue-level Git panel to generate suggested branch names or manually attach a branch. Those links are the source of truth for the branch activity shown here.</div>
+                </CardContent>
+              </Card>
+            </FadeIn>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+            <FadeIn delay={0.12}>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Pull Requests</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {(pullRequests?.pullRequests.length || 0) === 0 ? <p className="text-sm text-linear-text-secondary">No pull requests are linked to this workspace yet.</p> : pullRequests!.pullRequests.map((pr) => (
+                    <a key={pr.id} href={pr.url} target="_blank" rel="noreferrer" className="block rounded-lg bg-linear-surface px-4 py-3 transition-colors hover:bg-linear-border">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-linear-text">#{pr.number} {pr.title}</p><PullRequestStateBadge state={pr.state} />{pr.draft ? <Badge variant="outline">Draft</Badge> : null}</div>
+                          <p className="mt-1 text-xs text-linear-text-secondary">{pr.repository?.fullName || 'Unknown repository'} · {pr.branchName} · opened {formatDate(pr.createdAt)}</p>
+                          {pr.linkedIssues.length > 0 ? <div className="mt-2 flex flex-wrap gap-2">{pr.linkedIssues.map((issue) => <Badge key={issue.id} variant="outline">{issue.identifier}</Badge>)}</div> : null}
+                        </div>
+                        <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-linear-text-tertiary" />
+                      </div>
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
+            </FadeIn>
+
+            <FadeIn delay={0.14}>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Branch Activity</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {(branches?.branches.length || 0) === 0 ? <p className="text-sm text-linear-text-secondary">No linked branches yet. Link a branch from an issue to start tracking it here.</p> : branches!.branches.map((branch) => (
+                    <div key={branch.name} className="rounded-lg bg-linear-surface px-4 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0"><div className="flex items-center gap-2"><GitBranch className="h-4 w-4 text-linear-accent" /><span className="truncate text-sm font-medium text-linear-text">{branch.name}</span></div><p className="mt-1 text-xs text-linear-text-secondary">{branch.linkedIssues.length} linked issue{branch.linkedIssues.length === 1 ? '' : 's'} · updated {formatDate(branch.updatedAt)}</p></div>
+                        {branch.pullRequest ? <a href={branch.pullRequest.url} target="_blank" rel="noreferrer" className="rounded-md p-2 text-linear-text-secondary transition-colors hover:bg-linear-border hover:text-linear-text"><ExternalLink className="h-4 w-4" /></a> : null}
+                      </div>
+                      <div className="mt-3 rounded-md border border-linear-border/70 px-3 py-2 text-sm text-linear-text-secondary">{branch.pullRequest ? `PR #${branch.pullRequest.number}: ${branch.pullRequest.title}` : 'Manual branch link with no attached pull request yet.'}</div>
+                      <div className="mt-3 flex flex-wrap gap-2">{branch.linkedIssues.map((issue) => <Badge key={issue.id} variant="outline">{issue.identifier}</Badge>)}</div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </FadeIn>
+          </div>
+
+          <FadeIn delay={0.16}><div className="rounded-xl border border-linear-border bg-linear-elevated px-4 py-4 text-sm text-linear-text-secondary"><div className="flex items-center gap-2 font-medium text-linear-text"><CheckCircle2 className="h-4 w-4 text-linear-accent" />Live workspace git data is enabled</div><p className="mt-2 leading-6">This page is now backed by actual repository, pull request, and issue branch link data. If something looks missing, check whether the issue already has a linked branch or pull request recorded in its Git panel.</p></div></FadeIn>
+        </>
       )}
+
+      {overview?.integration && !status?.connected ? <FadeIn delay={0.18}><div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"><div className="flex items-center gap-2 font-medium"><AlertCircle className="h-4 w-4" />Integration record exists, but it is not currently marked active.</div></div></FadeIn> : null}
     </div>
   );
 }

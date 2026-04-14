@@ -2,6 +2,17 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
+type IssueState = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'CANCELLED';
+
+type DefaultWorkflowState = {
+  name: string;
+  key: string;
+  category: IssueState;
+  position: number;
+  isDefault?: boolean;
+  isTerminal?: boolean;
+};
+
 export default async function teamRoutes(fastify: FastifyInstance) {
   // List teams
   fastify.get('/', {
@@ -143,7 +154,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
     });
 
     // Create default workflow states
-    const defaultStates = [
+    const defaultStates: DefaultWorkflowState[] = [
       { name: 'Backlog', key: 'backlog', category: 'BACKLOG', position: 0, isDefault: true },
       { name: 'Todo', key: 'todo', category: 'TODO', position: 1 },
       { name: 'In Progress', key: 'in_progress', category: 'IN_PROGRESS', position: 2 },
