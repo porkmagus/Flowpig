@@ -37,7 +37,6 @@ export function usePresence(workspaceId: string, pageType: 'issue' | 'note', pag
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
         setPresence(prev => ({ ...prev, isConnected: true }));
 
         // Authenticate
@@ -111,7 +110,6 @@ export function usePresence(workspaceId: string, pageType: 'issue' | 'note', pag
       };
 
       ws.onclose = () => {
-        console.log('WebSocket disconnected');
         setPresence(prev => ({ ...prev, isConnected: false }));
         
         // Reconnect after 3 seconds

@@ -26,7 +26,7 @@ async function start() {
 
     await server.listen({ port: PORT, host: HOST });
 
-    console.log(`API server running on http://${HOST}:${PORT}`);
+    server.log.info(`API server running on http://${HOST}:${PORT}`);
   } catch (err) {
     console.error('❌ Failed to start server:', err);
     process.exit(1);

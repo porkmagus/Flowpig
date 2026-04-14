@@ -18,7 +18,7 @@ export default async function handleRequest(
     {
       signal: request.signal,
       onError(error: unknown) {
-        console.error(error);
+        console.error('SSR render error:', error);
         responseStatusCode = 500;
       },
     }

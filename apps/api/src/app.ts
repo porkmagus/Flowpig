@@ -45,60 +45,62 @@ export async function app(fastify: FastifyInstance) {
   await fastify.register(workspaceContextPlugin);
 
   // Public routes - no auth required
-  await fastify.register(healthRoutes, { prefix: '/health' });
-  await fastify.register(authRoutes, { prefix: '/auth' });
-  await fastify.register(uploadPublicRoutes, { prefix: '/uploads' });
-  await fastify.register(notePublicRoutes, { prefix: '/share' });
-
-  // Auth middleware for all other routes
-  fastify.addHook('onRequest', async (request: AuthenticatedRequest, reply) => {
-    if (request.url.startsWith('/health') || request.url.startsWith('/auth')) {
-      return;
-    }
-
-    try {
-      const session = await fastify.auth.api.getSession({
-        headers: request.headers,
-      });
-
-      if (session?.user) {
-        request.user = {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name || null,
-          image: session.user.image || null,
-        };
-      }
-    } catch {
-      // Not authenticated - continue without user
-    }
+  await fastify.register(async function publicRoutes(app) {
+    await app.register(healthRoutes, { prefix: '/health' });
+    await app.register(authRoutes, { prefix: '/auth' });
+    await app.register(uploadPublicRoutes, { prefix: '/uploads' });
+    await app.register(notePublicRoutes, { prefix: '/share' });
   });
 
-  // Protected routes
-  await fastify.register(workspaceRoutes, { prefix: '/workspaces' });
-  await fastify.register(issueRoutes, { prefix: '/workspaces/:workspaceId/issues' });
-  await fastify.register(commentRoutes, { prefix: '/workspaces/:workspaceId' });
-  await fastify.register(noteRoutes, { prefix: '/workspaces/:workspaceId/notes' });
-  await fastify.register(noteShareRoutes, { prefix: '/workspaces/:workspaceId/notes' });
-  await fastify.register(noteCommentRoutes, { prefix: '/workspaces/:workspaceId' });
-  await fastify.register(aiRoutes, { prefix: '/ai' });
-  await fastify.register(uploadRoutes, { prefix: '/workspaces/:workspaceId/uploads' });
-  await fastify.register(notificationRoutes, { prefix: '/notifications' });
-  await fastify.register(searchRoutes, { prefix: '/search' });
-  await fastify.register(databaseRoutes, { prefix: '/workspaces/:workspaceId/databases' });
-  await fastify.register(cycleRoutes, { prefix: '/workspaces/:workspaceId/cycles' });
-  await fastify.register(teamRoutes, { prefix: '/workspaces/:workspaceId/teams' });
-  await fastify.register(triageRoutes, { prefix: '/workspaces/:workspaceId' });
-  await fastify.register(roadmapRoutes, { prefix: '/workspaces/:workspaceId/roadmap' });
-  await fastify.register(historyRoutes, { prefix: '/workspaces/:workspaceId/history' });
-  await fastify.register(gitRoutes, { prefix: '/workspaces/:workspaceId/git' });
-  await fastify.register(analyticsRoutes, { prefix: '/workspaces/:workspaceId/analytics' });
-  await fastify.register(issueRelationsRoutes, { prefix: '/workspaces/:workspaceId/issues' });
-  await fastify.register(noteVersionRoutes, { prefix: '/workspaces/:workspaceId/notes' });
-  await fastify.register(billingRoutes, { prefix: '/workspaces/:workspaceId/billing' });
-  await fastify.register(projectRoutes, { prefix: '/workspaces/:workspaceId' });
-  // Stripe webhooks need raw body - registered separately
-  await fastify.register(stripeWebhookRoute, { prefix: '/webhooks' });
+  // Protected routes - auth middleware applies here only
+  await fastify.register(async function protectedRoutes(app) {
+    app.addHook('onRequest', async (request: AuthenticatedRequest, _reply) => {
+      try {
+        const session = await app.auth.api.getSession({
+          headers: request.headers,
+        });
+
+        if (session?.user) {
+          request.user = {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.name || null,
+            image: session.user.image || null,
+          };
+        }
+      } catch {
+        // Not authenticated - continue without user
+      }
+    });
+
+    await app.register(workspaceRoutes, { prefix: '/workspaces' });
+    await app.register(issueRoutes, { prefix: '/workspaces/:workspaceId/issues' });
+    await app.register(commentRoutes, { prefix: '/workspaces/:workspaceId' });
+    await app.register(noteRoutes, { prefix: '/workspaces/:workspaceId/notes' });
+    await app.register(noteShareRoutes, { prefix: '/workspaces/:workspaceId/notes' });
+    await app.register(noteCommentRoutes, { prefix: '/workspaces/:workspaceId' });
+    await app.register(aiRoutes, { prefix: '/ai' });
+    await app.register(uploadRoutes, { prefix: '/workspaces/:workspaceId/uploads' });
+    await app.register(notificationRoutes, { prefix: '/notifications' });
+    await app.register(searchRoutes, { prefix: '/search' });
+    await app.register(databaseRoutes, { prefix: '/workspaces/:workspaceId/databases' });
+    await app.register(cycleRoutes, { prefix: '/workspaces/:workspaceId/cycles' });
+    await app.register(teamRoutes, { prefix: '/workspaces/:workspaceId/teams' });
+    await app.register(triageRoutes, { prefix: '/workspaces/:workspaceId' });
+    await app.register(roadmapRoutes, { prefix: '/workspaces/:workspaceId/roadmap' });
+    await app.register(historyRoutes, { prefix: '/workspaces/:workspaceId/history' });
+    await app.register(gitRoutes, { prefix: '/workspaces/:workspaceId/git' });
+    await app.register(analyticsRoutes, { prefix: '/workspaces/:workspaceId/analytics' });
+    await app.register(issueRelationsRoutes, { prefix: '/workspaces/:workspaceId/issues' });
+    await app.register(noteVersionRoutes, { prefix: '/workspaces/:workspaceId/notes' });
+    await app.register(billingRoutes, { prefix: '/workspaces/:workspaceId/billing' });
+    await app.register(projectRoutes, { prefix: '/workspaces/:workspaceId' });
+  });
+
+  // Stripe webhooks need raw body - keep outside protected routes
+  await fastify.register(async function webhookRoutes(app) {
+    await app.register(stripeWebhookRoute, { prefix: '/webhooks' });
+  });
 
   await fastify.register(websocketPlugin);
 }

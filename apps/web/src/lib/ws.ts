@@ -41,7 +41,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
         setIsConnected(true);
         onConnect?.();
 
@@ -80,7 +79,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
               setIsAuthenticated(false);
               break;
             case 'subscribed':
-              console.log('Subscribed to workspace:', message.payload?.workspaceId);
               break;
             default:
               onMessage?.(message);
@@ -91,14 +89,12 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
       };
 
       ws.onclose = () => {
-        console.log('WebSocket disconnected');
         setIsConnected(false);
         setIsAuthenticated(false);
         onDisconnect?.();
 
         if (reconnect) {
           reconnectTimerRef.current = setTimeout(() => {
-            console.log('Reconnecting WebSocket...');
             connect();
           }, reconnectInterval);
         }
@@ -157,8 +153,6 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const send = useCallback((message: object) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
-    } else {
-      console.warn('WebSocket is not connected');
     }
   }, []);
 

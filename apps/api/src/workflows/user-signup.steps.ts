@@ -1,9 +1,11 @@
 'use step';
 
 export async function sendWelcomeEmail(email: string) {
-  console.log(`Sending welcome email to ${email}`);
+  // TODO: integrate with email provider (Resend, SendGrid, etc.)
+  void email;
 }
 
 export async function createUserRecord(email: string) {
-  console.log(`Creating user record for ${email}`);
+  // TODO: create user in database or CRM
+  void email;
 }

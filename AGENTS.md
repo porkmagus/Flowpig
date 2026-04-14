@@ -40,8 +40,6 @@
 - File uploads use `@fastify/multipart` + pluggable storage provider (`filesystem` active, S3 stubbed) in `apps/api/src/lib/storage/storage.ts`.
 
 ## Known Drift / Verify Before Refactoring
-- `apps/api/src/app.ts` currently registers several modules twice (`uploadRoutes`, `notificationRoutes`, `searchRoutes`, `aiRoutes`); verify desired behavior before changing.
-- `apps/api/src/modules/ai/ai.routes.ts` import paths appear inconsistent with folder location (`../plugins/...`), so confirm compile status before AI changes.
 - Web code contains both React Router framework config (`react-router.config.ts`) and a manual router (`src/app/router.tsx`); check which entry path is active before routing refactors.
 - Frontend often passes workspace slug in URLs while backend middleware expects `workspaceId`; preserve existing behavior unless you can migrate both sides together.
 

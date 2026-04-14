@@ -56,7 +56,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
 
     clients.set(clientId, client);
 
-    console.log(`WebSocket client connected: ${clientId}`);
+    fastify.log.debug(`WebSocket client connected: ${clientId}`);
 
     // Handle messages
     socket.on('message', async (rawMessage: Buffer) => {
@@ -251,7 +251,7 @@ export const websocketPlugin = fp(async (fastify: FastifyInstance) => {
 
     // Handle disconnect
     socket.on('close', () => {
-      console.log(`WebSocket client disconnected: ${clientId}`);
+      fastify.log.debug(`WebSocket client disconnected: ${clientId}`);
       
       // Remove from page viewers
       if (client.currentPage) {
