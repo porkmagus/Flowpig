@@ -16,12 +16,24 @@ function loadDatabaseEnv() {
   }
 
   const currentDir = dirname(fileURLToPath(import.meta.url));
-  const repoRoot = resolve(currentDir, '../../..');
-  const envFiles = [resolve(repoRoot, '.env'), resolve(repoRoot, '.env.dev')];
+  // Search up parent directories for env files to support bundled runtimes
+  const searchDirs = [
+    resolve(currentDir, '../../..'),
+    resolve(currentDir, '../../../..'),
+    resolve(currentDir, '../../../../..'),
+    resolve(currentDir, '../../../../../..'),
+    resolve(currentDir, '../../../../../../../..'),
+  ];
 
-  for (const envFile of envFiles) {
-    if (existsSync(envFile)) {
-      config({ path: envFile, override: false });
+  for (const dir of searchDirs) {
+    const envFiles = [resolve(dir, '.env'), resolve(dir, '.env.dev')];
+    for (const envFile of envFiles) {
+      if (existsSync(envFile)) {
+        config({ path: envFile, override: false });
+        if (process.env.DATABASE_URL) {
+          return;
+        }
+      }
     }
   }
 }

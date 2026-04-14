@@ -1,0 +1,26 @@
+{
+  "runId": "wrun_01KP5QYFCW2D48TVPJGYMJ31EV",
+  "deploymentId": "dpl_local@bundled",
+  "workflowName": "workflow//./src/workflows/user-signup//handleUserSignup",
+  "specVersion": 3,
+  "executionContext": {
+    "traceCarrier": {},
+    "workflowCoreVersion": "4.2.2",
+    "features": {
+      "encryption": false
+    }
+  },
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFtbMV0sInRlc3RAZXhhbXBsZS5jb20iXQ=="
+  },
+  "createdAt": "2026-04-14T10:17:45.127Z",
+  "startedAt": "2026-04-14T10:17:45.177Z",
+  "status": "completed",
+  "output": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bC0x"
+  },
+  "completedAt": "2026-04-14T10:17:45.438Z",
+  "updatedAt": "2026-04-14T10:17:45.438Z"
+}

@@ -1,8 +1,7 @@
 # ============================================
 # API Service - Production Dockerfile
 # ============================================
-# The API runs from source via tsx so workspace packages that still export
-# TypeScript remain loadable in production.
+# Builds the API with Nitro (Vercel Workflow SDK) and runs the bundled output.
 
 FROM node:24.14.1-alpine AS builder
 
@@ -28,6 +27,7 @@ COPY packages/db ./packages/db
 COPY packages/contracts ./packages/contracts
 
 RUN npm run db:generate
+RUN npm run build:api
 RUN npm cache clean --force
 
 FROM node:24.14.1-alpine AS runner
@@ -63,4 +63,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 ENTRYPOINT ["dumb-init", "--"]
 
-CMD ["node", "--import", "tsx", "apps/api/src/server.ts"]
+CMD ["node", "apps/api/.output/server/index.mjs"]

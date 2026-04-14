@@ -1,0 +1,12 @@
+{
+  "eventType": "step_failed",
+  "specVersion": 3,
+  "correlationId": "step_01KP5NAPMG5141M90F9KNR9SKE",
+  "eventData": {
+    "error": "Step \"step//./src/workflows/user-signup.steps//sendWelcomeEmail\" is not registered in the current deployment. This usually indicates a build or bundling issue that caused the step to not be included in the deployment.\n\nLearn more: https://useworkflow.dev/err/step-not-registered",
+    "stack": "StepNotRegisteredError: Step \"step//./src/workflows/user-signup.steps//sendWelcomeEmail\" is not registered in the current deployment. This usually indicates a build or bundling issue that caused the step to not be included in the deployment.\n\nLearn more: https://useworkflow.dev/err/step-not-registered\n    at file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:35077:17\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:3849:19\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:3821:57\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:34985:9\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:25578:20\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:30339:10\n    at async steps_default (file:///F:/flowpigdev/apps/api/.output/server/index.mjs:16757:10)\n    at async Array.<anonymous> (file:///F:/flowpigdev/node_modules/srvx/dist/log.mjs:11:15)"
+  },
+  "runId": "wrun_01KP5NAPJPKR685XBFB0GRXZ4V",
+  "eventId": "evnt_01KP5NAPQ4X89F3X17CEJ1BEXW",
+  "createdAt": "2026-04-14T09:32:00.100Z"
+}

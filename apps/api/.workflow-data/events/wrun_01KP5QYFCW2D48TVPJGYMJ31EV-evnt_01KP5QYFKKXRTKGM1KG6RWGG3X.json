@@ -1,0 +1,15 @@
+{
+  "eventType": "step_created",
+  "specVersion": 3,
+  "correlationId": "step_01KP5QYFESMJW8EYJ8SFMXS935",
+  "eventData": {
+    "stepName": "step//./src/workflows/user-signup.steps//createUserRecord",
+    "input": {
+      "__type": "Uint8Array",
+      "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyXSwidGVzdEBleGFtcGxlLmNvbSJd"
+    }
+  },
+  "runId": "wrun_01KP5QYFCW2D48TVPJGYMJ31EV",
+  "eventId": "evnt_01KP5QYFKKXRTKGM1KG6RWGG3X",
+  "createdAt": "2026-04-14T10:17:45.331Z"
+}

@@ -1,0 +1,20 @@
+{
+  "runId": "wrun_01KP5P65GBWFFPRBFBGNXCAB09",
+  "stepId": "step_01KP5P65J8B0BF68A4977V90BC",
+  "stepName": "step//./src/workflows/user-signup.steps//sendWelcomeEmail",
+  "status": "completed",
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyXSwiaGVsbG9AZXhhbXBsZS5jb20iXQ=="
+  },
+  "attempt": 1,
+  "startedAt": "2026-04-14T09:47:00.133Z",
+  "createdAt": "2026-04-14T09:47:00.084Z",
+  "updatedAt": "2026-04-14T09:47:00.137Z",
+  "specVersion": 3,
+  "output": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bC0x"
+  },
+  "completedAt": "2026-04-14T09:47:00.137Z"
+}

@@ -1,0 +1,27 @@
+{
+  "runId": "wrun_01KP5NAPJPKR685XBFB0GRXZ4V",
+  "deploymentId": "dpl_local@bundled",
+  "workflowName": "workflow//./src/workflows/user-signup//handleUserSignup",
+  "specVersion": 3,
+  "executionContext": {
+    "traceCarrier": {},
+    "workflowCoreVersion": "4.2.2",
+    "features": {
+      "encryption": false
+    }
+  },
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFtbMV0sImhlbGxvQGV4YW1wbGUuY29tIl0="
+  },
+  "createdAt": "2026-04-14T09:31:59.968Z",
+  "startedAt": "2026-04-14T09:32:00.016Z",
+  "status": "failed",
+  "error": {
+    "message": "Step \"step//./src/workflows/user-signup.steps//sendWelcomeEmail\" is not registered in the current deployment. This usually indicates a build or bundling issue that caused the step to not be included in the deployment.\n\nLearn more: https://useworkflow.dev/err/step-not-registered",
+    "stack": "StepNotRegisteredError: Step \"step//./src/workflows/user-signup.steps//sendWelcomeEmail\" is not registered in the current deployment. This usually indicates a build or bundling issue that caused the step to not be included in the deployment.\n\nLearn more: https://useworkflow.dev/err/step-not-registered\n    at file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:35077:17\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:3849:19\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:3821:57\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:34985:9\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:25578:20\n    at async file:///F:/flowpigdev/apps/api/.output/server/_libs/@workflow/core+%5B...%5D.mjs:30339:10\n    at async steps_default (file:///F:/flowpigdev/apps/api/.output/server/index.mjs:16757:10)\n    at async Array.<anonymous> (file:///F:/flowpigdev/node_modules/srvx/dist/log.mjs:11:15)",
+    "code": "USER_ERROR"
+  },
+  "completedAt": "2026-04-14T09:32:00.154Z",
+  "updatedAt": "2026-04-14T09:32:00.154Z"
+}
