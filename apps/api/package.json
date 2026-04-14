@@ -26,12 +26,13 @@
     "nitro": "^3.0.260311-beta",
     "openai": "6.34.0",
     "stripe": "^16.0.0",
-    "tsx": "4.21.0",
-    "workflow": "^4.2.2",
+
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "22.19.17",
-    "typescript": "5.9.3"
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "workflow": "^4.2.2"
   }
 }

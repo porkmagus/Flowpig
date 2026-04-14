@@ -1,11 +1,11 @@
-import { createWriteStream, createReadStream, promises as fs } from 'fs';
+import { createWriteStream, promises as fs } from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 import { randomUUID } from 'crypto';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
-import type { MultipartFile } from '@fastify/multipart';
+
 import { getStoragePublicUrl } from '../env.js';
 
 // Storage abstraction interface
@@ -199,8 +199,8 @@ export function generateFileKey(
 
 // Image processing stub (for future)
 export async function generateThumbnails(
-  buffer: Buffer,
-  key: string
+  _buffer: Buffer,
+  _key: string
 ): Promise<{ thumbnail?: string; preview?: string }> {
   // Placeholder for Sharp image processing
   // Would generate thumbnails, previews, WebP versions

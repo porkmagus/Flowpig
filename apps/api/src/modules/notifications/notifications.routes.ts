@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
-import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 import { broadcastNotificationCreated } from '../../plugins/websocket.js';
 
 type NotificationType =

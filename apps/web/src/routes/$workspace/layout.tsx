@@ -121,8 +121,6 @@ export default function WorkspaceLayout() {
     refetchInterval: 30000,
   });
 
-  const unreadCount = unreadCountData?.count || 0;
-
   if (!user) {
     return <Navigate to="/login" replace />;
   }

@@ -43,56 +43,6 @@ import { Badge } from '~/components/ui/badge';
 import { Input } from '~/components/ui/input';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
 
-interface Issue {
-  id: string;
-  identifier: string;
-  title: string;
-  description: string | null;
-  state: string;
-  priority: string;
-  dueDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-  completedAt: string | null;
-  creator: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  };
-  assignee: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  } | null;
-  team: {
-    id: string;
-    name: string;
-    key: string;
-    color: string;
-  } | null;
-  project: {
-    id: string;
-    name: string;
-  } | null;
-  cycle: {
-    id: string;
-    number: number;
-    name: string | null;
-    isActive: boolean;
-  } | null;
-  labels: Label[];
-  workflowState: {
-    id: string;
-    name: string;
-    color: string;
-    category: string;
-  } | null;
-  comments: Comment[];
-  relatedIssues: RelatedIssue[];
-}
-
 interface Comment {
   id: string;
   content: string;

@@ -27,8 +27,7 @@ import { API_URL } from '~/lib/api';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
-import { Badge } from '~/components/ui/badge';
-import { FadeIn, ScaleIn } from '~/components/ui/motion';
+
 
 interface CreateIssueModalProps {
   isOpen: boolean;

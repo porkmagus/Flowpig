@@ -41,24 +41,14 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
-import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
-import { Badge } from '~/components/ui/badge';
 
 interface CommandPaletteProps {
   workspaceId: string;
   workspaceSlug: string;
 }
 
-interface SearchResult {
-  id: string;
-  type: 'issue' | 'note' | 'page' | 'user' | 'project';
-  title: string;
-  subtitle?: string;
-  icon?: React.ReactNode;
-  url: string;
-  metadata?: Record<string, string>;
-}
+
 
 interface KeyboardShortcut {
   key: string;
