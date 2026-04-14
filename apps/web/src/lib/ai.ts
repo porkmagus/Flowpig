@@ -32,14 +32,18 @@ export function useAIStream(
   const [streamedContent, setStreamedContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef<Message[]>([]);
+
+  // Keep ref in sync with state to avoid stale closures
+  messagesRef.current = messages;
 
   const sendMessage = useCallback(async (content: string) => {
-    // Add user message
-    const userMessage: Message = { role: 'user', content };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
     setError(null);
     setStreamedContent('');
+
+    const userMessage: Message = { role: 'user', content };
+    const updatedMessages = [...messagesRef.current, userMessage];
+    setMessages(updatedMessages);
 
     // Abort any existing request
     if (abortControllerRef.current) {
@@ -130,7 +134,7 @@ export function useAIStream(
       setIsStreaming(false);
       onError?.(errorMessage);
     }
-  }, [messages, workspaceId, onToken, onComplete, onError]);
+  }, [workspaceId, onToken, onComplete, onError]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

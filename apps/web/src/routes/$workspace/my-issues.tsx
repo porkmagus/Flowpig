@@ -30,7 +30,12 @@ import {
   Search
 } from 'lucide-react';
 import { useState } from 'react';
-import { formatDistanceToNow, format, isToday, isTomorrow, isPast, startOfDay } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { format } from 'date-fns/format';
+import { isToday } from 'date-fns/isToday';
+import { isTomorrow } from 'date-fns/isTomorrow';
+import { isPast } from 'date-fns/isPast';
+import { startOfDay } from 'date-fns/startOfDay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '~/lib/utils';
 

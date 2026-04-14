@@ -415,7 +415,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   {description && !title && (
                     <button
                       type="button"
-                      onClick={generateWithAi}
+                      onClick={() => { void generateWithAi(); }}
                       disabled={isAiGenerating}
                       className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-linear-accent hover:text-linear-accent-hover bg-linear-accent-light px-2 py-1 rounded-md transition-colors"
                     >

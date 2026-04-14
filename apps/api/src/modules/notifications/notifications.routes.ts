@@ -57,7 +57,7 @@ export async function createNotification(
   });
 
   // Broadcast via WebSocket
-  broadcastNotificationCreated(fastify, userId, notification.id, {
+  await broadcastNotificationCreated(fastify, userId, notification.id, {
     id: notification.id,
     type: notification.type,
     title: notification.title,

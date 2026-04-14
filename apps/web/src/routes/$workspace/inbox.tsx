@@ -22,7 +22,7 @@ import {
   X
 } from 'lucide-react';
 import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 type NotificationFilter = 'all' | 'unread' | 'archive';
 

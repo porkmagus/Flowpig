@@ -129,7 +129,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
     });
 
     // Broadcast update
-    broadcastIssueUpdated(fastify, workspaceId, issueId, {
+    await broadcastIssueUpdated(fastify, workspaceId, issueId, {
       attachments: { added: [attachment] },
     });
 
