@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { AnimatedPage, AnimatedList, AnimatedItem } from '@flowpigdev/ui';
 import { useAuth } from '~/lib/auth-client';
@@ -351,6 +351,10 @@ export default function OnboardingRoute() {
   });
 
   const recentWorkspace = workspaces.find((workspace) => workspace.slug === recentWorkspaceSlug) || null;
+
+  if (!isAuthLoading && !user) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (isAuthLoading || isLoading) {
     return (

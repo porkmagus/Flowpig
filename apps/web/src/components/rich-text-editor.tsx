@@ -1,6 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
-import BubbleMenu from '@tiptap/extension-bubble-menu';
-import FloatingMenu from '@tiptap/extension-floating-menu';
+import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -217,7 +216,7 @@ export function RichTextEditor({
 
       {/* Bubble Menu (appears on selection) */}
       {editable && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+        <BubbleMenu editor={editor}>
           <div className="flex items-center gap-1 p-1 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/40">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
@@ -243,7 +242,7 @@ export function RichTextEditor({
 
       {/* Floating Menu (appears on empty line) */}
       {editable && (
-        <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
+        <FloatingMenu editor={editor}>
           <div className="flex items-center gap-1 p-1 bg-linear-elevated border border-linear-border rounded-lg shadow-lg shadow-black/40">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}

@@ -4,6 +4,7 @@ import RootRoute from '~/routes/__root';
 import IndexRoute from '~/routes/index';
 import LoginRoute from '~/routes/login';
 import SignupRoute from '~/routes/signup';
+import ShareRoute from '~/routes/share.$token';
 import OnboardingRoute from '~/routes/onboarding';
 import WorkspaceLayout from '~/routes/$workspace/layout';
 import WorkspaceIndex from '~/routes/$workspace/index';
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
           { index: true, element: <IndexRoute /> },
           { path: 'login', element: <LoginRoute /> },
           { path: 'signup', element: <SignupRoute /> },
+          { path: 'share/:token', element: <ShareRoute /> },
           { path: 'onboarding', element: <OnboardingRoute /> },
           {
             path: ':workspace',

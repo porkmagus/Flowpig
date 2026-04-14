@@ -18,6 +18,13 @@ interface User {
   image: string | null;
 }
 
+interface AuthUserShape {
+  id: string;
+  email: string;
+  name: string | null;
+  image?: string | null;
+}
+
 export type SocialProvider = 'github' | 'google';
 
 export interface AuthProviders {
@@ -34,7 +41,7 @@ function toAbsoluteCallbackUrl(callbackPath: string) {
   return new URL(callbackPath, window.location.origin).toString();
 }
 
-function mapUser(user: User) {
+function mapUser(user: AuthUserShape): User {
   return {
     id: user.id,
     email: user.email,

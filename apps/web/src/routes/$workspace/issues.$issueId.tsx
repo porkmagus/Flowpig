@@ -36,6 +36,7 @@ import {
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
 import { cn } from '~/lib/utils';
+import { FileAttachments } from '~/components/file-attachments';
 import { GitIntegrationPanel } from '~/components/git-integration';
 import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
@@ -856,6 +857,10 @@ export default function IssueDetail() {
               )}
             </div>
           )}
+
+          <div className="bg-linear-elevated rounded-lg border border-linear-border p-3">
+            <FileAttachments workspace={workspace || ''} issueId={issue.id} />
+          </div>
 
           {/* Related issues */}
           {issue.relatedIssues && issue.relatedIssues.length > 0 && (

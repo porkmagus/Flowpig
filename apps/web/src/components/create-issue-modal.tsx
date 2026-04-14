@@ -287,10 +287,16 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
     setStep('form');
   };
 
-  const selectedTeam = teams?.find((t: Team) => t.id === teamId);
-  const selectedAssignee = users?.find((u: User) => u.id === assigneeId);
-  const selectedProject = projects?.find((p: Project) => p.id === projectId);
-  const selectedCycle = cycles?.find((c: Cycle) => c.id === cycleId);
+  const teamOptions = teams ?? [];
+  const userOptions = users ?? [];
+  const projectOptions = projects ?? [];
+  const cycleOptions = cycles ?? [];
+  const labelOptions = labels ?? [];
+
+  const selectedTeam = teamOptions.find((t: Team) => t.id === teamId);
+  const selectedAssignee = userOptions.find((u: User) => u.id === assigneeId);
+  const selectedProject = projectOptions.find((p: Project) => p.id === projectId);
+  const selectedCycle = cycleOptions.find((c: Cycle) => c.id === cycleId);
   const selectedPriority = priorities.find((p) => p.id === priority);
 
   // Close on escape
@@ -474,7 +480,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   </div>
 
                   {/* Team selector */}
-                  {teams?.length > 0 && (
+                  {teamOptions.length > 0 && (
                     <div className="relative">
                       <button
                         type="button"
@@ -490,7 +496,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                       
                       {showTeamDropdown && (
                         <div className="absolute top-full left-0 mt-1 w-48 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 z-50 py-1">
-                          {teams.map((team: Team) => (
+                          {teamOptions.map((team: Team) => (
                             <button
                               key={team.id}
                               type="button"
@@ -539,7 +545,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                         >
                           <span>No assignee</span>
                         </button>
-                        {users?.map((user: User) => (
+                        {userOptions.map((user: User) => (
                           <button
                             key={user.id}
                             type="button"
@@ -560,7 +566,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   </div>
 
                   {/* Project selector */}
-                  {projects?.length > 0 && (
+                  {projectOptions.length > 0 && (
                     <div className="relative">
                       <button
                         type="button"
@@ -586,7 +592,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                           >
                             <span>No project</span>
                           </button>
-                          {projects.map((project: Project) => (
+                          {projectOptions.map((project: Project) => (
                             <button
                               key={project.id}
                               type="button"
@@ -605,7 +611,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   )}
 
                   {/* Cycle selector */}
-                  {cycles?.length > 0 && (
+                  {cycleOptions.length > 0 && (
                     <div className="relative">
                       <button
                         type="button"
@@ -631,7 +637,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                           >
                             <span>No cycle</span>
                           </button>
-                          {cycles.map((cycle: Cycle) => (
+                          {cycleOptions.map((cycle: Cycle) => (
                             <button
                               key={cycle.id}
                               type="button"
@@ -678,7 +684,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   </div>
 
                   {/* Labels */}
-                  {labels?.length > 0 && (
+                  {labelOptions.length > 0 && (
                     <div className="relative">
                       <button
                         type="button"
@@ -694,7 +700,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                       
                       {showLabelsDropdown && (
                         <div className="absolute top-full left-0 mt-1 w-48 bg-linear-elevated border border-linear-border rounded-lg shadow-elevation-2 z-50 py-1">
-                          {labels.map((label: Label) => (
+                          {labelOptions.map((label: Label) => (
                             <button
                               key={label.id}
                               type="button"

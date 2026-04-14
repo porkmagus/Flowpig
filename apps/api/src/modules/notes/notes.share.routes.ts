@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
+import { requireAuth } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
+import { getPrimaryAppUrl } from '../../lib/env.js';
 import crypto from 'crypto';
 
 function generateShareToken(): string {
@@ -8,6 +9,8 @@ function generateShareToken(): string {
 }
 
 export default async function shareRoutes(fastify: FastifyInstance) {
+  const appUrl = getPrimaryAppUrl();
+
   // Get sharing settings for a note
   fastify.get('/:noteId/sharing', {
     preHandler: [requireAuth, extractWorkspace],
@@ -57,8 +60,8 @@ export default async function shareRoutes(fastify: FastifyInstance) {
       return reply.status(403).send({ error: 'Not authorized to view sharing settings' });
     }
 
-    const publicUrl = note.shareToken 
-      ? `${process.env.APP_URL || 'http://localhost:5173'}/share/${note.shareToken}`
+    const publicUrl = note.shareToken
+      ? `${appUrl}/share/${note.shareToken}`
       : null;
 
     return {
@@ -128,7 +131,7 @@ export default async function shareRoutes(fastify: FastifyInstance) {
     });
 
     const publicUrl = shareToken
-      ? `${process.env.APP_URL || 'http://localhost:5173'}/share/${shareToken}`
+      ? `${appUrl}/share/${shareToken}`
       : null;
 
     return {
@@ -256,43 +259,5 @@ export default async function shareRoutes(fastify: FastifyInstance) {
     });
 
     return { success: true };
-  });
-
-  // Public access endpoint (no auth required)
-  fastify.get('/public/:token', async (request, reply) => {
-    const { token } = request.params as { token: string };
-
-    const note = await fastify.prisma.note.findUnique({
-      where: { shareToken: token },
-      include: {
-        creator: {
-          select: { id: true, name: true, image: true },
-        },
-      },
-    });
-
-    if (!note || note.deletedAt) {
-      return reply.status(404).send({ error: 'Note not found' });
-    }
-
-    if (note.publicAccess === 'PRIVATE') {
-      return reply.status(403).send({ error: 'Note is not publicly accessible' });
-    }
-
-    return {
-      note: {
-        id: note.id,
-        title: note.title,
-        slug: note.slug,
-        content: note.content,
-        emoji: note.emoji,
-        coverImage: note.coverImage,
-        publicAccess: note.publicAccess,
-        createdAt: note.createdAt.toISOString(),
-        updatedAt: note.updatedAt.toISOString(),
-        creator: note.creator,
-      },
-      accessLevel: note.publicAccess,
-    };
   });
 }

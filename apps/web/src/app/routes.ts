@@ -4,6 +4,7 @@ export default [
   index("../routes/index.tsx"),
   route("login", "../routes/login.tsx"),
   route("signup", "../routes/signup.tsx"),
+  route("share/:token", "../routes/share.$token.tsx"),
   route("invite/:token", "../routes/invite.$token.tsx"),
   route("onboarding", "../routes/onboarding.tsx"),
   route(":workspace", "../routes/$workspace/layout.tsx", [

@@ -103,6 +103,19 @@ interface TriageStatsResponse {
   };
 }
 
+interface DuplicateCandidate {
+  id: string;
+  identifier: string;
+  title: string;
+  state: string;
+  priority: 'NO_PRIORITY' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  project: { id: string; name: string } | null;
+}
+
+interface DuplicateSearchResponse {
+  issues: DuplicateCandidate[];
+}
+
 const priorityMeta = {
   URGENT: { label: 'Urgent', className: 'bg-red-500/10 text-red-300 border-red-500/20' },
   HIGH: { label: 'High', className: 'bg-orange-500/10 text-orange-300 border-orange-500/20' },
@@ -137,6 +150,9 @@ export default function TriagePage() {
   const [assignmentDrafts, setAssignmentDrafts] = useState<Record<string, string>>({});
   const [workflowDrafts, setWorkflowDrafts] = useState<Record<string, string>>({});
   const [snoozeDrafts, setSnoozeDrafts] = useState<Record<string, number>>({});
+  const [duplicatePickerIssueId, setDuplicatePickerIssueId] = useState<string | null>(null);
+  const [duplicateSearchDrafts, setDuplicateSearchDrafts] = useState<Record<string, string>>({});
+  const [duplicateTargetDrafts, setDuplicateTargetDrafts] = useState<Record<string, string>>({});
 
   const { data: teamsData } = useQuery({
     queryKey: ['teams', workspace],
@@ -236,6 +252,49 @@ export default function TriagePage() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['triage', workspace, selectedTeamId] });
+      queryClient.invalidateQueries({ queryKey: ['triage-stats', workspace, selectedTeamId] });
+    },
+  });
+
+  const duplicateSearch = duplicatePickerIssueId ? (duplicateSearchDrafts[duplicatePickerIssueId] || '') : '';
+
+  const { data: duplicateCandidatesData, isLoading: isDuplicateCandidatesLoading } = useQuery({
+    queryKey: ['triage-duplicate-candidates', workspace, selectedTeamId, duplicatePickerIssueId, duplicateSearch],
+    enabled: !!workspace && !!selectedTeamId && !!duplicatePickerIssueId,
+    queryFn: async (): Promise<DuplicateSearchResponse> => {
+      const params = new URLSearchParams();
+      params.set('teamId', selectedTeamId);
+      params.set('limit', '8');
+      params.set('sort', 'updatedAt');
+      params.set('order', 'desc');
+      if (duplicateSearch.trim()) {
+        params.set('search', duplicateSearch.trim());
+      }
+
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issues?${params.toString()}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to search duplicate candidates');
+      return response.json();
+    },
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: async ({ issueId, duplicateOfId }: { issueId: string; duplicateOfId: string }) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/teams/${selectedTeamId}/triage/${issueId}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ duplicateOfId }),
+      });
+      if (!response.ok) throw new Error('Failed to mark issue as duplicate');
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      setDuplicateTargetDrafts((current) => ({ ...current, [variables.issueId]: '' }));
+      setDuplicateSearchDrafts((current) => ({ ...current, [variables.issueId]: '' }));
+      setDuplicatePickerIssueId(null);
       queryClient.invalidateQueries({ queryKey: ['triage', workspace, selectedTeamId] });
       queryClient.invalidateQueries({ queryKey: ['triage-stats', workspace, selectedTeamId] });
     },
@@ -375,6 +434,8 @@ export default function TriagePage() {
             const selectedAssigneeId = assignmentDrafts[issue.id] || '';
             const selectedWorkflowId = workflowDrafts[issue.id] || defaultWorkflowStateId || '';
             const snoozeDays = snoozeDrafts[issue.id] || 7;
+            const duplicateTargetIssueId = duplicateTargetDrafts[issue.id] || '';
+            const duplicateCandidates = (duplicateCandidatesData?.issues || []).filter((candidate) => candidate.id !== issue.id);
 
             return (
               <StaggerItem key={issue.id}>
@@ -424,6 +485,58 @@ export default function TriagePage() {
                             <Button variant="outline" className="gap-2" onClick={() => snoozeMutation.mutate({ issueId: issue.id, days: snoozeDays })} disabled={snoozeMutation.isPending}><Clock3 className="h-4 w-4" />Snooze</Button>
                           </div>
                         </div>
+
+                        <Button variant="outline" className="gap-2" onClick={() => setDuplicatePickerIssueId((current) => current === issue.id ? null : issue.id)}>
+                          Duplicate of...
+                        </Button>
+
+                        {duplicatePickerIssueId === issue.id ? (
+                          <div className="space-y-2 rounded-lg border border-linear-border bg-linear-elevated/40 p-3">
+                            <input
+                              value={duplicateSearchDrafts[issue.id] || ''}
+                              onChange={(event) => setDuplicateSearchDrafts((current) => ({ ...current, [issue.id]: event.target.value }))}
+                              placeholder="Search for the original issue"
+                              className="w-full rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text outline-none"
+                            />
+
+                            {isDuplicateCandidatesLoading ? (
+                              <div className="flex items-center gap-2 text-sm text-linear-text-secondary">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Searching issues...
+                              </div>
+                            ) : duplicateCandidates.length === 0 ? (
+                              <p className="text-sm text-linear-text-secondary">No matching issues found.</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {duplicateCandidates.map((candidate) => (
+                                  <button
+                                    key={candidate.id}
+                                    type="button"
+                                    onClick={() => setDuplicateTargetDrafts((current) => ({ ...current, [issue.id]: candidate.id }))}
+                                    className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${duplicateTargetIssueId === candidate.id ? 'border-linear-accent bg-linear-accent/10' : 'border-linear-border bg-linear-surface hover:bg-linear-elevated'}`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-linear-text-secondary">{candidate.identifier}</span>
+                                      <Badge variant="outline">{priorityMeta[candidate.priority].label}</Badge>
+                                      {candidate.project ? <Badge variant="outline">{candidate.project.name}</Badge> : null}
+                                    </div>
+                                    <p className="mt-1 text-sm font-medium text-linear-text">{candidate.title}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            <Button
+                              variant="outline"
+                              className="gap-2"
+                              onClick={() => duplicateMutation.mutate({ issueId: issue.id, duplicateOfId: duplicateTargetIssueId })}
+                              disabled={!duplicateTargetIssueId || duplicateMutation.isPending}
+                            >
+                              {duplicateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                              Mark duplicate
+                            </Button>
+                          </div>
+                        ) : null}
 
                         <Button variant="outline" className="gap-2 border-red-500/20 text-red-300 hover:bg-red-500/10 hover:text-red-200" onClick={() => declineMutation.mutate(issue.id)} disabled={declineMutation.isPending}><XCircle className="h-4 w-4" />Decline issue</Button>
                       </div>

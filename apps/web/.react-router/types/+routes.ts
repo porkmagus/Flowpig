@@ -20,6 +20,11 @@ type Pages = {
   "/signup": {
     params: {};
   };
+  "/share/:token": {
+    params: {
+      "token": string;
+    };
+  };
   "/invite/:token": {
     params: {
       "token": string;
@@ -138,7 +143,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/login" | "/signup" | "/invite/:token" | "/onboarding" | "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/initiatives" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
+    page: "/" | "/login" | "/signup" | "/share/:token" | "/invite/:token" | "/onboarding" | "/:workspace" | "/:workspace/issues" | "/:workspace/issues/:issueId" | "/:workspace/notes" | "/:workspace/notes/:noteSlug" | "/:workspace/cycles" | "/:workspace/cycles/:cycleId" | "/:workspace/analytics" | "/:workspace/settings" | "/:workspace/inbox" | "/:workspace/team" | "/:workspace/databases" | "/:workspace/databases/:databaseId" | "/:workspace/initiatives" | "/:workspace/projects" | "/:workspace/projects/:projectId" | "/:workspace/roadmap" | "/:workspace/triage" | "/:workspace/my-issues" | "/:workspace/git-integration";
   };
   "../routes/index.tsx": {
     id: "../routes/index";
@@ -151,6 +156,10 @@ type RouteFiles = {
   "../routes/signup.tsx": {
     id: "../routes/signup";
     page: "/signup";
+  };
+  "../routes/share.$token.tsx": {
+    id: "../routes/share.$token";
+    page: "/share/:token";
   };
   "../routes/invite.$token.tsx": {
     id: "../routes/invite.$token";
@@ -251,6 +260,7 @@ type RouteModules = {
   "../routes/index": unknown;
   "../routes/login": unknown;
   "../routes/signup": unknown;
+  "../routes/share.$token": unknown;
   "../routes/invite.$token": unknown;
   "../routes/onboarding": unknown;
   "../routes/$workspace/layout": unknown;

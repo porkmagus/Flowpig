@@ -39,7 +39,7 @@ export function FileUploader({
       const formData = new FormData();
       formData.append('file', fileUpload.file);
 
-      const response = await fetch(`${API_URL}/uploads`, {
+      const response = await fetch(`${API_URL}/workspaces/${workspaceId}/uploads`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

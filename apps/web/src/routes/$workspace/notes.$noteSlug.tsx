@@ -7,6 +7,7 @@ import { useAuth } from '~/lib/auth-client';
 import { AnimatedPage } from '@flowpigdev/ui';
 import { RichTextEditor } from '~/components/rich-text-editor';
 import { FileUploader } from '~/components/file-uploader';
+import { ShareDialog } from '~/components/share-dialog';
 import {
   ArrowLeft,
   MessageSquare,
@@ -101,6 +102,7 @@ export default function NoteDetailRoute() {
   const [showNewSubpage, setShowNewSubpage] = useState(false);
   const [newSubpageTitle, setNewSubpageTitle] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['note', workspace, noteSlug],
@@ -426,7 +428,7 @@ export default function NoteDetailRoute() {
                         <button
                           onClick={() => {
                             setShowActions(false);
-                            // Share functionality
+                            setShowShareDialog(true);
                           }}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-linear-text-secondary hover:bg-linear-elevated text-left"
                         >
@@ -730,6 +732,14 @@ export default function NoteDetailRoute() {
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
       />
+
+      {showShareDialog && (
+        <ShareDialog
+          noteId={note.id}
+          workspace={workspace!}
+          onClose={() => setShowShareDialog(false)}
+        />
+      )}
     </AnimatedPage>
   );
 }

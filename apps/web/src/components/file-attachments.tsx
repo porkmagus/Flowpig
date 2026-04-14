@@ -56,10 +56,10 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ['issue-attachments', issueId],
+    queryKey: ['issue-attachments', workspace, issueId],
     queryFn: async (): Promise<{ attachments: Attachment[] }> => {
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/issues/${issueId}/attachments`,
+        `${API_URL}/workspaces/${workspace}/uploads/issue/${issueId}`,
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to load attachments');
@@ -79,29 +79,45 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
         // Track progress
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         
-        const response = await fetch(
-          `${API_URL}/workspaces/${workspace}/issues/${issueId}/attachments`,
-          {
-            method: 'POST',
-            credentials: 'include',
-            body: formData,
-          }
-        );
+        const uploadResponse = await fetch(`${API_URL}/workspaces/${workspace}/uploads`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+
+        const uploadResult = await uploadResponse.json() as {
+          upload: {
+            id: string;
+          };
+        };
+
+        setUploadProgress(prev => ({ ...prev, [file.name]: 70 }));
+
+        const attachResponse = await fetch(`${API_URL}/workspaces/${workspace}/uploads/attach-to-issue`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ issueId, uploadId: uploadResult.upload.id }),
+        });
         
         setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
         
-        if (!response.ok) {
-          throw new Error(`Failed to upload ${file.name}`);
+        if (!attachResponse.ok) {
+          throw new Error(`Failed to attach ${file.name}`);
         }
         
-        const result = await response.json();
+        const result = await attachResponse.json();
         uploadedAttachments.push(result.attachment);
       }
       
       return uploadedAttachments;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issue-attachments', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issue-attachments', workspace, issueId] });
       setUploadProgress({});
       toast.success('Files uploaded successfully');
     },
@@ -112,9 +128,9 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (attachmentId: string) => {
+    mutationFn: async ({ uploadId }: { uploadId: string }) => {
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/issues/${issueId}/attachments/${attachmentId}`,
+        `${API_URL}/workspaces/${workspace}/uploads/${uploadId}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -124,7 +140,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['issue-attachments', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issue-attachments', workspace, issueId] });
       toast.success('Attachment removed');
     },
     onError: () => {
@@ -306,7 +322,7 @@ export function FileAttachments({ workspace, issueId }: FileAttachmentsProps) {
                     <Download className="w-4 h-4" />
                   </a>
                   <button
-                    onClick={() => deleteMutation.mutate(attachment.id)}
+                    onClick={() => deleteMutation.mutate({ uploadId: attachment.upload.id })}
                     disabled={deleteMutation.isPending}
                     className="p-1.5 hover:bg-red-100 rounded text-linear-text-secondary hover:text-red-600"
                     title="Remove"

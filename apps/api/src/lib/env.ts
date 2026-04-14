@@ -13,6 +13,36 @@ function withHttp(origin: string) {
   return stripTrailingSlash(origin.startsWith('http') ? origin : `http://${origin}`);
 }
 
+function getOriginAliases(origin: string) {
+  const normalized = withHttp(origin);
+
+  try {
+    const url = new URL(normalized);
+    const aliases = new Set<string>([stripTrailingSlash(url.origin)]);
+
+    if (!url.port && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+      if (url.hostname.startsWith('www.')) {
+        const apexHostname = url.hostname.slice(4);
+        const apexUrl = new URL(url.origin);
+        apexUrl.hostname = apexHostname;
+        aliases.add(stripTrailingSlash(apexUrl.origin));
+      } else if (url.hostname.includes('.')) {
+        const wwwUrl = new URL(url.origin);
+        wwwUrl.hostname = `www.${url.hostname}`;
+        aliases.add(stripTrailingSlash(wwwUrl.origin));
+      }
+    }
+
+    return [...aliases];
+  } catch {
+    return [normalized];
+  }
+}
+
+function createPortRange(start: number, end: number) {
+  return Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
+}
+
 function requireInProduction(name: string, value?: string) {
   if (process.env.NODE_ENV === 'production' && !value) {
     throw new Error(`${name} must be set in production`);
@@ -23,8 +53,12 @@ function requireInProduction(name: string, value?: string) {
 
 export function getTrustedOrigins() {
   if (process.env.NODE_ENV !== 'production') {
-    const configured = splitAndTrim(process.env.APP_URL).map(withHttp);
-    const ports = ['5173', '5174', '5175', '5176', '5177', '4173', '3000'];
+    const configured = splitAndTrim(process.env.APP_URL).flatMap(getOriginAliases);
+    const ports = [
+      ...createPortRange(5173, 5199),
+      '4173',
+      '3000',
+    ];
     const hosts = ['localhost', '127.0.0.1'];
     const origins = new Set(configured);
 
@@ -37,12 +71,12 @@ export function getTrustedOrigins() {
     return [...origins];
   }
 
-  const origins = splitAndTrim(requireInProduction('APP_URL', process.env.APP_URL));
+  const origins = splitAndTrim(requireInProduction('APP_URL', process.env.APP_URL)).flatMap(getOriginAliases);
   if (origins.length === 0) {
     throw new Error('APP_URL must include at least one origin in production');
   }
 
-  return origins;
+  return [...new Set(origins)];
 }
 
 export function getPrimaryAppUrl() {

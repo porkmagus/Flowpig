@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, Link, useParams, useLocation, useNavigate } from 'react-router';
+import { Navigate, Outlet, Link, useParams, useLocation, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '~/lib/auth-client';
@@ -110,6 +110,7 @@ export default function WorkspaceLayout() {
   // Get unread notification count for sidebar badge
   const { data: unreadCountData } = useQuery({
     queryKey: ['notifications', 'count'],
+    enabled: !!user,
     queryFn: async () => {
       const response = await fetch(`${API_URL}/notifications/unread-count`, {
         credentials: 'include',
@@ -121,6 +122,10 @@ export default function WorkspaceLayout() {
   });
 
   const unreadCount = unreadCountData?.count || 0;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const mainNavItems: NavItem[] = [
     { to: `/${workspace}`, icon: Layout, label: 'Home' },

@@ -9,6 +9,8 @@ import healthRoutes from './modules/health/health.routes.js';
 import issueRoutes from './modules/issues/issues.routes.js';
 import commentRoutes from './modules/comments/comments.routes.js';
 import noteRoutes from './modules/notes/notes.routes.js';
+import noteShareRoutes from './modules/notes/notes.share.routes.js';
+import notePublicRoutes from './modules/notes/notes.public.routes.js';
 import noteCommentRoutes from './modules/notes/notes.comments.routes.js';
 import aiRoutes from './modules/ai/ai.routes.js';
 import uploadRoutes from './modules/uploads/uploads.routes.js';
@@ -46,6 +48,7 @@ export async function app(fastify: FastifyInstance) {
   await fastify.register(healthRoutes, { prefix: '/health' });
   await fastify.register(authRoutes, { prefix: '/auth' });
   await fastify.register(uploadPublicRoutes, { prefix: '/uploads' });
+  await fastify.register(notePublicRoutes, { prefix: '/share' });
 
   // Auth middleware for all other routes
   fastify.addHook('onRequest', async (request: AuthenticatedRequest, reply) => {
@@ -76,9 +79,10 @@ export async function app(fastify: FastifyInstance) {
   await fastify.register(issueRoutes, { prefix: '/workspaces/:workspaceId/issues' });
   await fastify.register(commentRoutes, { prefix: '/workspaces/:workspaceId' });
   await fastify.register(noteRoutes, { prefix: '/workspaces/:workspaceId/notes' });
+  await fastify.register(noteShareRoutes, { prefix: '/workspaces/:workspaceId/notes' });
   await fastify.register(noteCommentRoutes, { prefix: '/workspaces/:workspaceId' });
   await fastify.register(aiRoutes, { prefix: '/ai' });
-  await fastify.register(uploadRoutes, { prefix: '/uploads' });
+  await fastify.register(uploadRoutes, { prefix: '/workspaces/:workspaceId/uploads' });
   await fastify.register(notificationRoutes, { prefix: '/notifications' });
   await fastify.register(searchRoutes, { prefix: '/search' });
   await fastify.register(databaseRoutes, { prefix: '/workspaces/:workspaceId/databases' });

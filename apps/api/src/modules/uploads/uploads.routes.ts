@@ -118,9 +118,13 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
         issueId,
         uploadId,
         workspaceId,
+        attachedById: userId,
       },
       include: {
         upload: true,
+        attachedBy: {
+          select: { id: true, name: true, image: true },
+        },
       },
     });
 
@@ -140,6 +144,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
           size: attachment.upload.size,
           sizeFormatted: formatFileSize(attachment.upload.size),
         },
+        attachedBy: attachment.attachedBy,
         createdAt: attachment.createdAt.toISOString(),
       },
     });
