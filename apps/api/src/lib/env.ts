@@ -39,6 +39,19 @@ function getOriginAliases(origin: string) {
   }
 }
 
+function getAppSubdomainAlias(origin: string): string | undefined {
+  try {
+    const url = new URL(withHttp(origin));
+    if (url.hostname.startsWith('api.')) {
+      url.hostname = `app.${url.hostname.slice(4)}`;
+      return stripTrailingSlash(url.origin);
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
 function createPortRange(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
 }
@@ -71,12 +84,19 @@ export function getTrustedOrigins() {
     return [...origins];
   }
 
-  const origins = splitAndTrim(requireInProduction('APP_URL', process.env.APP_URL)).flatMap(getOriginAliases);
+  const appOrigins = splitAndTrim(requireInProduction('APP_URL', process.env.APP_URL)).flatMap(getOriginAliases);
+  const frontendOrigins = splitAndTrim(process.env.FRONTEND_URL || '').flatMap(getOriginAliases);
+  const apiOrigins = splitAndTrim(process.env.API_URL || process.env.BETTER_AUTH_URL || '').flatMap(getOriginAliases);
+  // Auto-derive app subdomain from api subdomain (e.g. api.flowpig.dev -> app.flowpig.dev)
+  const inferredAppOrigins = apiOrigins
+    .map(getAppSubdomainAlias)
+    .filter((o): o is string => Boolean(o));
+  const origins = [...new Set([...appOrigins, ...frontendOrigins, ...apiOrigins, ...inferredAppOrigins])];
   if (origins.length === 0) {
     throw new Error('APP_URL must include at least one origin in production');
   }
 
-  return [...new Set(origins)];
+  return origins;
 }
 
 export function getPrimaryAppUrl() {

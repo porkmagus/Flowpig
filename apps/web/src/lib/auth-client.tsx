@@ -159,7 +159,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      throw new Error(error.message || 'Social sign-in failed');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
+      const details = err.message || err.error || (err.code ? `${err.code} (${err.status})` : '');
+      console.error('Social sign-in error:', err);
+      throw new Error(details || 'Social sign-in failed');
     }
   }
 

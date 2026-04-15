@@ -49,6 +49,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
   fastify.all('/*', async (request: FastifyRequest, reply: FastifyReply) => {
     const auth = fastify.auth;
     const url = new URL(request.url, getApiBaseUrl());
+    const isSocialSignIn = request.url.includes('/sign-in/social');
 
     const headers = new Headers(request.headers as Record<string, string>);
     const rawBody = getAuthRequestBody(request);
@@ -58,29 +59,53 @@ export default async function authRoutes(fastify: FastifyInstance) {
     if (rawBody && !headers.has('content-type')) {
       headers.set('content-type', 'application/json');
     }
-    
+
     const init: RequestInit = {
       method: request.method,
       headers,
       body: rawBody
     };
 
+    if (isSocialSignIn) {
+      console.log('[auth] sign-in/social request:', {
+        url: request.url,
+        origin: headers.get('origin') || 'missing',
+        body: rawBody,
+      });
+    }
+
     try {
       const req = new Request(url, init);
       const response = await auth.handler(req);
 
+      // Use getSetCookie() for correct handling of multiple Set-Cookie headers
+      const setCookies = response.headers.getSetCookie?.() || [];
+      for (const cookie of setCookies) {
+        reply.header('Set-Cookie', cookie);
+      }
+
       for (const [key, value] of response.headers.entries()) {
         if (key === 'set-cookie') {
-          const cookies = Array.isArray(value) ? value : [value];
-          for (const cookie of cookies) {
-            reply.header('Set-Cookie', cookie);
-          }
-        } else if (!['content-encoding', 'transfer-encoding'].includes(key.toLowerCase())) {
+          // Already handled above; skip to avoid duplication.
+          continue;
+        }
+        // Don't forward Location on successful JSON responses (Better Auth sets it
+        // for compatibility, but it can confuse fetch clients into following it).
+        if (key.toLowerCase() === 'location' && response.status >= 200 && response.status < 300) {
+          continue;
+        }
+        if (!['content-encoding', 'transfer-encoding'].includes(key.toLowerCase())) {
           reply.header(key, value);
         }
       }
 
       const responseBody = await response.text();
+      if (isSocialSignIn) {
+        console.log('[auth] sign-in/social response:', {
+          status: response.status,
+          body: responseBody.slice(0, 500),
+        });
+      }
       if (response.status >= 500 && !responseBody) {
         console.error('Auth handler returned empty 500 for', request.method, request.url);
       }
