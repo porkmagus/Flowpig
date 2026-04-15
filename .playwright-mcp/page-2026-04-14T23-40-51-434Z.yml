@@ -1,0 +1,13 @@
+- generic [ref=e239]:
+  - img [ref=e241]
+  - heading "Oops!" [level=1] [ref=e243]
+  - paragraph [ref=e244]: Sorry, an unexpected error has occurred.
+  - paragraph [ref=e245]: H?.find is not a function
+  - generic [ref=e246]:
+    - link "Go Home" [ref=e247] [cursor=pointer]:
+      - /url: /
+      - img [ref=e248]
+      - text: Go Home
+    - button "Retry" [ref=e251]:
+      - img [ref=e252]
+      - text: Retry

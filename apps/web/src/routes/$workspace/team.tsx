@@ -75,7 +75,8 @@ export default function TeamRoute() {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to load teams');
-      return response.json();
+      const payload = await response.json() as { teams: any[] };
+      return payload.teams;
     },
   });
 
@@ -156,7 +157,7 @@ export default function TeamRoute() {
   });
 
   const members: WorkspaceMember[] = membersData?.members || [];
-  const teams = teamsData?.teams || [];
+  const teams = teamsData || [];
   const invitations = invitationsData?.invitations || [];
 
   function copyInviteLink(acceptUrl: string) {

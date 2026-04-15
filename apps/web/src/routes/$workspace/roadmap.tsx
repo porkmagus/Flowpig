@@ -140,10 +140,11 @@ export default function RoadmapPage() {
   const { data: teamsData } = useQuery({
     queryKey: ['teams', workspace],
     enabled: !!workspace,
-    queryFn: async (): Promise<TeamListResponse> => {
+    queryFn: async () => {
       const response = await fetch(`${API_URL}/workspaces/${workspace}/teams`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch teams');
-      return response.json();
+      const payload = await response.json() as TeamListResponse;
+      return payload.teams;
     },
   });
 
@@ -211,7 +212,7 @@ export default function RoadmapPage() {
 
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setSelectedTeamId('')} className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${!selectedTeamId ? 'border-linear-accent bg-linear-accent text-white' : 'border-linear-border bg-linear-surface text-linear-text-secondary hover:bg-linear-elevated'}`}>All teams</button>
-            {teamsData?.teams.map((team) => (
+            {teamsData?.map((team) => (
               <button key={team.id} onClick={() => setSelectedTeamId(team.id)} className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${selectedTeamId === team.id ? 'border-linear-accent bg-linear-accent text-white' : 'border-linear-border bg-linear-surface text-linear-text-secondary hover:bg-linear-elevated'}`}><span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: team.color }} />{team.name}</span></button>
             ))}
           </div>

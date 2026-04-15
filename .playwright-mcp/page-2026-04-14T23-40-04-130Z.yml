@@ -1,0 +1,15 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - heading "Create your first workspace" [level=1] [ref=e10]
+    - paragraph [ref=e11]: A workspace is where your team collaborates on issues, docs, and projects.
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - textbox "e.g., Acme Corp" [ref=e14]
+      - button "Create" [ref=e15] [cursor=pointer]:
+        - text: Create
+        - img [ref=e16]
+    - paragraph [ref=e18]: "Your workspace URL will be: app.flowpig.dev/your-workspace"
+  - generic [ref=e19]:
+    - img [ref=e20]
+    - generic [ref=e23]: Signed in as demo@flowpig.dev

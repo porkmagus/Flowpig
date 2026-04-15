@@ -78,7 +78,8 @@ export default function InitiativesRoute() {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load projects');
-      return response.json() as Promise<{ projects: ProjectOption[] }>;
+      const payload = await response.json() as { projects: ProjectOption[] };
+      return payload.projects;
     },
     enabled: !!workspace && showCreateModal,
   });
@@ -94,7 +95,7 @@ export default function InitiativesRoute() {
     });
   }, [data?.initiatives, search, statusFilter]);
 
-  const availableProjects = (projectsData?.projects ?? []).filter((project) => project.status !== 'CANCELLED');
+  const availableProjects = (projectsData ?? []).filter((project) => project.status !== 'CANCELLED');
 
   const createMutation = useMutation({
     mutationFn: async () => {

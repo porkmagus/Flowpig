@@ -157,16 +157,17 @@ export default function TriagePage() {
   const { data: teamsData } = useQuery({
     queryKey: ['teams', workspace],
     enabled: !!workspace,
-    queryFn: async (): Promise<TeamListResponse> => {
+    queryFn: async () => {
       const response = await fetch(`${API_URL}/workspaces/${workspace}/teams`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch teams');
-      return response.json();
+      const payload = await response.json() as TeamListResponse;
+      return payload.teams;
     },
   });
 
   useEffect(() => {
-    if (!selectedTeamId && teamsData?.teams.length) {
-      setSelectedTeamId(teamsData.teams[0].id);
+    if (!selectedTeamId && teamsData?.length) {
+      setSelectedTeamId(teamsData[0].id);
     }
   }, [selectedTeamId, teamsData]);
 
@@ -361,7 +362,7 @@ export default function TriagePage() {
               Team inbox
             </p>
             <div className="flex flex-wrap gap-2">
-              {teamsData?.teams.map((team) => (
+              {teamsData?.map((team) => (
                 <button
                   key={team.id}
                   onClick={() => setSelectedTeamId(team.id)}

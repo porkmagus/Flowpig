@@ -1,0 +1,67 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - link "Flowpig Plan clearly. Ship calmly." [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - generic [ref=e12]:
+          - generic [ref=e13]: Flowpig
+          - generic [ref=e14]: Plan clearly. Ship calmly.
+      - generic [ref=e15]:
+        - generic [ref=e16]: Welcome back
+        - heading "Reconnect with the work without rebuilding context." [level=1] [ref=e17]
+        - paragraph [ref=e18]: Flowpig is built to help teams move from discussion to delivery with less friction, fewer tabs, and clearer ownership.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - img [ref=e22]
+          - generic [ref=e25]: Work stays connected
+          - generic [ref=e26]: Specs, notes, and issue history stay in one workspace instead of scattering across tools.
+        - generic [ref=e27]:
+          - img [ref=e29]
+          - generic [ref=e33]: Execution is visible
+          - generic [ref=e34]: Track ownership, priorities, and Git-aware progress without losing the planning context.
+        - generic [ref=e35]:
+          - img [ref=e37]
+          - generic [ref=e40]: AI helps with the busywork
+          - generic [ref=e41]: Summaries, drafting, and planning support show up where the team is already working.
+    - generic [ref=e42]:
+      - text: Built for product, design, and engineering
+      - img [ref=e43]
+  - generic [ref=e46]:
+    - link "Back to home" [ref=e47] [cursor=pointer]:
+      - /url: /
+      - img [ref=e48]
+      - text: Back to home
+    - generic [ref=e50]:
+      - heading "Sign in to your workspace" [level=2] [ref=e51]
+      - paragraph [ref=e52]: Pick up where the team left off. Your notes, issues, roadmap, and inbox are all waiting in one place.
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - text: Email
+          - textbox "Email" [ref=e57]:
+            - /placeholder: you@example.com
+        - generic [ref=e58]:
+          - text: Password
+          - generic [ref=e59]:
+            - textbox "Password Show password" [ref=e60]:
+              - /placeholder: Enter your password
+            - button "Show password" [ref=e61]:
+              - img [ref=e62]
+        - button "Sign in" [ref=e65]
+      - generic [ref=e68]: or
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - button "GH Continue with GitHub" [disabled] [ref=e72]:
+            - generic [ref=e73]: GH
+            - text: Continue with GitHub
+          - button "G Continue with Google" [disabled] [ref=e74]:
+            - generic [ref=e75]: G
+            - text: Continue with Google
+        - paragraph [ref=e76]: Checking available sign-in providers...
+      - button "Try demo account" [ref=e77]
+      - paragraph [ref=e78]: test@flowpig.dev - testpassword123
+    - generic [ref=e79]:
+      - text: Don't have an account?
+      - link "Create one" [ref=e80] [cursor=pointer]:
+        - /url: /signup

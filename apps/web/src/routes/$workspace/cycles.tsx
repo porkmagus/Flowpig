@@ -225,12 +225,13 @@ export default function CyclesList() {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to fetch cycles');
-      return response.json();
+      const data = await response.json() as { cycles: Cycle[] };
+      return data.cycles ?? [];
     },
   });
 
   // Fetch active cycle details
-  const { data: activeCycle } = useQuery({
+  const { data: activeCycleDataRaw } = useQuery({
     queryKey: ['active-cycle', workspace],
     queryFn: async () => {
       const response = await fetch(
@@ -238,7 +239,8 @@ export default function CyclesList() {
         { credentials: 'include' }
       );
       if (!response.ok) return null;
-      return response.json();
+      const data = await response.json();
+      return (data as { cycle: Cycle & { stats?: any; burndown?: any } }).cycle;
     },
   });
 
@@ -298,7 +300,7 @@ export default function CyclesList() {
     },
   });
 
-  const activeCycleData = cycles?.find((c: Cycle) => c.isActive) || activeCycle;
+  const activeCycleData = (cycles ?? []).find((c: Cycle) => c.isActive) || activeCycleDataRaw;
 
   return (
     <div className="space-y-6">
