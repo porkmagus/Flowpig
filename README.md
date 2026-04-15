@@ -1,4 +1,4 @@
-# Flowpigdev - Phase 1 & 2 Complete
+# Flowpig.dev
 
 Modern project management rebuilt with Fastify + React Router + Prisma.
 
