@@ -37,6 +37,9 @@ RUN apk add --no-cache \
     openssl \
     dumb-init
 
+# Install tsx globally so the server can load workspace TypeScript packages at runtime
+RUN npm install -g tsx
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 flowpig
 
