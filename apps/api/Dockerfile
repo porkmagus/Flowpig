@@ -13,6 +13,7 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
+ENV NODE_ENV=production
 ENV DATABASE_URL=postgresql://flowpig:flowpig@localhost:5432/flowpig_build
 
 COPY package.json package-lock.json ./
