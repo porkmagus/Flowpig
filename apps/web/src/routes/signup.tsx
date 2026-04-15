@@ -16,21 +16,18 @@ import { useAuth, type SocialProvider } from '~/lib/auth-client';
 const benefits = [
   {
     icon: Users,
-    title: 'Bring the whole team into one system',
-    description:
-      'Notes, issues, cycles, and planning live together so everyone is working from the same context.',
+    title: 'One system for your team',
+    description: 'Notes, issues, and planning stay connected.',
   },
   {
     icon: Target,
-    title: 'Move from idea to execution faster',
-    description:
-      'Create a workspace that makes prioritization, delivery, and follow-through easier from day one.',
+    title: 'Move faster',
+    description: 'Prioritize and ship with less friction from day one.',
   },
   {
     icon: Bot,
-    title: 'Use AI without losing control',
-    description:
-      'Get drafting and summarization help where it matters, while keeping decisions visible and reviewable.',
+    title: 'AI that helps',
+    description: 'Draft and summarize without losing control.',
   },
 ];
 
@@ -112,10 +109,10 @@ export default function SignupRoute() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Start a workspace for product, design, and engineering in one connected flow. No extra setup ceremony required."
+      subtitle="Start a workspace for product and engineering."
       asideEyebrow="Start strong"
-      asideTitle="Set up the workspace your team actually wants to use."
-      asideDescription="Flowpig is designed to make planning, coordination, and shipping feel connected from the first session instead of bolted together later."
+      asideTitle="Set up a workspace your team wants to use."
+      asideDescription="Connected notes, issues, and planning—without the setup ceremony."
       benefits={benefits}
       footer={
         <>

@@ -15,21 +15,18 @@ import { useAuth, type SocialProvider } from '~/lib/auth-client';
 const benefits = [
   {
     icon: FileText,
-    title: 'Work stays connected',
-    description:
-      'Specs, notes, and issue history stay in one workspace instead of scattering across tools.',
+    title: 'Connected work',
+    description: 'Specs and issues live in one place.',
   },
   {
     icon: GitBranch,
-    title: 'Execution is visible',
-    description:
-      'Track ownership, priorities, and Git-aware progress without losing the planning context.',
+    title: 'Visible execution',
+    description: 'Track progress without switching tools.',
   },
   {
     icon: Bot,
-    title: 'AI helps with the busywork',
-    description:
-      'Summaries, drafting, and planning support show up where the team is already working.',
+    title: 'Less busywork',
+    description: 'Get AI help where it actually matters.',
   },
 ];
 
@@ -92,11 +89,11 @@ export default function LoginRoute() {
 
   return (
     <AuthShell
-      title="Sign in to your workspace"
-      subtitle="Pick up where the team left off. Your notes, issues, roadmap, and inbox are all waiting in one place."
+      title="Sign in"
+      subtitle="Welcome back. Pick up where you left off."
       asideEyebrow="Welcome back"
-      asideTitle="Reconnect with the work without rebuilding context."
-      asideDescription="Flowpig is built to help teams move from discussion to delivery with less friction, fewer tabs, and clearer ownership."
+      asideTitle="Stay in the flow."
+      asideDescription="One workspace for notes, issues, and planning. Less switching, more shipping."
       benefits={benefits}
       footer={
         <>

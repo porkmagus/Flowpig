@@ -4,12 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node -e \"require('dotenv').config({path:require('path').resolve(process.cwd(),'../../.env.dev')})\" && npx nitro dev",
-    "dev:legacy": "node --import tsx src/server.ts",
-    "dev:watch": "tsx watch src/server.ts",
-    "build": "npx nitro build",
-    "build:legacy": "tsc",
-    "start": "node .output/server/index.mjs",
+    "dev": "node -e \"require('dotenv').config({path:require('path').resolve(process.cwd(),'../../.env.dev')})\" && tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,16 +20,13 @@
     "dotenv": "^17.4.2",
     "fastify": "5.8.4",
     "fastify-plugin": "5.1.0",
-    "nitro": "^3.0.260311-beta",
     "openai": "6.34.0",
     "stripe": "^16.0.0",
-
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "22.19.17",
     "tsx": "4.21.0",
-    "typescript": "5.9.3",
-    "workflow": "^4.2.2"
+    "typescript": "5.9.3"
   }
 }

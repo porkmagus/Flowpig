@@ -7,4 +7,4 @@ npx prisma db push --accept-data-loss
 
 echo "[api] Starting server..."
 cd /app/apps/api
-exec node .output/server/index.mjs
+exec node dist/server.js

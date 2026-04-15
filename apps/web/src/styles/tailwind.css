@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary colors (Linear accent-based) */
-  --color-primary-50: #EEF0FF;
-  --color-primary-100: #E0E3FF;
-  --color-primary-200: #C5CAFF;
-  --color-primary-300: #A3A9FF;
-  --color-primary-400: #8287F5;
-  --color-primary-500: #5E6AD2;
-  --color-primary-600: #4F5BB8;
-  --color-primary-700: #424A9A;
-  --color-primary-800: #383F82;
-  --color-primary-900: #30366F;
+  /* Primary colors - muted blue-purple */
+  --color-primary-50: #f0f1f7;
+  --color-primary-100: #e1e3ef;
+  --color-primary-200: #c3c7df;
+  --color-primary-300: #a5abcf;
+  --color-primary-400: #878fbf;
+  --color-primary-500: #545980;
+  --color-primary-600: #4a4f70;
+  --color-primary-700: #404560;
+  --color-primary-800: #363b50;
+  --color-primary-900: #2c3140;
 
   /* Gray colors */
   --color-gray-50: #F9FAFB;
@@ -112,23 +112,23 @@
     --radius: 0.625rem;
     
     /* Linear-specific colors - Dark mode */
-    --linear-bg: #0D0D0D;
-    --linear-surface: #1A1A1A;
-    --linear-elevated: #1F1F1F;
-    --linear-border: #2A2A2A;
-    --linear-border-hover: #3A3A3A;
-    --linear-text: #FFFFFF;
-    --linear-text-secondary: #A0A0A0;
-    --linear-text-tertiary: #6E6E6E;
-    --linear-accent: #5E6AD2;
-    --linear-accent-hover: #4F5BB3;
-    --linear-accent-light: rgba(94, 106, 210, 0.1);
-    --linear-success: #0D9B6A;
-    --linear-success-light: rgba(13, 155, 106, 0.1);
-    --linear-warning: #F2A50C;
-    --linear-warning-light: rgba(242, 165, 12, 0.1);
-    --linear-error: #D13B3B;
-    --linear-error-light: rgba(209, 59, 59, 0.1);
+    --linear-bg: #020306;
+    --linear-surface: #07080c;
+    --linear-elevated: #0c0e14;
+    --linear-border: #14161f;
+    --linear-border-hover: #1c1f2b;
+    --linear-text: #e8eaef;
+    --linear-text-secondary: #6b7180;
+    --linear-text-tertiary: #404554;
+    --linear-accent: #545980;
+    --linear-accent-hover: #5e6390;
+    --linear-accent-light: rgba(84, 89, 128, 0.12);
+    --linear-success: #22c59b;
+    --linear-success-light: rgba(34, 197, 155, 0.1);
+    --linear-warning: #d4a356;
+    --linear-warning-light: rgba(212, 163, 86, 0.1);
+    --linear-error: #d96e6e;
+    --linear-error-light: rgba(217, 110, 110, 0.1);
     
     /* Status colors */
     --status-backlog: #6E6E6E;
@@ -295,7 +295,7 @@
   
   /* Text gradient */
   .text-gradient {
-    background: linear-gradient(135deg, var(--linear-accent) 0%, #8B5CF6 100%);
+    background: linear-gradient(135deg, var(--linear-accent) 0%, #5e6390 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

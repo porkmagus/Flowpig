@@ -48,3 +48,8 @@ coverage/
 .cache/
 .temp/
 tmp/
+
+# Build artifacts
+.output/
+.workflow-data/
+

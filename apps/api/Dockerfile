@@ -1,7 +1,7 @@
 # ============================================
 # API Service - Production Dockerfile
 # ============================================
-# Builds the API with Nitro (Vercel Workflow SDK) and runs the bundled output.
+# Builds the Fastify API with TypeScript and runs the compiled output.
 
 FROM node:24.14.1-alpine AS builder
 
