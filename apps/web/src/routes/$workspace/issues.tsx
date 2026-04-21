@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowUpDown,
@@ -155,6 +155,7 @@ export default function IssuesList() {
       return response.json() as Promise<{ issues: Issue[] }>;
     },
     enabled: !!workspace,
+    placeholderData: keepPreviousData,
   });
 
   const { data: users } = useQuery({

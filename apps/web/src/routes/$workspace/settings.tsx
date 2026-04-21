@@ -721,15 +721,18 @@ function AppearanceSettings({
     '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'
   ];
 
-  const [selectedColor, setSelectedColor] = useState(workspace.color);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(workspace.settings?.appearance?.theme || 'system');
+  const currentColor = workspace.color || '#5E6AD2';
+  const currentTheme = workspace.settings?.appearance?.theme || 'system';
+
+  const [selectedColor, setSelectedColor] = useState(currentColor);
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(currentTheme);
 
   useEffect(() => {
-    setSelectedColor(workspace.color);
+    setSelectedColor(workspace.color || '#5E6AD2');
     setTheme(workspace.settings?.appearance?.theme || 'system');
   }, [workspace]);
 
-  const isDirty = selectedColor !== workspace.color || theme !== (workspace.settings?.appearance?.theme || 'system');
+  const isDirty = selectedColor !== currentColor || theme !== currentTheme;
 
   return (
     <div className="space-y-4">
@@ -768,14 +771,18 @@ function AppearanceSettings({
                   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
                   document.documentElement.classList.toggle('light', prefersLight);
                 }
-                onUpdate({
-                  color: selectedColor,
-                  settings: {
-                    appearance: {
-                      theme,
-                    },
-                  },
-                });
+                const updates: Partial<WorkspaceSettings> = {};
+                if (selectedColor !== currentColor) {
+                  updates.color = selectedColor;
+                }
+                if (theme !== currentTheme) {
+                  updates.settings = {
+                    appearance: { theme },
+                  };
+                }
+                if (Object.keys(updates).length > 0) {
+                  onUpdate(updates);
+                }
               }}
               disabled={isUpdating || !isDirty}
               className="gap-1.5"

@@ -1,7 +1,8 @@
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
+import { useCreateIssueModal } from '~/components/create-issue-modal';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
 import { CircleDot, FileText, Users, ArrowRight } from 'lucide-react';
 
@@ -21,6 +22,8 @@ interface WorkspaceStats {
 
 export default function WorkspaceIndex() {
   const { workspace } = useParams();
+  const navigate = useNavigate();
+  const createIssueModal = useCreateIssueModal();
 
   const { data, isLoading } = useQuery({
     queryKey: ['workspace', workspace],
@@ -89,7 +92,10 @@ export default function WorkspaceIndex() {
         >
           <h3 className="font-semibold text-linear-text mb-4">Quick start</h3>
           <div className="space-y-3">
-            <button className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left">
+            <button
+              onClick={() => createIssueModal.open()}
+              className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left"
+            >
               <CircleDot className="w-5 h-5 text-linear-accent" />
               <div className="flex-1">
                 <p className="font-medium text-linear-text">Create your first issue</p>
@@ -97,7 +103,10 @@ export default function WorkspaceIndex() {
               </div>
               <ArrowRight className="w-4 h-4 text-linear-text-tertiary" />
             </button>
-            <button className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left">
+            <button
+              onClick={() => navigate(`/${workspace}/notes`)}
+              className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left"
+            >
               <FileText className="w-5 h-5 text-linear-accent" />
               <div className="flex-1">
                 <p className="font-medium text-linear-text">Write documentation</p>
@@ -105,7 +114,10 @@ export default function WorkspaceIndex() {
               </div>
               <ArrowRight className="w-4 h-4 text-linear-text-tertiary" />
             </button>
-            <button className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left">
+            <button
+              onClick={() => navigate(`/${workspace}/team`)}
+              className="w-full flex items-center gap-3 p-3 bg-linear-elevated hover:bg-linear-surface rounded-lg transition-colors text-left"
+            >
               <Users className="w-5 h-5 text-linear-accent" />
               <div className="flex-1">
                 <p className="font-medium text-linear-text">Invite your team</p>

@@ -57,7 +57,7 @@ interface Database {
   emoji: string | null;
   properties: Property[];
   views: View[];
-  rows: Row[];
+  rows?: Row[];
 }
 
 const propertyIcons: Record<string, React.ReactNode> = {
@@ -96,7 +96,9 @@ export default function DatabaseDetailRoute() {
     },
   });
 
-  const database: Database | undefined = data?.database;
+  const database: Database | undefined = data?.database
+    ? { ...data.database, rows: data.rows || [] }
+    : undefined;
 
   const activeView = useMemo(() => {
     if (!database) return null;

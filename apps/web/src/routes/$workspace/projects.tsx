@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedCard, AnimatedItem, AnimatedList, AnimatedPage } from '@flowpigdev/ui';
 import { API_URL } from '~/lib/api';
@@ -71,6 +71,7 @@ export default function ProjectsListRoute() {
       return response.json() as Promise<{ projects: Project[] }>;
     },
     enabled: !!workspace,
+    placeholderData: keepPreviousData,
   });
 
   const projects = data?.projects ?? [];

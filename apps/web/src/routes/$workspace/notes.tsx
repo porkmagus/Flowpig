@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, Link, useNavigate } from 'react-router';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { API_URL } from '~/lib/api';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
@@ -99,7 +99,10 @@ export default function NotesListRoute() {
           <FileText className="w-12 h-12 text-linear-text-tertiary mx-auto mb-4" />
           <h3 className="text-lg font-medium text-linear-text mb-2">No notes yet</h3>
           <p className="text-linear-text-secondary mb-4">Create your first note to get started</p>
-          <button className="text-linear-accent hover:text-linear-accent font-medium">
+          <button
+            onClick={() => navigate(`/${workspace}/notes`)}
+            className="text-linear-accent hover:text-linear-accent font-medium"
+          >
             Create note
           </button>
         </div>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet, Link, useParams, useLocation, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '~/lib/auth-client';
 import { NotificationBadge } from '~/components/notification-badge';
 import { CommandPalette } from '~/components/command-palette';
@@ -44,7 +44,71 @@ interface NavItem {
 
 const LAST_WORKSPACE_KEY = 'flowpig:last-workspace';
 
-function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, workspace: string, path: string) {
+  if (path === `/${workspace}/issues` || path === `/${workspace}/my-issues`) {
+    queryClient.prefetchQuery({
+      queryKey: ['issues', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/issues`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  } else if (path === `/${workspace}/notes`) {
+    queryClient.prefetchQuery({
+      queryKey: ['notes', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/notes`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  } else if (path === `/${workspace}/cycles`) {
+    queryClient.prefetchQuery({
+      queryKey: ['cycles', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/cycles`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  } else if (path === `/${workspace}/databases`) {
+    queryClient.prefetchQuery({
+      queryKey: ['databases', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/databases`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  } else if (path === `/${workspace}/team`) {
+    queryClient.prefetchQuery({
+      queryKey: ['workspace-members', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/members`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  } else if (path === `/${workspace}/projects`) {
+    queryClient.prefetchQuery({
+      queryKey: ['projects', workspace],
+      queryFn: async () => {
+        const res = await fetch(`${API_URL}/workspaces/${workspace}/projects`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      },
+      staleTime: 60 * 1000,
+    });
+  }
+}
+
+function NavLink({ item, isActive, onPrefetch }: { item: NavItem; isActive: boolean; onPrefetch?: () => void }) {
   const Icon = item.icon;
   
   return (
@@ -52,6 +116,7 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
       <TooltipTrigger asChild>
         <Link
           to={item.to}
+          onMouseEnter={onPrefetch}
           className={cn(
             "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-all duration-150",
             isActive
@@ -72,6 +137,7 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
 
 function NavSection({ title, items, activePath }: { title?: string; items: NavItem[]; activePath: string }) {
   const { workspace } = useParams();
+  const queryClient = useQueryClient();
   
   const isActive = (path: string) => {
     if (path === `/${workspace}`) {
@@ -88,7 +154,12 @@ function NavSection({ title, items, activePath }: { title?: string; items: NavIt
         </p>
       )}
       {items.map((item) => (
-        <NavLink key={item.to} item={item} isActive={isActive(item.to)} />
+        <NavLink
+          key={item.to}
+          item={item}
+          isActive={isActive(item.to)}
+          onPrefetch={() => workspace && prefetchRouteData(queryClient, workspace, item.to)}
+        />
       ))}
     </div>
   );
@@ -197,10 +268,7 @@ export default function WorkspaceLayout() {
           initial={{ x: -10, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          className={cn(
-            "w-56 bg-linear-elevated border-r border-linear-border flex flex-col fixed h-full z-20",
-            isNotesSection && "w-52"
-          )}
+          className="w-56 bg-linear-elevated border-r border-linear-border flex flex-col fixed h-full z-20"
         >
           {/* Workspace header */}
           <div className="px-3 py-3 border-b border-linear-border">
