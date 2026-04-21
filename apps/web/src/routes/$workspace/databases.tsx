@@ -27,11 +27,11 @@ interface DatabaseItem {
   emoji: string | null;
   createdAt: string;
   updatedAt: string;
-  creator: {
+  creator?: {
     id: string;
     name: string | null;
     image: string | null;
-  };
+  } | null;
   _count?: {
     views: number;
     rows: number;
@@ -266,14 +266,16 @@ export default function DatabasesListRoute() {
                   </div>
 
                   {/* Creator */}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-linear-border">
-                    <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
-                      {(database.creator.name || '?').charAt(0).toUpperCase()}
+                  {database.creator && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-linear-border">
+                      <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
+                        {(database.creator.name || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-linear-text-secondary">
+                        {database.creator.name || 'Unknown'}
+                      </span>
                     </div>
-                    <span className="text-sm text-linear-text-secondary">
-                      {database.creator.name || 'Unknown'}
-                    </span>
-                  </div>
+                  )}
                 </AnimatedCard>
               </Link>
             </AnimatedItem>
@@ -306,7 +308,7 @@ export default function DatabasesListRoute() {
                   </span>
                   <span className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-linear-elevated rounded-full flex items-center justify-center text-xs">
-                      {(database.creator.name || '?').charAt(0).toUpperCase()}
+                      {(database.creator?.name || '?').charAt(0).toUpperCase()}
                     </div>
                   </span>
                 </div>

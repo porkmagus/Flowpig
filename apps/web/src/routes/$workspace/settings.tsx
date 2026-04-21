@@ -213,6 +213,14 @@ export default function SettingsPage() {
     { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-linear-accent" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}

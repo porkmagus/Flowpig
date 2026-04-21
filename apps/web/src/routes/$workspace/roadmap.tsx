@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarRange, CheckCircle2, Loader2, Target } from 'lucide-react';
 import { API_URL } from '~/lib/runtime-config';
+import { AlertCircle, CalendarRange, CheckCircle2, Loader2, Target } from 'lucide-react';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -131,11 +131,14 @@ export default function RoadmapPage() {
   const [groupBy, setGroupBy] = useState<'team' | 'project' | 'assignee'>('team');
   const [includeCompleted, setIncludeCompleted] = useState(false);
 
-  const today = new Date();
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - 30);
-  const endDate = new Date(today);
-  endDate.setMonth(endDate.getMonth() + 3);
+  const { startDate, endDate } = useMemo(() => {
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(start.getDate() - 30);
+    const end = new Date(today);
+    end.setMonth(end.getMonth() + 3);
+    return { startDate: start, endDate: end };
+  }, []);
 
   const { data: teamsData } = useQuery({
     queryKey: ['teams', workspace],

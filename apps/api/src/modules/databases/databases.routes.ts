@@ -51,7 +51,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
       },
       include: {
         _count: {
-          select: { rows: true },
+          select: { rows: true, views: true },
         },
         views: {
           select: { id: true, name: true, type: true },
@@ -65,7 +65,10 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
         id: db.id,
         name: db.name,
         description: db.description,
-        rowCount: db._count.rows,
+        _count: {
+          rows: db._count.rows,
+          views: db._count.views,
+        },
         views: db.views,
         createdAt: db.createdAt.toISOString(),
         updatedAt: db.updatedAt.toISOString(),
@@ -191,7 +194,7 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
       rows: rows.map(row => ({
         id: row.id,
         cells: row.cells.reduce((acc, cell) => {
-          acc[cell.property.name] = cell.value;
+          acc[cell.property.id] = cell.value;
           return acc;
         }, {} as Record<string, any>),
         createdAt: row.createdAt.toISOString(),
