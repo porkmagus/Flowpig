@@ -97,7 +97,7 @@ function NavSection({ title, items, activePath }: { title?: string; items: NavIt
 export default function WorkspaceLayout() {
   const { workspace } = useParams();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const location = useLocation();
   const createIssueModal = useCreateIssueModal();
 
@@ -120,6 +120,14 @@ export default function WorkspaceLayout() {
     },
     refetchInterval: 30000,
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-linear-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-linear-border border-t-linear-accent" />
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;

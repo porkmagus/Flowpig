@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * Issues e2e tests — Chromium only (webkit binary not installed).
@@ -10,20 +10,30 @@ import { test, expect } from '@playwright/test';
  *
  * Workspace slug comes from the seeded workspace (packages/db/seed.ts).
  * Override with the WORKSPACE environment variable.
- *
- * NOTE: The frontend has no route-level auth guards; auth is enforced by the
- * API. Unauthenticated users see the page shell with no data — they are NOT
- * redirected to /login by the frontend.
  */
 const WORKSPACE = process.env.WORKSPACE ?? 'acme-corp';
 
+async function loginAsTestUser(page: Page) {
+  // Log in via API so the session cookie is set in the browser context
+  const response = await page.context().request.post('http://localhost:3001/auth/sign-in/email', {
+    data: {
+      email: 'test@flowpig.dev',
+      password: 'testpassword123',
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Login API failed: ${await response.text()}`);
+  }
+  await page.goto(`/${WORKSPACE}/issues`);
+  await page.waitForLoadState('domcontentloaded');
+}
+
 test.describe('Issues list page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/${WORKSPACE}/issues`);
-    await page.waitForLoadState('domcontentloaded');
+    await loginAsTestUser(page);
   });
 
-  test('loads at the issues URL (no frontend auth redirect)', async ({ page }) => {
+  test('loads at the issues URL', async ({ page }) => {
     await expect(page).toHaveURL(new RegExp(`/${WORKSPACE}/issues`));
   });
 
@@ -50,8 +60,7 @@ test.describe('Issues list page', () => {
 
 test.describe('Create issue modal', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/${WORKSPACE}/issues`);
-    await page.waitForLoadState('domcontentloaded');
+    await loginAsTestUser(page);
   });
 
   test('opens modal (shows title input) when create button is clicked', async ({ page }) => {
@@ -90,8 +99,7 @@ test.describe('Create issue modal', () => {
 test.describe('Issue detail page', () => {
   // Navigate via the issues list to pick up the real (auto-generated) issue ID
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/${WORKSPACE}/issues`);
-    await page.waitForLoadState('domcontentloaded');
+    await loginAsTestUser(page);
   });
 
   test('clicking an issue in the list navigates to its detail page', async ({ page }) => {
@@ -142,8 +150,7 @@ test.describe('Issue detail page', () => {
 
 test.describe('Issue filtering', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/${WORKSPACE}/issues`);
-    await page.waitForLoadState('domcontentloaded');
+    await loginAsTestUser(page);
   });
 
   test('clicking the Filters button toggles the filter panel', async ({ page }) => {

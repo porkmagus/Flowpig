@@ -21,7 +21,7 @@ test.describe('Landing page', () => {
   });
 
   test('primary CTA links to signup', async ({ page }) => {
-    const cta = page.getByRole('link', { name: /create workspace/i }).first();
+    const cta = page.getByRole('link', { name: /create a workspace/i }).first();
     await expect(cta).toBeVisible();
     await expect(cta).toHaveAttribute('href', /signup/);
   });
