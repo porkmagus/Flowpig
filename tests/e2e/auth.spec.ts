@@ -14,7 +14,7 @@ test.describe('Login page', () => {
   });
 
   test('submit button is visible and not white', async ({ page }) => {
-    const submitBtn = page.getByRole('button', { name: /sign in|log in|continue/i });
+    const submitBtn = page.getByRole('button', { name: 'Sign in' });
     await expect(submitBtn).toBeVisible();
     const bg = await submitBtn.evaluate((el) =>
       window.getComputedStyle(el).backgroundColor

@@ -108,6 +108,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
   const [cycleId, setCycleId] = useState(initialValues?.cycleId || '');
   const [labelIds, setLabelIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState('');
+  const [error, setError] = useState<string | null>(null);
   
   // UI state
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
@@ -192,29 +193,37 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
         credentials: 'include',
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create issue');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Failed to create issue' }));
+        throw new Error(err.error || err.message || 'Failed to create issue');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
       queryClient.invalidateQueries({ queryKey: ['my-issues', workspace] });
+      setError(null);
       onClose();
       resetForm();
     },
+    onError: (err: Error) => {
+      setError(err.message);
+    },
   });
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setTitle('');
     setDescription('');
     setPriority('NO_PRIORITY');
-    setTeamId('');
-    setAssigneeId('');
-    setProjectId('');
-    setCycleId('');
+    setTeamId(initialValues?.teamId || '');
+    setAssigneeId(initialValues?.assigneeId || '');
+    setProjectId(initialValues?.projectId || '');
+    setCycleId(initialValues?.cycleId || '');
     setLabelIds([]);
     setDueDate('');
     setStep('form');
-  };
+    setError(null);
+  }, [initialValues]);
 
   // AI title generation
   const generateWithAi = async () => {
@@ -309,6 +318,13 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Auto-select first team when teams load
+  useEffect(() => {
+    if (teams && teams.length > 0 && !teamId && !initialValues?.teamId) {
+      setTeamId(teams[0].id);
+    }
+  }, [teams, teamId, initialValues]);
+
   // Listen for open event from command palette
   useEffect(() => {
     const handleOpen = () => {
@@ -316,7 +332,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
     };
     window.addEventListener('open-create-issue', handleOpen);
     return () => window.removeEventListener('open-create-issue', handleOpen);
-  }, []);
+  }, [resetForm]);
 
   if (!isOpen) return null;
 
@@ -436,6 +452,14 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   rows={4}
                   className="w-full bg-linear-surface border border-linear-border rounded-lg px-3 py-2 text-sm text-linear-text placeholder:text-linear-text-tertiary focus:outline-none focus:ring-2 focus:ring-linear-accent focus:border-transparent resize-none"
                 />
+
+                {/* Error message */}
+                {error && (
+                  <div className="flex items-center gap-1.5 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
                 {/* Properties toolbar */}
                 <div className="flex flex-wrap items-center gap-2">

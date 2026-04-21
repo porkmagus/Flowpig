@@ -150,7 +150,8 @@ exports.Prisma.SessionScalarFieldEnum = {
   userAgent: 'userAgent'
 };
 
-exports.Prisma.VerificationTokenScalarFieldEnum = {
+exports.Prisma.VerificationScalarFieldEnum = {
+  id: 'id',
   identifier: 'identifier',
   value: 'value',
   expiresAt: 'expiresAt',
@@ -1090,7 +1091,7 @@ exports.GitLinkType = exports.$Enums.GitLinkType = {
 exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
-  VerificationToken: 'VerificationToken',
+  Verification: 'Verification',
   Workspace: 'Workspace',
   Billing: 'Billing',
   Invoice: 'Invoice',

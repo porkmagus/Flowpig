@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
+import { CreateIssueModal, useCreateIssueModal } from '~/components/create-issue-modal';
 import { 
   StaggerContainer, 
   StaggerItem,
@@ -400,6 +401,7 @@ export default function MyIssues() {
   const { workspace } = useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const createIssueModal = useCreateIssueModal();
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-issues', workspace],
@@ -464,7 +466,7 @@ export default function MyIssues() {
               <Search className="w-3.5 h-3.5" />
               Filter
             </Button>
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => createIssueModal.open()}>
               <Plus className="w-3.5 h-3.5" />
               New issue
             </Button>
@@ -524,6 +526,12 @@ export default function MyIssues() {
           />
         ))}
       </div>
+
+      {/* Create Issue Modal */}
+      <CreateIssueModal
+        isOpen={createIssueModal.isOpen}
+        onClose={createIssueModal.close}
+      />
 
       {/* Empty state */}
       {data?.groups.every((g) => g.issues.length === 0) && (

@@ -47,7 +47,8 @@ model Session {
   @@map("sessions")
 }
 
-model VerificationToken {
+model Verification {
+  id         String   @id @default(cuid())
   identifier String
   value      String   @unique @map("token")
   expiresAt  DateTime @map("expires")
@@ -55,7 +56,7 @@ model VerificationToken {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, value])
-  @@map("verification_tokens")
+  @@map("verification")
 }
 
 // Core Application Tables
