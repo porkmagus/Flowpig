@@ -97,7 +97,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
             select: { id: true, name: true, color: true },
           },
           _count: {
-            select: { comments: { where: { deletedAt: null } } },
+            select: { comments: { where: { deletedAt: null } }, children: { where: { deletedAt: null } } },
           },
         },
         orderBy: { [sortField]: sortOrder },
@@ -126,6 +126,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         workflowState: issue.workflowState,
         labels: issue.labels,
         commentCount: issue._count.comments,
+        childrenCount: issue._count.children,
       })),
       meta: {
         page: pageNum,
@@ -206,6 +207,13 @@ export default async function issueRoutes(fastify: FastifyInstance) {
             },
           },
         },
+        parent: {
+          select: { id: true, identifier: true, title: true, state: true },
+        },
+        children: {
+          where: { deletedAt: null },
+          select: { id: true, identifier: true, title: true, state: true, priority: true },
+        },
       },
     });
 
@@ -261,6 +269,8 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           })),
         ],
         isSubscribed: issue.subscriptions.length > 0,
+        parent: issue.parent,
+        children: issue.children,
       },
     };
   });
@@ -278,7 +288,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { title, description, teamId, projectId, cycleId, priority, assigneeId, labelIds, dueDate } = parseResult.data;
+    const { title, description, teamId, projectId, cycleId, priority, assigneeId, labelIds, dueDate, parentId } = parseResult.data;
     const userId = (request as any).user!.id;
     const workspaceId = request.workspace!.id;
 
@@ -428,7 +438,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { title, description, state, priority, projectId, cycleId, assigneeId, labelIds, workflowStateId, dueDate } = parseResult.data;
+    const { title, description, state, priority, projectId, cycleId, assigneeId, labelIds, workflowStateId, dueDate, parentId } = parseResult.data;
 
     // Check if issue exists and user has access
     const existingIssue = await fastify.prisma.issue.findFirst({
@@ -473,6 +483,21 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       }
     }
 
+    if (parentId) {
+      const parent = await fastify.prisma.issue.findFirst({
+        where: {
+          id: parentId,
+          workspaceId: request.workspace!.id,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!parent) {
+        return reply.status(400).send({ error: 'Invalid parent issue' });
+      }
+    }
+
     // Build update data
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
@@ -484,6 +509,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
     if (assigneeId !== undefined) updateData.assigneeId = assigneeId;
     if (workflowStateId !== undefined) updateData.workflowStateId = workflowStateId;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (parseResult.data.parentId !== undefined) updateData.parentId = parseResult.data.parentId || null;
 
     // Handle labels separately
     if (labelIds !== undefined) {
@@ -522,16 +548,53 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       },
     });
 
-    // Create activity for state change
+    // Create activities for changes
+    const workspaceId = request.workspace!.id;
     if (state && state !== existingIssue.state) {
       await fastify.prisma.activity.create({
         data: {
-          workspaceId: request.workspace!.id,
+          workspaceId,
           issueId: issue.id,
           actorId: userId,
           type: 'ISSUE_STATE_CHANGED',
           description: `changed state from ${existingIssue.state} to ${state}`,
           metadata: { from: existingIssue.state, to: state },
+        },
+      });
+    }
+    if (priority && priority !== existingIssue.priority) {
+      await fastify.prisma.activity.create({
+        data: {
+          workspaceId,
+          issueId: issue.id,
+          actorId: userId,
+          type: 'ISSUE_PRIORITY_CHANGED',
+          description: `changed priority from ${existingIssue.priority} to ${priority}`,
+          metadata: { from: existingIssue.priority, to: priority },
+        },
+      });
+    }
+    if (assigneeId !== undefined && assigneeId !== existingIssue.assigneeId) {
+      await fastify.prisma.activity.create({
+        data: {
+          workspaceId,
+          issueId: issue.id,
+          actorId: userId,
+          type: 'ISSUE_ASSIGNED',
+          description: assigneeId ? `assigned to user` : `unassigned`,
+          metadata: { assigneeId: assigneeId || null },
+        },
+      });
+    }
+    if (title && title !== existingIssue.title) {
+      await fastify.prisma.activity.create({
+        data: {
+          workspaceId,
+          issueId: issue.id,
+          actorId: userId,
+          type: 'ISSUE_UPDATED',
+          description: `updated title`,
+          metadata: { field: 'title' },
         },
       });
     }
@@ -741,6 +804,37 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         dueToday: todayIssues.length,
         completedThisWeek: completedRecently.length,
       },
+    };
+  });
+
+  // Get issue activities
+  fastify.get('/:issueId/activities', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { issueId } = request.params as { issueId: string };
+
+    const activities = await fastify.prisma.activity.findMany({
+      where: {
+        issueId,
+        workspaceId: request.workspace!.id,
+      },
+      include: {
+        actor: {
+          select: { id: true, name: true, image: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      activities: activities.map((a) => ({
+        id: a.id,
+        type: a.type,
+        description: a.description,
+        metadata: a.metadata,
+        createdAt: a.createdAt.toISOString(),
+        actor: a.actor,
+      })),
     };
   });
 

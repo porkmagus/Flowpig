@@ -31,13 +31,21 @@ import {
   ChevronDown,
   History,
   CornerUpRight,
-  Loader2
+  Loader2,
+  MoveRight,
+  Pencil,
+  UserPlus,
+  UserMinus,
+  Trash,
+  MessageCircle,
+  GitCommit
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
 import { cn } from '~/lib/utils';
 import { FileAttachments } from '~/components/file-attachments';
 import { GitIntegrationPanel } from '~/components/git-integration';
+import { CreateIssueModal, useCreateIssueModal } from '~/components/create-issue-modal';
 import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
 import { Input } from '~/components/ui/input';
@@ -77,6 +85,19 @@ interface Label {
   color: string;
 }
 
+interface ActivityItem {
+  id: string;
+  type: string;
+  description: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+  actor: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  } | null;
+}
+
 const priorities = [
   { id: 'URGENT', label: 'Urgent', color: 'text-priority-urgent', bg: 'bg-priority-urgent', icon: AlertTriangle },
   { id: 'HIGH', label: 'High', color: 'text-priority-high', bg: 'bg-priority-high', icon: Flag },
@@ -100,6 +121,7 @@ export default function IssueDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const createIssueModal = useCreateIssueModal();
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // UI State
@@ -122,6 +144,20 @@ export default function IssueDetail() {
       );
       if (!response.ok) throw new Error('Failed to fetch issue');
       return response.json();
+    },
+  });
+
+  // Fetch activities
+  const { data: activitiesData } = useQuery({
+    queryKey: ['issue-activities', issueId],
+    enabled: activeTab === 'activity',
+    queryFn: async () => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/issues/${issueId}/activities`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) throw new Error('Failed to fetch activities');
+      return response.json() as Promise<{ activities: ActivityItem[] }>;
     },
   });
 
@@ -445,13 +481,72 @@ export default function IssueDetail() {
             )}
           </div>
 
+          {/* Sub-issues */}
+          {(issue.parent || (issue.children && issue.children.length > 0)) && (
+            <div className="bg-linear-elevated rounded-lg border border-linear-border p-4">
+              {issue.parent && (
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider mb-2">Parent issue</p>
+                  <Link
+                    to={`/${workspace}/issues/${issue.parent.id}`}
+                    className="flex items-center gap-2 text-sm text-linear-text hover:text-linear-accent transition-colors"
+                  >
+                    <span className="text-linear-text-secondary">{issue.parent.identifier}</span>
+                    <span>{issue.parent.title}</span>
+                  </Link>
+                </div>
+              )}
+              {issue.children && issue.children.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-linear-text-secondary uppercase tracking-wider">
+                      Sub-issues ({issue.children.length})
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    {issue.children.map((child: any) => (
+                      <Link
+                        key={child.id}
+                        to={`/${workspace}/issues/${child.id}`}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-linear-surface text-sm transition-colors"
+                      >
+                        <CircleDot className="w-3.5 h-3.5 text-linear-text-tertiary" />
+                        <span className="text-linear-text-secondary">{child.identifier}</span>
+                        <span className="text-linear-text">{child.title}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Create sub-issue button */}
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5"
+              onClick={() =>
+                createIssueModal.open({
+                  teamId: issue.team?.id,
+                  projectId: issue.project?.id,
+                  parentId: issue.id,
+                })
+              }
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add sub-issue
+            </Button>
+          </div>
+
           {/* Tabs */}
           <div className="bg-linear-elevated rounded-lg border border-linear-border">
             {/* Tab headers */}
             <div className="flex items-center gap-1 px-4 border-b border-linear-border">
               {[
                 { id: 'comments', label: 'Comments', count: issue.comments?.length || 0 },
-                { id: 'activity', label: 'Activity', icon: History },
+                { id: 'activity', label: 'Activity', icon: History, count: activitiesData?.activities?.length || 0 },
                 { id: 'git', label: 'Git', icon: GitBranch },
               ].map((tab) => (
                 <button
@@ -578,19 +673,38 @@ export default function IssueDetail() {
 
               {activeTab === 'activity' && (
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-linear-surface flex items-center justify-center shrink-0">
-                      <History className="w-4 h-4 text-linear-text-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-linear-text">
-                        Issue created by <span className="font-medium">{issue.creator.name || issue.creator.email}</span>
-                      </p>
-                      <p className="text-xs text-linear-text-tertiary">
-                        {new Date(issue.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                  {!activitiesData?.activities?.length ? (
+                    <p className="text-sm text-linear-text-secondary text-center py-4">No activity yet</p>
+                  ) : (
+                    activitiesData.activities.map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-linear-surface flex items-center justify-center shrink-0">
+                          {activity.type === 'ISSUE_CREATED' && <CircleDot className="w-4 h-4 text-linear-accent" />}
+                          {activity.type === 'ISSUE_STATE_CHANGED' && <MoveRight className="w-4 h-4 text-priority-high" />}
+                          {activity.type === 'ISSUE_PRIORITY_CHANGED' && <Flag className="w-4 h-4 text-priority-urgent" />}
+                          {activity.type === 'ISSUE_ASSIGNED' && <UserPlus className="w-4 h-4 text-linear-accent" />}
+                          {activity.type === 'ISSUE_UPDATED' && <Pencil className="w-4 h-4 text-linear-text-secondary" />}
+                          {activity.type === 'ISSUE_DELETED' && <Trash className="w-4 h-4 text-priority-urgent" />}
+                          {activity.type === 'COMMENT_ADDED' && <MessageCircle className="w-4 h-4 text-linear-success" />}
+                          {activity.type === 'ISSUE_RELATED' && <GitCommit className="w-4 h-4 text-linear-text-secondary" />}
+                        </div>
+                        <div>
+                          <p className="text-sm text-linear-text">
+                            <span className="font-medium">{activity.actor?.name || 'Someone'}</span>{' '}
+                            {activity.description}
+                          </p>
+                          {activity.metadata && activity.type === 'ISSUE_STATE_CHANGED' && (
+                            <p className="text-xs text-linear-text-secondary mt-0.5">
+                              {activity.metadata.from} → {activity.metadata.to}
+                            </p>
+                          )}
+                          <p className="text-xs text-linear-text-tertiary mt-0.5">
+                            {new Date(activity.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
 

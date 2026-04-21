@@ -4,8 +4,12 @@ import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tansta
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowUpDown,
+  Bookmark,
   Check,
+  CornerUpRight,
   Filter,
+  LayoutGrid,
+  List,
   Loader2,
   MoreHorizontal,
   Plus,
@@ -20,6 +24,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
 import { CreateIssueModal, useCreateIssueModal } from '~/components/create-issue-modal';
+import { IssueBoard } from '~/components/issue-board';
 
 interface Issue {
   id: string;
@@ -51,6 +56,7 @@ interface Issue {
     color: string;
   }>;
   commentCount: number;
+  childrenCount?: number;
   workflowState: {
     id: string;
     name: string;
@@ -108,8 +114,68 @@ export default function IssuesList() {
   });
   const [sort, setSort] = useState<SortState>({ field: 'createdAt', direction: 'desc' });
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
   const [editingIssue, setEditingIssue] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showSaveView, setShowSaveView] = useState(false);
+  const [viewName, setViewName] = useState('');
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+
+  // Fetch saved views
+  const { data: viewsData } = useQuery({
+    queryKey: ['issue-views', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issue-views`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch views');
+      return response.json() as Promise<{ views: Array<{
+        id: string; name: string; filters: FilterState; sort: SortState; isDefault: boolean; createdById: string;
+      }> }>;
+    },
+    enabled: !!workspace,
+  });
+
+  const createViewMutation = useMutation({
+    mutationFn: async (payload: { name: string; filters: FilterState; sort: SortState; isDefault?: boolean }) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issue-views`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('Failed to save view');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue-views', workspace] });
+      setShowSaveView(false);
+      setViewName('');
+    },
+  });
+
+  const deleteViewMutation = useMutation({
+    mutationFn: async (viewId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issue-views/${viewId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to delete view');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue-views', workspace] });
+      setActiveViewId(null);
+    },
+  });
+
+  const applyView = (viewId: string) => {
+    const view = viewsData?.views.find((v) => v.id === viewId);
+    if (!view) return;
+    setActiveViewId(viewId);
+    if (view.filters) setFilters(view.filters);
+    if (view.sort) setSort(view.sort);
+  };
 
   useEffect(() => {
     const projectId = searchParams.get('projectId');
@@ -325,10 +391,57 @@ export default function IssuesList() {
               {visibleIssues.length} issues{filters.project.length === 1 ? ' in the selected project' : ' in this workspace'}
             </p>
           </div>
-          <Button size="sm" onClick={() => createIssueModal.open()} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            New issue
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-linear-surface rounded-md border border-linear-border">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "p-1.5 rounded-l-md transition-colors",
+                  viewMode === 'list' ? "bg-linear-accent-light text-linear-accent" : "text-linear-text-secondary hover:text-linear-text"
+                )}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('board')}
+                className={cn(
+                  "p-1.5 rounded-r-md transition-colors",
+                  viewMode === 'board' ? "bg-linear-accent-light text-linear-accent" : "text-linear-text-secondary hover:text-linear-text"
+                )}
+                title="Board view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Saved Views */}
+            {viewsData && viewsData.views.length > 0 && (
+              <select
+                value={activeViewId || ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    applyView(e.target.value);
+                  } else {
+                    setActiveViewId(null);
+                  }
+                }}
+                className="h-8 rounded-md border border-linear-border bg-linear-surface px-2 text-xs focus:outline-none focus:ring-2 focus:ring-linear-accent"
+              >
+                <option value="">All issues</option>
+                {viewsData.views.map((view) => (
+                  <option key={view.id} value={view.id}>
+                    {view.name}{view.isDefault ? ' ★' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <Button size="sm" onClick={() => createIssueModal.open()} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              New issue
+            </Button>
+          </div>
         </div>
       </FadeIn>
 
@@ -356,6 +469,16 @@ export default function IssuesList() {
               {activeFiltersCount}
             </Badge>
           )}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowSaveView(true)}
+          className="gap-1.5"
+        >
+          <Bookmark className="h-3.5 w-3.5" />
+          Save view
         </Button>
 
         <Button
@@ -553,10 +676,64 @@ export default function IssuesList() {
         )}
       </AnimatePresence>
 
+      {/* Save View Modal */}
+      <AnimatePresence>
+        {showSaveView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setShowSaveView(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-lg border border-linear-border bg-linear-elevated p-4 shadow-lg"
+            >
+              <h3 className="text-sm font-semibold text-linear-text mb-3">Save current view</h3>
+              <Input
+                value={viewName}
+                onChange={(e) => setViewName(e.target.value)}
+                placeholder="View name..."
+                className="mb-3"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setShowSaveView(false); setViewName(''); }}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!viewName.trim() || createViewMutation.isPending}
+                  onClick={() => {
+                    createViewMutation.mutate({
+                      name: viewName.trim(),
+                      filters,
+                      sort,
+                    });
+                  }}
+                >
+                  {createViewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-linear-accent" />
         </div>
+      ) : viewMode === 'board' ? (
+        <IssueBoard
+          issues={visibleIssues}
+          onStateChange={(issueId, newState) => {
+            updateIssueMutation.mutate({ id: issueId, data: { state: newState } });
+          }}
+        />
       ) : (
         <div className="flex-1 overflow-auto">
           <StaggerContainer className="space-y-1">
@@ -671,6 +848,12 @@ export default function IssuesList() {
                     {issue.workflowState?.name || issue.state}
                   </Badge>
 
+                  {issue.childrenCount ? (
+                    <div className="shrink-0 flex items-center gap-0.5 text-xs text-linear-text-tertiary">
+                      <CornerUpRight className="w-3 h-3" />
+                      {issue.childrenCount}
+                    </div>
+                  ) : null}
                   {issue.commentCount > 0 && <div className="shrink-0 text-xs text-linear-text-tertiary">{issue.commentCount}</div>}
 
                   <button className="rounded p-1 opacity-0 transition-all hover:bg-linear-border group-hover:opacity-100">

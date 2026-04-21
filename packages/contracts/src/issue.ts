@@ -10,6 +10,7 @@ export const CreateIssueSchema = z.object({
   assigneeId: z.string().optional().nullable(),
   labelIds: z.array(z.string()).optional(),
   dueDate: z.string().datetime().optional().nullable(),
+  parentId: z.string().optional().nullable(),
 });
 
 export const UpdateIssueSchema = z.object({
@@ -23,6 +24,7 @@ export const UpdateIssueSchema = z.object({
   labelIds: z.array(z.string()).optional(),
   dueDate: z.string().datetime().optional().nullable(),
   workflowStateId: z.string().optional(),
+  parentId: z.string().optional().nullable(),
 });
 
 export type CreateIssueInput = z.infer<typeof CreateIssueSchema>;

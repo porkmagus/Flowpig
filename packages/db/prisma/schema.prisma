@@ -98,6 +98,7 @@ model Workspace {
   retros               SprintRetro[]
   teams                Team[]
   templates            Template[]
+  issueViews           IssueView[]
   triageRules          TriageRule[]
   uploads              Upload[]
   webhooks             Webhook[]
@@ -1018,6 +1019,27 @@ model Template {
   @@map("templates")
 }
 
+model IssueView {
+  id          String    @id @default(cuid())
+  workspaceId String
+  createdById String
+  name        String
+  filters     Json      @default("{}")
+  sort        Json      @default("{}")
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy   User      @relation(fields: [createdById], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, isDefault])
+  @@index([createdById])
+  @@index([deletedAt])
+  @@map("issue_views")
+}
+
 model Webhook {
   id             String            @id @default(cuid())
   workspaceId    String
@@ -1159,6 +1181,7 @@ model User {
   teams                   TeamMember[]
   triageOwnedTeams        Team[]              @relation("TriageOwner")
   templates               Template[]
+  issueViews              IssueView[]
   uploads                 Upload[]
   attachedFiles           IssueAttachment[]
   webhookDeliveries       WebhookDelivery[]

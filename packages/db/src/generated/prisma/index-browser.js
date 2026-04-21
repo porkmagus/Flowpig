@@ -713,6 +713,19 @@ exports.Prisma.TemplateScalarFieldEnum = {
   deletedAt: 'deletedAt'
 };
 
+exports.Prisma.IssueViewScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  createdById: 'createdById',
+  name: 'name',
+  filters: 'filters',
+  sort: 'sort',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.WebhookScalarFieldEnum = {
   id: 'id',
   workspaceId: 'workspaceId',
@@ -1135,6 +1148,7 @@ exports.Prisma.ModelName = {
   Upload: 'Upload',
   IssueAttachment: 'IssueAttachment',
   Template: 'Template',
+  IssueView: 'IssueView',
   Webhook: 'Webhook',
   WebhookEvent: 'WebhookEvent',
   WebhookDelivery: 'WebhookDelivery',

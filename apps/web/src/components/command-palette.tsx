@@ -57,11 +57,29 @@ interface KeyboardShortcut {
 }
 
 const GLOBAL_SHORTCUTS: KeyboardShortcut[] = [
-  { key: 'G', label: 'Go to...', category: 'Navigation' },
-  { key: 'C', label: 'Create issue', category: 'Actions' },
+  // Navigation
   { key: '⌘ K', label: 'Command palette', category: 'Navigation' },
-  { key: '⌘ /', label: 'Keyboard shortcuts', category: 'Navigation' },
-  { key: 'Esc', label: 'Close/Back', category: 'Navigation' },
+  { key: 'G', label: 'Go to...', category: 'Navigation' },
+  { key: 'G H', label: 'Home', category: 'Navigation' },
+  { key: 'G M', label: 'My Issues', category: 'Navigation' },
+  { key: 'G I', label: 'Inbox', category: 'Navigation' },
+  { key: 'G S', label: 'Issues', category: 'Navigation' },
+  { key: 'G C', label: 'Cycles', category: 'Navigation' },
+  { key: 'G T', label: 'Triage', category: 'Navigation' },
+  { key: 'G R', label: 'Roadmap', category: 'Navigation' },
+  { key: 'G P', label: 'Projects', category: 'Navigation' },
+  { key: 'G A', label: 'Analytics', category: 'Navigation' },
+  { key: 'G N', label: 'Notes', category: 'Navigation' },
+  { key: 'G D', label: 'Databases', category: 'Navigation' },
+  { key: 'G E', label: 'Team', category: 'Navigation' },
+  { key: 'G ,', label: 'Settings', category: 'Navigation' },
+  // Actions
+  { key: 'C', label: 'Create issue', category: 'Actions' },
+  { key: '⌘ /', label: 'Keyboard shortcuts', category: 'Actions' },
+  { key: 'Esc', label: 'Close / Back', category: 'Actions' },
+  // Issues
+  { key: '⌘ Enter', label: 'Save issue title edit', category: 'Issues' },
+  { key: '⌘ Click', label: 'Select multiple issues', category: 'Issues' },
 ];
 
 const NAVIGATION_ITEMS = [

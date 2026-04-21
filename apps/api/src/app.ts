@@ -28,6 +28,8 @@ import issueRelationsRoutes from './modules/issues/issues.relations.routes.js';
 import noteVersionRoutes from './modules/notes/notes.versions.routes.js';
 import billingRoutes, { stripeWebhookRoute } from './modules/billing/billing.routes.js';
 import projectRoutes from './modules/projects/projects.routes.js';
+import templateRoutes from './modules/templates/templates.routes.js';
+import issueViewRoutes from './modules/issue-views/issue-views.routes.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import uploadPublicRoutes from './modules/uploads/uploads.public.routes.js';
 import { getTrustedOrigins } from './lib/env.js';
@@ -95,6 +97,8 @@ export async function app(fastify: FastifyInstance) {
     await app.register(noteVersionRoutes, { prefix: '/workspaces/:workspaceId/notes' });
     await app.register(billingRoutes, { prefix: '/workspaces/:workspaceId/billing' });
     await app.register(projectRoutes, { prefix: '/workspaces/:workspaceId' });
+    await app.register(templateRoutes, { prefix: '/workspaces/:workspaceId/templates' });
+    await app.register(issueViewRoutes, { prefix: '/workspaces/:workspaceId/issue-views' });
   });
 
   // Stripe webhooks need raw body - keep outside protected routes

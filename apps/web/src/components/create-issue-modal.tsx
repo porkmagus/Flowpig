@@ -40,6 +40,7 @@ interface CreateIssueModalProps {
     assigneeId?: string;
     projectId?: string;
     cycleId?: string;
+    parentId?: string;
   };
 }
 
@@ -85,12 +86,7 @@ const priorities = [
   { id: 'NO_PRIORITY', label: 'No priority', color: 'text-priority-none', bg: 'bg-priority-none/10', icon: Flag },
 ];
 
-const templates = [
-  { id: 'bug', label: 'Bug Report', icon: AlertCircle, description: 'Report a bug or issue' },
-  { id: 'feature', label: 'Feature Request', icon: Sparkles, description: 'Request a new feature' },
-  { id: 'improvement', label: 'Improvement', icon: Zap, description: 'Suggest an improvement' },
-  { id: 'task', label: 'Task', icon: CheckCircle2, description: 'General task or to-do' },
-];
+
 
 export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssueModalProps) {
   const { workspace } = useParams();
@@ -106,6 +102,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
   const [assigneeId, setAssigneeId] = useState(initialValues?.assigneeId || '');
   const [projectId, setProjectId] = useState(initialValues?.projectId || '');
   const [cycleId, setCycleId] = useState(initialValues?.cycleId || '');
+  const [parentId, setParentId] = useState(initialValues?.parentId || '');
   const [labelIds, setLabelIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +138,19 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
       if (!response.ok) return [];
       const payload = await response.json() as { members: Array<{ user: User }> };
       return payload.members.map((member) => member.user);
+    },
+    enabled: isOpen,
+  });
+
+  const { data: templatesData } = useQuery({
+    queryKey: ['templates', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/templates?type=ISSUE`, {
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      const payload = await response.json() as { templates: Array<{ id: string; name: string; description: string | null; content: any; icon: string | null; color: string | null }> };
+      return payload.templates || [];
     },
     enabled: isOpen,
   });
@@ -219,6 +229,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
     setAssigneeId(initialValues?.assigneeId || '');
     setProjectId(initialValues?.projectId || '');
     setCycleId(initialValues?.cycleId || '');
+    setParentId(initialValues?.parentId || '');
     setLabelIds([]);
     setDueDate('');
     setStep('form');
@@ -268,33 +279,17 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
       cycleId: cycleId || undefined,
       labelIds: labelIds.length > 0 ? labelIds : undefined,
       dueDate: dueDate || undefined,
+      parentId: parentId || undefined,
     });
   };
 
   const applyTemplate = (templateId: string) => {
-    const templateMap: Record<string, { title: string; description: string }> = {
-      bug: {
-        title: '[Bug] ',
-        description: '## Bug Description\n\n## Steps to Reproduce\n1. \n2. \n3. \n\n## Expected Behavior\n\n## Actual Behavior\n\n## Environment\n',
-      },
-      feature: {
-        title: '[Feature] ',
-        description: '## Feature Description\n\n## Problem Statement\n\n## Proposed Solution\n\n## Acceptance Criteria\n- [ ] \n- [ ] \n- [ ] \n',
-      },
-      improvement: {
-        title: '[Improvement] ',
-        description: '## Current State\n\n## Proposed Improvement\n\n## Benefits\n\n## Implementation Notes\n',
-      },
-      task: {
-        title: '',
-        description: '',
-      },
-    };
-
-    const template = templateMap[templateId];
-    if (template) {
-      setTitle(template.title);
-      setDescription(template.description);
+    const template = templatesData?.find((t) => t.id === templateId);
+    if (template && template.content) {
+      const content = template.content as Record<string, any>;
+      if (content.title) setTitle(content.title);
+      if (content.description) setDescription(content.description);
+      if (content.priority) setPriority(content.priority);
     }
     setStep('form');
   };
@@ -374,21 +369,26 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {templates.map((template) => (
+                {templatesData && templatesData.length > 0 ? templatesData.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => applyTemplate(template.id)}
                     className="flex items-start gap-3 p-4 rounded-lg border border-linear-border hover:border-linear-accent hover:bg-linear-accent-light/50 transition-all text-left"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-linear-accent-light flex items-center justify-center shrink-0">
-                      <template.icon className="w-5 h-5 text-linear-accent" />
+                    <div className="w-10 h-10 rounded-lg bg-linear-accent-light flex items-center justify-center shrink-0 text-lg">
+                      {template.icon || '📋'}
                     </div>
                     <div>
-                      <h3 className="font-medium text-linear-text">{template.label}</h3>
-                      <p className="text-sm text-linear-text-secondary mt-0.5">{template.description}</p>
+                      <h3 className="font-medium text-linear-text">{template.name}</h3>
+                      <p className="text-sm text-linear-text-secondary mt-0.5">{template.description || 'No description'}</p>
                     </div>
                   </button>
-                ))}
+                )) : (
+                  <div className="col-span-2 text-center py-8 text-linear-text-secondary">
+                    <p>No templates yet</p>
+                    <p className="text-sm mt-1">Create your first issue template from an existing issue</p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
