@@ -14,10 +14,24 @@ function Document({ children }: { children: ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="min-h-screen bg-[#0D0D0D] text-white antialiased">
+      <body className="min-h-screen bg-linear-bg text-linear-text antialiased">
         <Providers>{children}</Providers>
         <ScrollRestoration />
         <Scripts />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('flowpig:theme');
+                  if (theme === 'light') document.documentElement.classList.add('light');
+                  else if (theme === 'dark') document.documentElement.classList.remove('light');
+                  else if (window.matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.classList.add('light');
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </body>
     </html>
   );
@@ -34,7 +48,7 @@ export default function App() {
 export function HydrateFallback() {
   return (
     <Document>
-      <div className="min-h-screen bg-[#0D0D0D]" />
+      <div className="min-h-screen bg-linear-bg" />
     </Document>
   );
 }

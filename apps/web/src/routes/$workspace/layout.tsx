@@ -121,6 +121,33 @@ export default function WorkspaceLayout() {
     refetchInterval: 30000,
   });
 
+  // Fetch workspace settings to apply theme
+  const { data: workspaceSettingsData } = useQuery({
+    queryKey: ['workspace-settings', workspace],
+    enabled: !!workspace && !!user,
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch workspace');
+      return response.json() as { workspace: { settings?: { appearance?: { theme?: 'light' | 'dark' | 'system' } } | null } };
+    },
+  });
+
+  useEffect(() => {
+    const theme = workspaceSettingsData?.workspace?.settings?.appearance?.theme;
+    if (!theme) return;
+    localStorage.setItem('flowpig:theme', theme);
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else if (theme === 'dark') {
+      document.documentElement.classList.remove('light');
+    } else if (theme === 'system') {
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      document.documentElement.classList.toggle('light', prefersLight);
+    }
+  }, [workspaceSettingsData]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-linear-bg flex items-center justify-center">

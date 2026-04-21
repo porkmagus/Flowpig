@@ -124,7 +124,7 @@ export default function SettingsPage() {
         }
       );
       const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(payload?.message || 'Failed to update workspace');
+      if (!response.ok) throw new Error(payload?.message || payload?.error || 'Failed to update workspace');
       return payload as { workspace: WorkspaceSettings };
     },
     onSuccess: (result, variables) => {
@@ -722,14 +722,14 @@ function AppearanceSettings({
   ];
 
   const [selectedColor, setSelectedColor] = useState(workspace.color);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(workspace.settings.appearance?.theme || 'system');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(workspace.settings?.appearance?.theme || 'system');
 
   useEffect(() => {
     setSelectedColor(workspace.color);
-    setTheme(workspace.settings.appearance?.theme || 'system');
+    setTheme(workspace.settings?.appearance?.theme || 'system');
   }, [workspace]);
 
-  const isDirty = selectedColor !== workspace.color || theme !== (workspace.settings.appearance?.theme || 'system');
+  const isDirty = selectedColor !== workspace.color || theme !== (workspace.settings?.appearance?.theme || 'system');
 
   return (
     <div className="space-y-4">
@@ -758,14 +758,25 @@ function AppearanceSettings({
           </div>
           <div className="mt-4">
             <Button
-              onClick={() => onUpdate({
-                color: selectedColor,
-                settings: {
-                  appearance: {
-                    theme,
+              onClick={() => {
+                localStorage.setItem('flowpig:theme', theme);
+                if (theme === 'light') {
+                  document.documentElement.classList.add('light');
+                } else if (theme === 'dark') {
+                  document.documentElement.classList.remove('light');
+                } else if (theme === 'system') {
+                  const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                  document.documentElement.classList.toggle('light', prefersLight);
+                }
+                onUpdate({
+                  color: selectedColor,
+                  settings: {
+                    appearance: {
+                      theme,
+                    },
                   },
-                },
-              })}
+                });
+              }}
               disabled={isUpdating || !isDirty}
               className="gap-1.5"
             >

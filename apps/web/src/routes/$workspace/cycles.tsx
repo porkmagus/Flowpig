@@ -87,43 +87,60 @@ interface Cycle {
   }>;
 }
 
+interface Team {
+  id: string;
+  name: string;
+  key: string;
+  color: string;
+}
+
 interface CreateCycleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (data: any) => void;
+  teams: Team[];
+  isPending: boolean;
+  error: string | null;
 }
 
-function CreateCycleModal({ isOpen, onClose, onCreate }: CreateCycleModalProps) {
+function CreateCycleModal({ isOpen, onClose, onCreate, teams, isPending, error }: CreateCycleModalProps) {
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [goals, setGoals] = useState<string[]>(['']);
+  const [sprintGoal, setSprintGoal] = useState('');
+  const [teamId, setTeamId] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError(null);
+    if (!teamId) {
+      setLocalError('Please select a team.');
+      return;
+    }
+    if (!startDate || !endDate) {
+      setLocalError('Start and end dates are required.');
+      return;
+    }
     onCreate({
       name: name || null,
       startDate,
       endDate,
-      goals: goals.filter(g => g.trim()),
+      sprintGoal: sprintGoal.trim() || undefined,
+      teamId,
     });
-    onClose();
+  };
+
+  const handleClose = () => {
     setName('');
     setStartDate('');
     setEndDate('');
-    setGoals(['']);
-  };
-
-  const addGoal = () => setGoals([...goals, '']);
-  const updateGoal = (index: number, value: string) => {
-    const newGoals = [...goals];
-    newGoals[index] = value;
-    setGoals(newGoals);
-  };
-  const removeGoal = (index: number) => {
-    setGoals(goals.filter((_, i) => i !== index));
+    setSprintGoal('');
+    setTeamId('');
+    setLocalError(null);
+    onClose();
   };
 
   return (
@@ -169,40 +186,41 @@ function CreateCycleModal({ isOpen, onClose, onCreate }: CreateCycleModalProps) 
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-linear-text mb-1">Goals</label>
-            <div className="space-y-2">
-              {goals.map((goal, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={goal}
-                    onChange={(e) => updateGoal(index, e.target.value)}
-                    placeholder={`Goal ${index + 1}`}
-                    className="flex-1 px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
-                  />
-                  {goals.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeGoal(index)}
-                      className="p-2 text-priority-urgent hover:bg-priority-urgent/10 rounded-lg"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={addGoal}
-              className="mt-2 text-sm text-linear-accent hover:text-linear-accent-hover"
+            <label className="block text-sm font-medium text-linear-text mb-1">Team <span className="text-priority-urgent">*</span></label>
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              required
+              className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent text-linear-text"
             >
-              + Add another goal
-            </button>
+              <option value="">Select a team</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name} ({team.key})
+                </option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-linear-text mb-1">Sprint Goal</label>
+            <input
+              type="text"
+              value={sprintGoal}
+              onChange={(e) => setSprintGoal(e.target.value)}
+              placeholder="e.g., Complete user authentication flow"
+              className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent"
+            />
+          </div>
+          {(localError || error) && (
+            <div className="text-sm text-priority-urgent bg-linear-error-light rounded-lg px-3 py-2">
+              {localError || error}
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Create Cycle</Button>
+            <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Creating...' : 'Create Cycle'}
+            </Button>
           </div>
         </form>
       </motion.div>
@@ -244,6 +262,19 @@ export default function CyclesList() {
     },
   });
 
+  // Fetch teams for cycle creation
+  const { data: teamsData } = useQuery({
+    queryKey: ['teams', workspace],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/teams`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch teams');
+      const data = await response.json() as { teams: Team[] };
+      return data.teams ?? [];
+    },
+  });
+
   // Mutations
   const createCycleMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -256,11 +287,13 @@ export default function CyclesList() {
           body: JSON.stringify(data),
         }
       );
-      if (!response.ok) throw new Error('Failed to create cycle');
-      return response.json();
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || payload?.message || 'Failed to create cycle');
+      return payload;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
+      setShowCreateModal(false);
     },
   });
 
@@ -582,8 +615,14 @@ export default function CyclesList() {
       {/* Create Modal */}
       <CreateCycleModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          createCycleMutation.reset();
+        }}
         onCreate={(data) => createCycleMutation.mutate(data)}
+        teams={teamsData ?? []}
+        isPending={createCycleMutation.isPending}
+        error={createCycleMutation.error?.message ?? null}
       />
     </div>
   );

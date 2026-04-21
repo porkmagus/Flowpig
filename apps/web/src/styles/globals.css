@@ -40,7 +40,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
-  background-color: #020306;
+  background-color: var(--color-linear-bg);
 }
 
 body {
@@ -49,7 +49,7 @@ body {
   background:
     radial-gradient(circle at 20% 0%, rgba(84, 89, 128, 0.07), transparent 40%),
     radial-gradient(circle at 80% 100%, rgba(60, 64, 90, 0.04), transparent 35%),
-    #020306;
+    var(--color-linear-bg);
   color: var(--color-linear-text);
   min-height: 100vh;
   overflow-x: hidden;
@@ -62,6 +62,26 @@ body {
 ::selection {
   background-color: rgba(84, 89, 128, 0.28);
   color: #ffffff;
+}
+
+.light {
+  --color-linear-bg: #FFFFFF;
+  --color-linear-surface: #F7F7F8;
+  --color-linear-elevated: #FFFFFF;
+  --color-linear-border: #E6E6E6;
+  --color-linear-border-hover: #D4D4D4;
+  --color-linear-text: #1F1F1F;
+  --color-linear-text-secondary: #6E6E6E;
+  --color-linear-text-tertiary: #8E8E8E;
+  --color-linear-accent: #5E6AD2;
+  --color-linear-accent-hover: #4F5BB3;
+  --color-linear-accent-light: #EEF0FF;
+  --color-linear-success: #0D9B6A;
+  --color-linear-success-light: #E6F6F0;
+  --color-linear-warning: #F2A50C;
+  --color-linear-warning-light: #FEF6E6;
+  --color-linear-error: #D13B3B;
+  --color-linear-error-light: #FCEEEE;
 }
 
 /* Utility classes */

@@ -253,6 +253,10 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (!teamId) {
+      setError('Please select a team before creating the issue.');
+      return;
+    }
 
     createMutation.mutate({
       title: title.trim(),
@@ -318,12 +322,12 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Auto-select first team when teams load
+  // Auto-select first team when teams load or modal opens
   useEffect(() => {
-    if (teams && teams.length > 0 && !teamId && !initialValues?.teamId) {
+    if (isOpen && teams && teams.length > 0 && !teamId && !initialValues?.teamId) {
       setTeamId(teams[0].id);
     }
-  }, [teams, teamId, initialValues]);
+  }, [isOpen, teams, teamId, initialValues]);
 
   // Listen for open event from command palette
   useEffect(() => {
@@ -503,7 +507,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   </div>
 
                   {/* Team selector */}
-                  {teamOptions.length > 0 && (
+                  {teamOptions.length > 0 ? (
                     <div className="relative">
                       <button
                         type="button"
@@ -540,6 +544,10 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                         </div>
                       )}
                     </div>
+                  ) : (
+                    <span className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-md px-2.5 py-1.5">
+                      No teams available
+                    </span>
                   )}
 
                   {/* Assignee selector */}
@@ -773,7 +781,7 @@ export function CreateIssueModal({ isOpen, onClose, initialValues }: CreateIssue
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={!title.trim() || createMutation.isPending}
+                    disabled={!title.trim() || !teamId || createMutation.isPending}
                   >
                     {createMutation.isPending ? (
                       <>
