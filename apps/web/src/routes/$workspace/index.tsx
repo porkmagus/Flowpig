@@ -64,10 +64,10 @@ export default function WorkspaceIndex() {
   }
 
   const stats = [
-    { label: 'Issues', value: data?.workspace.stats.issues || 0, icon: CircleDot, color: 'bg-red-500/10 text-red-400' },
-    { label: 'Notes', value: data?.workspace.stats.notes || 0, icon: FileText, color: 'bg-sky-500/10 text-sky-300' },
-    { label: 'Members', value: data?.workspace.stats.members || 0, icon: Users, color: 'bg-emerald-500/10 text-emerald-300' },
-    { label: 'Teams', value: data?.workspace.stats.teams || 0, icon: Users, color: 'bg-violet-500/10 text-violet-300' },
+    { label: 'Issues', value: data?.workspace?.stats?.issues ?? 0, icon: CircleDot, color: 'bg-red-500/10 text-red-400' },
+    { label: 'Notes', value: data?.workspace?.stats?.notes ?? 0, icon: FileText, color: 'bg-sky-500/10 text-sky-300' },
+    { label: 'Members', value: data?.workspace?.stats?.members ?? 0, icon: Users, color: 'bg-emerald-500/10 text-emerald-300' },
+    { label: 'Teams', value: data?.workspace?.stats?.teams ?? 0, icon: Users, color: 'bg-violet-500/10 text-violet-300' },
   ];
 
   return (
@@ -75,9 +75,9 @@ export default function WorkspaceIndex() {
       {/* Welcome header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-linear-text">
-          Welcome to {data?.workspace.name || workspace}
+          Welcome to {data?.workspace?.name || workspace}
         </h1>
-        {data?.workspace.description && (
+        {data?.workspace?.description && (
           <p className="mt-2 text-linear-text-secondary">{data.workspace.description}</p>
         )}
       </div>

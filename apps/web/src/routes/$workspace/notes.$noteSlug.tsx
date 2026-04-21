@@ -552,13 +552,13 @@ export default function NoteDetailRoute() {
           <div className="bg-linear-surface rounded-xl border border-linear-border p-6">
             <h3 className="font-semibold text-linear-text mb-4 flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
-              Comments ({note.comments.length})
+              Comments ({note.comments?.length ?? 0})
             </h3>
 
             {/* Comment list */}
             <div className="space-y-4 mb-6">
               <AnimatePresence>
-                {note.comments.map((comment) => (
+                {(note.comments || []).map((comment) => (
                   <motion.div
                     key={comment.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -592,7 +592,7 @@ export default function NoteDetailRoute() {
 
                       {/* Reactions */}
                       <div className="flex items-center gap-2 mt-2">
-                        {comment.reactions.map((reaction) => (
+                        {(comment.reactions || []).map((reaction) => (
                           <button
                             key={reaction.id}
                             className="flex items-center gap-1 px-2 py-0.5 bg-linear-elevated hover:bg-linear-elevated rounded-full text-sm transition-colors"
@@ -734,9 +734,9 @@ export default function NoteDetailRoute() {
               )}
             </AnimatePresence>
 
-            {note.children.length > 0 ? (
+            {(note.children || []).length > 0 ? (
               <div className="space-y-2">
-                {note.children.map((child) => (
+                {(note.children || []).map((child) => (
                   <Link
                     key={child.id}
                     to={`/${workspace}/notes/${child.slug}`}

@@ -311,6 +311,117 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
     return { success: true };
   });
 
+  // Create database view
+  fastify.post('/:databaseId/views', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { databaseId } = request.params as { databaseId: string };
+    const { name, type, config } = request.body as {
+      name: string;
+      type: string;
+      config?: Record<string, unknown>;
+    };
+
+    const database = await fastify.prisma.database.findFirst({
+      where: {
+        id: databaseId,
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+    });
+
+    if (!database) {
+      return reply.status(404).send({ error: 'Database not found' });
+    }
+
+    const view = await fastify.prisma.databaseView.create({
+      data: {
+        databaseId,
+        name,
+        type: type as any,
+        config: (config || {}) as never,
+      },
+    });
+
+    return reply.status(201).send({ view: { id: view.id, name: view.name, type: view.type, config: view.config } });
+  });
+
+  // Create database property
+  fastify.post('/:databaseId/properties', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { databaseId } = request.params as { databaseId: string };
+    const { name, type, config } = request.body as {
+      name: string;
+      type: string;
+      config?: Record<string, unknown>;
+    };
+
+    const database = await fastify.prisma.database.findFirst({
+      where: {
+        id: databaseId,
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+      include: { properties: true },
+    });
+
+    if (!database) {
+      return reply.status(404).send({ error: 'Database not found' });
+    }
+
+    const maxOrder = database.properties.reduce((max, p) => Math.max(max, p.order), 0);
+
+    const property = await fastify.prisma.databaseProperty.create({
+      data: {
+        databaseId,
+        name,
+        type: type as any,
+        config: (config || {}) as never,
+        order: maxOrder + 1,
+      },
+    });
+
+    return reply.status(201).send({ property: { id: property.id, name: property.name, type: property.type, config: property.config, order: property.order } });
+  });
+
+  // Update a single cell
+  fastify.patch('/:databaseId/rows/:rowId/cells/:propertyId', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const { databaseId, rowId, propertyId } = request.params as { databaseId: string; rowId: string; propertyId: string };
+    const { value } = request.body as { value: unknown };
+
+    const database = await fastify.prisma.database.findFirst({
+      where: {
+        id: databaseId,
+        workspaceId: request.workspace!.id,
+        deletedAt: null,
+      },
+    });
+
+    if (!database) {
+      return reply.status(404).send({ error: 'Database not found' });
+    }
+
+    const cell = await fastify.prisma.databaseCell.upsert({
+      where: {
+        rowId_propertyId: {
+          rowId,
+          propertyId,
+        },
+      },
+      update: { value: value as never },
+      create: {
+        rowId,
+        propertyId,
+        value: value as never,
+      },
+    });
+
+    return { cell: { id: cell.id, rowId: cell.rowId, propertyId: cell.propertyId, value: cell.value } };
+  });
+
   // Calculate rollup values for a row
   fastify.get('/:databaseId/rows/:rowId/rollup', {
     preHandler: [requireAuth, extractWorkspace],

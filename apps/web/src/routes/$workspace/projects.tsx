@@ -277,8 +277,8 @@ export default function ProjectsListRoute() {
         </div>
       ) : (
         <AnimatedList className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => {
-            const status = statusConfig[project.status];
+          {sortedProjects.map((project) => {
+            const status = statusConfig[project.status] ?? statusConfig.PLANNED;
             return (
               <AnimatedItem key={project.id}>
                 <Link to={`/${workspace}/projects/${project.id}`}>

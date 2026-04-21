@@ -341,14 +341,17 @@ export default async function issueRoutes(fastify: FastifyInstance) {
     }
 
     // Get next issue number for this team
-    const lastIssue = await fastify.prisma.issue.findFirst({
+    const teamIssues = await fastify.prisma.issue.findMany({
       where: { teamId },
-      orderBy: { identifier: 'desc' },
+      select: { identifier: true },
     });
 
-    const issueNumber = lastIssue 
-      ? parseInt(lastIssue.identifier.split('-')[1]) + 1 
-      : 1;
+    const maxNumber = teamIssues.reduce((max, issue) => {
+      const num = parseInt(issue.identifier.split('-')[1]);
+      return Math.max(max, isNaN(num) ? 0 : num);
+    }, 0);
+
+    const issueNumber = maxNumber + 1;
     const identifier = `${team.key}-${issueNumber}`;
 
     // Get default workflow state for this team
