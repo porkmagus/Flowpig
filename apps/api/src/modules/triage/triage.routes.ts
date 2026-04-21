@@ -8,7 +8,7 @@ export default async function triageRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { teamId } = request.params as { teamId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     // Verify team exists in workspace
@@ -84,7 +84,7 @@ export default async function triageRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { teamId, issueId } = request.params as { teamId: string; issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { assigneeId, workflowStateId } = request.body as { assigneeId?: string; workflowStateId?: string };
 
@@ -166,7 +166,7 @@ export default async function triageRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { teamId, issueId } = request.params as { teamId: string; issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { days = 7 } = request.body as { days?: number };
 
@@ -189,7 +189,7 @@ export default async function triageRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { teamId, issueId } = request.params as { teamId: string; issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { duplicateOfId } = request.body as { duplicateOfId: string };
 
@@ -229,7 +229,7 @@ export default async function triageRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { teamId, issueId } = request.params as { teamId: string; issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { reason } = request.body as { reason?: string };
 

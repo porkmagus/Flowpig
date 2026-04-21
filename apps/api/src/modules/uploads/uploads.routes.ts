@@ -21,7 +21,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     const data = await request.file();
@@ -83,7 +83,7 @@ export default async function uploadRoutes(fastify: FastifyInstance) {
   fastify.post('/attach-to-issue', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { issueId, uploadId } = request.body as { issueId: string; uploadId: string };
 

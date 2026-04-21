@@ -3,6 +3,8 @@ import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
+import { useToast } from '~/components/ui/toast';
 import { useAuth } from '~/lib/auth-client';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
 import { 
@@ -15,6 +17,8 @@ import {
   Trash2,
   X,
   Check,
+  Edit3,
+  FolderKanban,
 } from 'lucide-react';
 
 interface WorkspaceMember {
@@ -50,6 +54,7 @@ export default function TeamRoute() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const { success, error: showError } = useToast();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('MEMBER');
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
@@ -63,7 +68,8 @@ export default function TeamRoute() {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to load members');
-      return response.json();
+      const data = await response.json() as { members: WorkspaceMember[] };
+      return data.members || [];
     },
   });
 
@@ -80,7 +86,7 @@ export default function TeamRoute() {
     },
   });
 
-  const canManageInvites = (membersData?.members as WorkspaceMember[] | undefined)?.some(
+  const canManageInvites = (membersData as WorkspaceMember[] | undefined)?.some(
     (member) => member.userId === user?.id && ['OWNER', 'ADMIN'].includes(member.role)
   ) ?? false;
 
@@ -132,7 +138,9 @@ export default function TeamRoute() {
       );
       queryClient.invalidateQueries({ queryKey: ['workspace-members', workspace] });
       queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
+      success(result.status === 'member-added' ? 'Member added' : 'Invitation sent');
     },
+    onError: (err) => showError(err.message),
   });
 
   const revokeInvitationMutation = useMutation({
@@ -153,10 +161,76 @@ export default function TeamRoute() {
       setInviteLink(null);
       setInviteMessage(result.message || 'Invitation revoked.');
       queryClient.invalidateQueries({ queryKey: ['workspace-invitations', workspace] });
+      success('Invitation revoked');
     },
+    onError: (err) => showError(err.message),
   });
 
-  const members: WorkspaceMember[] = membersData?.members || [];
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ role }),
+      });
+      if (!response.ok) throw new Error('Failed to update role');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspace] });
+      success('Role updated');
+    },
+    onError: (err) => showError(err.message),
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/members/${memberId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to remove member');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspace] });
+      success('Member removed');
+    },
+    onError: (err) => showError(err.message),
+  });
+
+  const createTeamMutation = useMutation({
+    mutationFn: async (payload: { name: string; key: string; color: string; description?: string }) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/teams`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('Failed to create team');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', workspace] });
+      setShowCreateTeam(false);
+      setNewTeamName('');
+      setNewTeamKey('');
+      setNewTeamColor('#5E6AD2');
+      setNewTeamDescription('');
+      success('Team created');
+    },
+    onError: (err) => showError(err.message),
+  });
+
+  const [showCreateTeam, setShowCreateTeam] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamKey, setNewTeamKey] = useState('');
+  const [newTeamColor, setNewTeamColor] = useState('#5E6AD2');
+  const [newTeamDescription, setNewTeamDescription] = useState('');
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+
+  const members: WorkspaceMember[] = membersData || [];
   const teams = teamsData || [];
   const invitations = invitationsData?.invitations || [];
 
@@ -382,6 +456,47 @@ export default function TeamRoute() {
                     <span className="text-sm text-linear-text-tertiary">
                       Joined {new Date(member.joinedAt).toLocaleDateString()}
                     </span>
+                    {canManageInvites && member.userId !== user?.id && (
+                      <>
+                        {editingMemberId === member.id ? (
+                          <div className="flex items-center gap-1">
+                            <Select
+                              value={member.role}
+                              onChange={(v) => {
+                                updateRoleMutation.mutate({ memberId: member.id, role: v });
+                                setEditingMemberId(null);
+                              }}
+                              options={[
+                                { value: 'ADMIN', label: 'Admin' },
+                                { value: 'MEMBER', label: 'Member' },
+                                { value: 'GUEST', label: 'Guest' },
+                              ]}
+                              size="sm"
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setEditingMemberId(member.id)}
+                            className="p-1 text-linear-text-tertiary hover:text-linear-text rounded transition-colors"
+                            title="Change role"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove ${member.user.name || member.user.email} from the workspace?`)) {
+                              removeMemberMutation.mutate(member.id);
+                            }
+                          }}
+                          disabled={removeMemberMutation.isPending}
+                          className="p-1 text-linear-text-tertiary hover:text-linear-error rounded transition-colors"
+                          title="Remove member"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </AnimatedItem>
@@ -392,7 +507,18 @@ export default function TeamRoute() {
 
       {/* Teams Section */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-linear-text mb-4">Teams</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-linear-text">Teams</h2>
+          {canManageInvites && (
+            <button
+              onClick={() => setShowCreateTeam(true)}
+              className="flex items-center gap-1.5 text-sm text-linear-accent hover:text-linear-accent-hover font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Create team
+            </button>
+          )}
+        </div>
         <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {teams.map((team: any) => (
             <AnimatedItem key={team.id}>
@@ -451,15 +577,16 @@ export default function TeamRoute() {
                 <label className="block text-sm font-medium text-linear-text-secondary mb-2">
                   Role
                 </label>
-                <select
+                <Select
                   value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
-                >
-                  <option value="MEMBER">Member</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="GUEST">Guest</option>
-                </select>
+                  onChange={(v) => setInviteRole(v)}
+                  options={[
+                    { value: 'MEMBER', label: 'Member' },
+                    { value: 'ADMIN', label: 'Admin' },
+                    { value: 'GUEST', label: 'Guest' },
+                  ]}
+                  className="w-full"
+                />
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -475,6 +602,96 @@ export default function TeamRoute() {
                   className="px-4 py-2 bg-linear-accent text-white rounded-lg hover:bg-linear-accent/80 transition-colors disabled:opacity-50"
                 >
                   {inviteMutation.isPending ? 'Sending...' : 'Send Invite'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Create Team Modal */}
+      {showCreateTeam && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-linear-surface rounded-xl p-6 w-full max-w-md border border-linear-border shadow-2xl shadow-black/30"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-linear-text">Create Team</h2>
+              <button onClick={() => setShowCreateTeam(false)}>
+                <X className="w-5 h-5 text-linear-text-tertiary" />
+              </button>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              createTeamMutation.mutate({
+                name: newTeamName.trim(),
+                key: newTeamKey.trim().toUpperCase(),
+                color: newTeamColor,
+                description: newTeamDescription.trim() || undefined,
+              });
+            }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">Name</label>
+                <input
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
+                  placeholder="Engineering"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">Key</label>
+                <input
+                  value={newTeamKey}
+                  onChange={(e) => setNewTeamKey(e.target.value)}
+                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
+                  placeholder="ENG"
+                  maxLength={5}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {['#5E6AD2', '#E85913', '#0D9B6A', '#D13B3B', '#F2A50C', '#7B61FF', '#0EA5E9', '#EC4899'].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNewTeamColor(c)}
+                      className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                        newTeamColor === c ? 'border-white ring-2 ring-linear-accent' : 'border-transparent'
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-linear-text-secondary mb-2">Description (optional)</label>
+                <input
+                  value={newTeamDescription}
+                  onChange={(e) => setNewTeamDescription(e.target.value)}
+                  className="w-full px-3 py-2 bg-linear-elevated border border-linear-border rounded-lg text-linear-text focus:ring-2 focus:ring-linear-accent/40 focus:outline-none"
+                  placeholder="What this team works on..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTeam(false)}
+                  className="px-4 py-2 text-linear-text-secondary hover:bg-linear-elevated rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createTeamMutation.isPending || !newTeamName.trim() || !newTeamKey.trim()}
+                  className="px-4 py-2 bg-linear-accent text-white rounded-lg hover:bg-linear-accent/80 transition-colors disabled:opacity-50"
+                >
+                  {createTeamMutation.isPending ? 'Creating...' : 'Create Team'}
                 </button>
               </div>
             </form>

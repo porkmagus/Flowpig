@@ -121,7 +121,7 @@ export default function IndexRoute() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-linear-bg text-white">
+    <div className="force-dark min-h-screen overflow-x-hidden bg-linear-bg text-white">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute -left-24 -top-24 h-120 w-120 rounded-full bg-linear-accent/8 blur-3xl"

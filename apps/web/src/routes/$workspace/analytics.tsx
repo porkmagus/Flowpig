@@ -18,11 +18,13 @@ import {
   GitBranch,
   Flame,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Download,
 } from 'lucide-react';
 import { format } from 'date-fns/format';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
+import { Select } from '~/components/ui/select';
 import { Badge } from '~/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
@@ -230,6 +232,7 @@ export default function AnalyticsPage() {
   const { workspace } = useParams();
   const [timeRange, setTimeRange] = useState<'7' | '30' | '90'>('30');
   const velocityWeeks = timeRange === '7' ? 4 : timeRange === '30' ? 12 : 24;
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: ['analytics-overview', workspace],
@@ -255,31 +258,45 @@ export default function AnalyticsPage() {
     },
   });
 
-  const { data: activeCycles } = useQuery({
-    queryKey: ['cycles', workspace, 'active-analytics'],
-    queryFn: async (): Promise<CycleListData> => {
+  const { data: cyclesData } = useQuery({
+    queryKey: ['cycles', workspace, 'analytics'],
+    queryFn: async () => {
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/cycles?isActive=true&limit=1`,
+        `${API_URL}/workspaces/${workspace}/cycles?limit=50`,
         { credentials: 'include' }
       );
-      if (!response.ok) throw new Error('Failed to load active cycles');
-      return response.json();
+      if (!response.ok) throw new Error('Failed to load cycles');
+      return response.json() as Promise<{ cycles: Array<{ id: string; name: string; number: number; isActive: boolean }> }>;
     },
   });
 
-  const activeCycle = activeCycles?.cycles?.[0];
+  const cycles = cyclesData?.cycles || [];
+  const activeCycle = cycles.find((c) => c.isActive);
+  const burndownCycleId = selectedCycleId || activeCycle?.id;
 
   const { data: burndown } = useQuery({
-    queryKey: ['analytics-burndown', workspace, activeCycle?.id],
+    queryKey: ['analytics-burndown', workspace, burndownCycleId],
     queryFn: async (): Promise<BurndownData> => {
       const response = await fetch(
-        `${API_URL}/workspaces/${workspace}/analytics/burndown/${activeCycle!.id}`,
+        `${API_URL}/workspaces/${workspace}/analytics/burndown/${burndownCycleId}`,
         { credentials: 'include' }
       );
       if (!response.ok) return null as any;
       return response.json();
     },
-    enabled: !!activeCycle?.id,
+    enabled: !!burndownCycleId,
+  });
+
+  const { data: trends } = useQuery({
+    queryKey: ['analytics-trends', workspace, timeRange],
+    queryFn: async () => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/analytics/trends?period=${timeRange}`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) throw new Error('Failed to load trends');
+      return response.json() as Promise<{ data: Array<{ date: string; created: number; completed: number }> }>;
+    },
   });
 
   const { data: distribution } = useQuery({
@@ -347,22 +364,51 @@ export default function AnalyticsPage() {
             </p>
           </div>
           
-          {/* Time range selector */}
-          <div className="flex items-center gap-1 bg-linear-surface p-1 rounded-lg border border-linear-border">
-            {(['7', '30', '90'] as const).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
-                  timeRange === range
-                    ? 'bg-linear-elevated text-linear-text shadow-elevation-1'
-                    : 'text-linear-text-secondary hover:text-linear-text'
-                )}
-              >
-                {range}d
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            {/* Export button */}
+            <button
+              onClick={() => {
+                const payload = {
+                  overview,
+                  velocity,
+                  burndown,
+                  distribution,
+                  teamPerformance,
+                  contributors,
+                  exportedAt: new Date().toISOString(),
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `analytics-${workspace}-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-linear-text-secondary hover:text-linear-text rounded-lg border border-linear-border hover:bg-linear-surface transition-colors"
+              title="Export analytics data"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </button>
+
+            {/* Time range selector */}
+            <div className="flex items-center gap-1 bg-linear-surface p-1 rounded-lg border border-linear-border">
+              {(['7', '30', '90'] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                    timeRange === range
+                      ? 'bg-linear-elevated text-linear-text shadow-elevation-1'
+                      : 'text-linear-text-secondary hover:text-linear-text'
+                  )}
+                >
+                  {range}d
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </FadeIn>
@@ -466,9 +512,22 @@ export default function AnalyticsPage() {
                       {burndown.summary.completedIssues}/{burndown.summary.totalIssues} completed
                     </p>
                   </div>
-                  <Badge variant={burndown.summary.completionRate >= 80 ? 'success' : 'warning'}>
-                    {burndown.summary.completionRate}%
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {cycles.length > 1 && (
+                      <Select
+                        value={burndownCycleId || ''}
+                        onChange={(v) => setSelectedCycleId(v || null)}
+                        options={cycles.map((c) => ({
+                          value: c.id,
+                          label: `${c.name} ${c.isActive ? '(Active)' : ''}`,
+                        }))}
+                        size="sm"
+                      />
+                    )}
+                    <Badge variant={burndown.summary.completionRate >= 80 ? 'success' : 'warning'}>
+                      {burndown.summary.completionRate}%
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -535,6 +594,67 @@ export default function AnalyticsPage() {
           )}
         </FadeIn>
       </div>
+
+      {/* Issue Trends */}
+      <FadeIn delay={0.28}>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Issue Trends</CardTitle>
+            <p className="text-xs text-linear-text-secondary">
+              Issues created vs completed over time
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trends?.data || []}>
+                  <defs>
+                    <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#5E6AD2" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#5E6AD2" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0D9B6A" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#0D9B6A" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--linear-border)" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                    stroke="var(--linear-text-tertiary)"
+                    fontSize={10}
+                  />
+                  <YAxis stroke="var(--linear-text-tertiary)" fontSize={10} allowDecimals={false} />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--linear-text)', 
+                      border: 'none', 
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                    labelFormatter={(date) => format(new Date(date), 'MMM d, yyyy')}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="created" 
+                    stroke="#5E6AD2" 
+                    fill="url(#colorCreated)"
+                    name="Created"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="completed" 
+                    stroke="#0D9B6A" 
+                    fill="url(#colorCompleted)"
+                    name="Completed"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </FadeIn>
 
       {/* Issue Distribution */}
       <FadeIn delay={0.3}>

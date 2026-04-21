@@ -89,7 +89,7 @@ export default async function noteCommentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId } = request.params as { noteId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { content, parentId, blockId } = request.body as { 
       content: string; 
       parentId?: string;

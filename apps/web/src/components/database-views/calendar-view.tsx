@@ -14,10 +14,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucid
 interface CalendarViewProps {
   rows: Array<{
     id: string;
-    cells: Array<{
-      propertyId: string;
-      value: any;
-    }>;
+    cells: Record<string, any>;
   }>;
   properties: Array<{
     id: string;
@@ -41,8 +38,7 @@ export function CalendarView({
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const getCellValue = (row: any, propertyId: string) => {
-    const cell = row.cells.find((c: any) => c.propertyId === propertyId);
-    return cell?.value;
+    return row.cells[propertyId];
   };
 
   // Filter rows that have a date value

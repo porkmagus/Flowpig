@@ -196,7 +196,7 @@ export default async function cycleRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { teamId, name, startDate, endDate, sprintGoal, capacity } = request.body as {
       teamId: string;
@@ -349,7 +349,7 @@ export default async function cycleRoutes(fastify: FastifyInstance) {
   fastify.post('/:cycleId/retro', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { cycleId } = request.params as { cycleId: string };
     const workspaceId = request.workspace!.id;
     const { wentWell, toImprove, actionItems } = request.body as {

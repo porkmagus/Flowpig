@@ -64,6 +64,27 @@ body {
   color: #ffffff;
 }
 
+/* Force dark mode — used by marketing pages that should always render dark */
+.force-dark {
+  --color-linear-bg: #020306;
+  --color-linear-surface: #07080c;
+  --color-linear-elevated: #0c0e14;
+  --color-linear-border: #14161f;
+  --color-linear-border-hover: #1c1f2b;
+  --color-linear-text: #e8eaef;
+  --color-linear-text-secondary: #6b7180;
+  --color-linear-text-tertiary: #404554;
+  --color-linear-accent: #545980;
+  --color-linear-accent-hover: #5e6390;
+  --color-linear-accent-light: rgba(84, 89, 128, 0.12);
+  --color-linear-success: #22c59b;
+  --color-linear-success-light: rgba(34, 197, 155, 0.1);
+  --color-linear-warning: #d4a356;
+  --color-linear-warning-light: rgba(212, 163, 86, 0.1);
+  --color-linear-error: #d96e6e;
+  --color-linear-error-light: rgba(217, 110, 110, 0.1);
+}
+
 .light {
   --color-linear-bg: #FFFFFF;
   --color-linear-surface: #F7F7F8;

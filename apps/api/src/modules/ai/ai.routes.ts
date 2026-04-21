@@ -27,7 +27,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
   fastify.post('/chat', { 
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { messages, model = defaultModel, temperature = 0.7 } = request.body as {
       messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
@@ -95,7 +95,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
   fastify.post('/stream', { 
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { messages, model = defaultModel, temperature = 0.7, conversationId } = request.body as {
       messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
@@ -222,7 +222,7 @@ export default async function aiRoutes(fastify: FastifyInstance) {
   fastify.post('/actions/:actionId/confirm', { 
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { actionId } = request.params as { actionId: string };
     const { confirmed, data } = request.body as { confirmed: boolean; data?: any };
 

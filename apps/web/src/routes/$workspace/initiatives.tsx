@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedPage } from '@flowpigdev/ui';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
 import { ArrowUpRight, FolderKanban, Plus, Search, Target } from 'lucide-react';
 
 interface InitiativeProject {
@@ -159,32 +160,27 @@ export default function InitiativesRoute() {
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Status</label>
-                  <select
+                  <Select
                     value={status}
-                    onChange={(event) => setStatus(event.target.value as (typeof initiativeStatusOptions)[number])}
-                    className="w-full rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
-                  >
-                    {initiativeStatusOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option.replaceAll('_', ' ')}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setStatus(v as (typeof initiativeStatusOptions)[number])}
+                    options={initiativeStatusOptions.map((option) => ({
+                      value: option,
+                      label: option.replaceAll('_', ' '),
+                    }))}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Linked project</label>
-                  <select
+                  <Select
                     value={projectId}
-                    onChange={(event) => setProjectId(event.target.value)}
-                    className="w-full rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
-                  >
-                    <option value="">No project yet</option>
-                    {availableProjects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setProjectId(v)}
+                    options={[
+                      { value: '', label: 'No project yet' },
+                      ...availableProjects.map((project) => ({ value: project.id, label: project.name })),
+                    ]}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Description</label>
@@ -243,18 +239,14 @@ export default function InitiativesRoute() {
             className="w-full rounded-lg border border-linear-border py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-linear-accent/40"
           />
         </div>
-        <select
+        <Select
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
-        >
-          <option value="">All Statuses</option>
-          {initiativeStatusOptions.map((option) => (
-            <option key={option} value={option}>
-              {option.replaceAll('_', ' ')}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setStatusFilter(v)}
+          options={[
+            { value: '', label: 'All Statuses' },
+            ...initiativeStatusOptions.map((option) => ({ value: option, label: option.replaceAll('_', ' ') })),
+          ]}
+        />
       </div>
 
       {isLoading ? (

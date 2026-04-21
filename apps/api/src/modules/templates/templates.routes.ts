@@ -1,6 +1,16 @@
 import type { FastifyInstance } from 'fastify';
+import { TemplateType } from '@flowpigdev/db';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
+
+interface CreateTemplateBody {
+  name: string;
+  description?: string;
+  type?: string;
+  icon?: string;
+  color?: string;
+  content?: unknown;
+}
 
 export default async function templateRoutes(fastify: FastifyInstance) {
   fastify.get('/', {
@@ -9,8 +19,12 @@ export default async function templateRoutes(fastify: FastifyInstance) {
     const { type } = request.query as { type?: string };
     const workspaceId = request.workspace!.id;
 
+    const typeFilter = type && Object.values(TemplateType).includes(type as TemplateType)
+      ? (type as TemplateType)
+      : undefined;
+
     const templates = await fastify.prisma.template.findMany({
-      where: { workspaceId, type: type as any, deletedAt: null },
+      where: { workspaceId, type: typeFilter, deletedAt: null },
       include: { createdBy: { select: { id: true, name: true, image: true } } },
       orderBy: { usageCount: 'desc' },
     });
@@ -28,12 +42,12 @@ export default async function templateRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
-    const { name, description, type, icon, color, content } = request.body as any;
+    const { name, description, type, icon, color, content } = request.body as CreateTemplateBody;
 
     const template = await fastify.prisma.template.create({
-      data: { workspaceId, name, description, type, icon, color, content, createdById: userId },
+      data: { workspaceId, name, description, type: type as TemplateType, icon, color, content: content as never, createdById: userId },
     });
 
     return reply.status(201).send({

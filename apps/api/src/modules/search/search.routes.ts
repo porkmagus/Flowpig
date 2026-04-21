@@ -2,6 +2,36 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, type AuthenticatedRequest } from '../../plugins/auth.js';
 import { extractWorkspace, type WorkspaceRequest } from '../../middleware/workspace.js';
 
+interface RawIssueResult {
+  id: string;
+  identifier: string;
+  title: string;
+  state: string;
+  priority: string;
+  team_id: string | null;
+  team_name: string | null;
+  team_key: string | null;
+  team_color: string | null;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  assignee_image: string | null;
+  workflow_state_id: string | null;
+  workflow_state_name: string | null;
+  workflow_state_color: string | null;
+  rank: number | null;
+}
+
+interface RawNoteResult {
+  id: string;
+  title: string;
+  slug: string;
+  emoji: string | null;
+  creator_id: string | null;
+  creator_name: string | null;
+  creator_image: string | null;
+  rank: number | null;
+}
+
 export default async function searchRoutes(fastify: FastifyInstance) {
   // Global search across workspace (enhanced with full-text)
   fastify.get('/workspace/:workspaceId', {
@@ -19,16 +49,20 @@ export default async function searchRoutes(fastify: FastifyInstance) {
 
     const workspaceId = request.workspace!.id;
     const limitNum = parseInt(limit, 10);
-    const results: any[] = [];
+    const results: Array<
+      | { type: 'issue'; id: string; title: string; subtitle: string; url: string; meta: Record<string, unknown> }
+      | { type: 'note'; id: string; title: string; subtitle: string; url: string; meta: Record<string, unknown> }
+      | { type: 'user'; id: string; title: string; subtitle: string; url: string; meta: Record<string, unknown> }
+    > = [];
     const searchTerm = q.trim();
 
     // Search issues with full-text when available
     if (!type || type === 'issue' || type === 'all') {
-      let issues;
+      let issues: RawIssueResult[] = [];
       
       try {
         // Try full-text search first
-        issues = await fastify.prisma.$queryRaw`
+        issues = await fastify.prisma.$queryRaw<RawIssueResult[]>`
           SELECT 
             i.id,
             i.identifier,
@@ -62,7 +96,7 @@ export default async function searchRoutes(fastify: FastifyInstance) {
         `;
       } catch (e) {
         // Fallback to basic search if full-text not available
-        issues = await fastify.prisma.issue.findMany({
+        const fallbackIssues = await fastify.prisma.issue.findMany({
           where: {
             workspaceId,
             deletedAt: null,
@@ -78,9 +112,27 @@ export default async function searchRoutes(fastify: FastifyInstance) {
           },
           take: limitNum,
         });
+        issues = fallbackIssues.map((i) => ({
+          id: i.id,
+          identifier: i.identifier,
+          title: i.title,
+          state: i.state,
+          priority: i.priority,
+          team_id: i.team?.id ?? null,
+          team_name: i.team?.name ?? null,
+          team_key: i.team?.key ?? null,
+          team_color: i.team?.color ?? null,
+          assignee_id: i.assignee?.id ?? null,
+          assignee_name: i.assignee?.name ?? null,
+          assignee_image: i.assignee?.image ?? null,
+          workflow_state_id: i.workflowState?.id ?? null,
+          workflow_state_name: i.workflowState?.name ?? null,
+          workflow_state_color: i.workflowState?.color ?? null,
+          rank: null,
+        }));
       }
 
-      for (const i of issues as any[]) {
+      for (const i of issues) {
         results.push({
           type: 'issue' as const,
           id: i.id,
@@ -100,10 +152,10 @@ export default async function searchRoutes(fastify: FastifyInstance) {
 
     // Search notes with full-text when available
     if (!type || type === 'note' || type === 'all') {
-      let notes;
+      let notes: RawNoteResult[] = [];
       
       try {
-        notes = await fastify.prisma.$queryRaw`
+        notes = await fastify.prisma.$queryRaw<RawNoteResult[]>`
           SELECT 
             n.id,
             n.title,
@@ -126,7 +178,7 @@ export default async function searchRoutes(fastify: FastifyInstance) {
           LIMIT ${limitNum}
         `;
       } catch (e) {
-        notes = await fastify.prisma.note.findMany({
+        const fallbackNotes = await fastify.prisma.note.findMany({
           where: {
             workspaceId,
             deletedAt: null,
@@ -138,9 +190,19 @@ export default async function searchRoutes(fastify: FastifyInstance) {
           },
           take: limitNum,
         });
+        notes = fallbackNotes.map((n) => ({
+          id: n.id,
+          title: n.title,
+          slug: n.slug,
+          emoji: n.emoji,
+          creator_id: n.creator?.id ?? null,
+          creator_name: n.creator?.name ?? null,
+          creator_image: n.creator?.image ?? null,
+          rank: null,
+        }));
       }
 
-      for (const n of notes as any[]) {
+      for (const n of notes) {
         results.push({
           type: 'note' as const,
           id: n.id,

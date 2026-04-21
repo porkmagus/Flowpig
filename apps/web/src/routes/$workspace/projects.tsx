@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedCard, AnimatedItem, AnimatedList, AnimatedPage } from '@flowpigdev/ui';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
+import { Skeleton, SkeletonCard } from '~/components/ui/skeleton';
+import { useToast } from '~/components/ui/toast';
 import {
   ArrowUpDown,
   Clock,
@@ -53,7 +56,15 @@ export default function ProjectsListRoute() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'updatedAt' | 'createdAt' | 'name' | 'progress'>('updatedAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setShowCreateModal(true);
+    window.addEventListener('open-create-project', handler);
+    return () => window.removeEventListener('open-create-project', handler);
+  }, []);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
 
@@ -76,6 +87,22 @@ export default function ProjectsListRoute() {
 
   const projects = data?.projects ?? [];
 
+  const sortedProjects = [...projects].sort((a, b) => {
+    let cmp = 0;
+    if (sortField === 'name') {
+      cmp = a.name.localeCompare(b.name);
+    } else if (sortField === 'progress') {
+      cmp = (a.progress || 0) - (b.progress || 0);
+    } else if (sortField === 'createdAt') {
+      cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else {
+      cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const { success, error: showError } = useToast();
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`${API_URL}/workspaces/${workspace}/projects`, {
@@ -97,7 +124,9 @@ export default function ProjectsListRoute() {
       setShowCreateModal(false);
       setNewProjectName('');
       setNewProjectDescription('');
+      success('Project created');
     },
+    onError: (err) => showError(err.message),
   });
 
   return (
@@ -129,26 +158,43 @@ export default function ProjectsListRoute() {
             className="w-full rounded-lg border border-linear-border py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-linear-accent/40"
           />
         </div>
-        <select
+        <Select
           value={statusFilter || ''}
-          onChange={(event) => setStatusFilter(event.target.value || null)}
-          className="rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
-        >
-          <option value="">All Status</option>
-          <option value="PLANNED">Planned</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="PAUSED">Paused</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
+          onChange={(v) => setStatusFilter(v || null)}
+          options={[
+            { value: '', label: 'All Status' },
+            { value: 'PLANNED', label: 'Planned' },
+            { value: 'IN_PROGRESS', label: 'In Progress' },
+            { value: 'PAUSED', label: 'Paused' },
+            { value: 'COMPLETED', label: 'Completed' },
+            { value: 'CANCELLED', label: 'Cancelled' },
+          ]}
+          placeholder="All Status"
+        />
         <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-linear-elevated">
           <Filter className="h-4 w-4" />
           Filter
         </button>
-        <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-linear-elevated">
-          <ArrowUpDown className="h-4 w-4" />
-          Sort
-        </button>
+        <div className="flex items-center gap-1 rounded-lg border border-linear-border bg-linear-surface">
+          <Select
+            value={sortField}
+            onChange={(v) => setSortField(v as typeof sortField)}
+            options={[
+              { value: 'updatedAt', label: 'Updated' },
+              { value: 'createdAt', label: 'Created' },
+              { value: 'name', label: 'Name' },
+              { value: 'progress', label: 'Progress' },
+            ]}
+            size="sm"
+          />
+          <button
+            onClick={() => setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+            className="px-2 py-2 text-linear-text-secondary hover:text-linear-text"
+            title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -212,10 +258,12 @@ export default function ProjectsListRoute() {
       </AnimatePresence>
 
       {isLoading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-linear-accent/30 border-t-primary-500" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
-      ) : projects.length === 0 ? (
+      ) : sortedProjects.length === 0 ? (
         <div className="rounded-xl border border-linear-border bg-linear-surface py-16 text-center">
           <FolderKanban className="mx-auto mb-4 h-12 w-12 text-linear-text-tertiary" />
           <h3 className="mb-2 text-lg font-medium text-linear-text">No projects yet</h3>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +26,8 @@ import {
 import { API_URL } from '~/lib/api';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
+import { Select } from '~/components/ui/select';
+import { useToast } from '~/components/ui/toast';
 import { Badge } from '~/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
@@ -187,19 +189,15 @@ function CreateCycleModal({ isOpen, onClose, onCreate, teams, isPending, error }
           </div>
           <div>
             <label className="block text-sm font-medium text-linear-text mb-1">Team <span className="text-priority-urgent">*</span></label>
-            <select
+            <Select
               value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              required
-              className="w-full px-3 py-2 bg-linear-surface border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent text-linear-text"
-            >
-              <option value="">Select a team</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name} ({team.key})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setTeamId(v)}
+              options={[
+                { value: '', label: 'Select a team' },
+                ...teams.map((team) => ({ value: team.id, label: `${team.name} (${team.key})` })),
+              ]}
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-linear-text mb-1">Sprint Goal</label>
@@ -232,6 +230,13 @@ export default function CyclesList() {
   const { workspace } = useParams();
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { success, error: showError } = useToast();
+
+  useEffect(() => {
+    const handler = () => setShowCreateModal(true);
+    window.addEventListener('open-create-cycle', handler);
+    return () => window.removeEventListener('open-create-cycle', handler);
+  }, []);
   const [selectedCycle, setSelectedCycle] = useState<string | null>(null);
 
   // Fetch cycles
@@ -295,7 +300,9 @@ export default function CyclesList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
       setShowCreateModal(false);
+      success('Cycle created');
     },
+    onError: (err) => showError(err.message),
   });
 
   const startCycleMutation = useMutation({
@@ -313,7 +320,9 @@ export default function CyclesList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
       queryClient.invalidateQueries({ queryKey: ['active-cycle', workspace] });
+      success('Cycle started');
     },
+    onError: (err) => showError(err.message),
   });
 
   const completeCycleMutation = useMutation({
@@ -331,7 +340,9 @@ export default function CyclesList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cycles', workspace] });
       queryClient.invalidateQueries({ queryKey: ['active-cycle', workspace] });
+      success('Cycle completed');
     },
+    onError: (err) => showError(err.message),
   });
 
   const activeCycleData = (cycles ?? []).find((c: Cycle) => c.isActive) || activeCycleDataRaw;

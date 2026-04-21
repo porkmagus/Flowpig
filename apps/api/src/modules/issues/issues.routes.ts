@@ -96,6 +96,10 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           labels: {
             select: { id: true, name: true, color: true },
           },
+          subscriptions: {
+            where: { userId: request.user!.id },
+            select: { id: true },
+          },
           _count: {
             select: { comments: { where: { deletedAt: null } }, children: { where: { deletedAt: null } } },
           },
@@ -127,6 +131,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
         labels: issue.labels,
         commentCount: issue._count.comments,
         childrenCount: issue._count.children,
+        isSubscribed: issue.subscriptions.length > 0,
       })),
       meta: {
         page: pageNum,
@@ -189,7 +194,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
           orderBy: { createdAt: 'asc' },
         },
         subscriptions: {
-          where: { userId: (request as any).user!.id },
+          where: { userId: request.user!.id },
         },
         relations: {
           where: { deletedAt: null },
@@ -289,7 +294,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
     }
 
     const { title, description, teamId, projectId, cycleId, priority, assigneeId, labelIds, dueDate, parentId } = parseResult.data;
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     // Get team to generate identifier
@@ -427,7 +432,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { issueId } = request.params as { issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
 
     const parseResult = UpdateIssueSchema.safeParse(request.body);
     
@@ -624,7 +629,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { issueId } = request.params as { issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
 
     const issue = await fastify.prisma.issue.findFirst({
       where: {
@@ -661,7 +666,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
   fastify.get('/my-issues/grouped', {
     preHandler: [requireAuth, extractWorkspace]
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
@@ -842,7 +847,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
   fastify.post('/bulk-update', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { issueIds, updates } = request.body as {
       issueIds: string[];
       updates: {
@@ -919,7 +924,7 @@ export default async function issueRoutes(fastify: FastifyInstance) {
   fastify.post('/bulk-delete', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { issueIds } = request.body as { issueIds: string[] };
 
     if (!issueIds || issueIds.length === 0) {
@@ -959,5 +964,49 @@ export default async function issueRoutes(fastify: FastifyInstance) {
       success: true,
       deletedCount: issueIds.length,
     };
+  });
+
+  // Subscribe to issue
+  fastify.post('/:issueId/subscribe', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const userId = request.user!.id;
+    const { issueId } = request.params as { issueId: string };
+    const workspaceId = request.workspace!.id;
+
+    const issue = await fastify.prisma.issue.findFirst({
+      where: { id: issueId, workspaceId, deletedAt: null },
+    });
+    if (!issue) return reply.status(404).send({ error: 'Issue not found' });
+
+    await fastify.prisma.issueSubscription.upsert({
+      where: {
+        issueId_userId: { issueId, userId },
+      },
+      update: {},
+      create: { issueId, userId },
+    });
+
+    return { subscribed: true };
+  });
+
+  // Unsubscribe from issue
+  fastify.delete('/:issueId/subscribe', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const userId = request.user!.id;
+    const { issueId } = request.params as { issueId: string };
+    const workspaceId = request.workspace!.id;
+
+    const issue = await fastify.prisma.issue.findFirst({
+      where: { id: issueId, workspaceId, deletedAt: null },
+    });
+    if (!issue) return reply.status(404).send({ error: 'Issue not found' });
+
+    await fastify.prisma.issueSubscription.deleteMany({
+      where: { issueId, userId },
+    });
+
+    return { subscribed: false };
   });
 }

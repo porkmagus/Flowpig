@@ -97,7 +97,7 @@ export default async function issueRelationsRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { issueId } = request.params as { issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { relatedIssueId, type } = request.body as {
       relatedIssueId: string;
       type: 'RELATES_TO' | 'BLOCKS' | 'BLOCKED_BY' | 'DUPLICATES' | 'DUPLICATED_BY';

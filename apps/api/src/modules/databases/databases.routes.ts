@@ -336,15 +336,15 @@ export default async function databaseRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Database not found' });
     }
 
-    const rollups: Record<string, any> = {};
+    const rollups: Record<string, unknown> = {};
 
     for (const property of database.properties) {
-      const config = (property.config as any) || {};
+      const config = (property.config as Record<string, unknown> | null) || {};
       const {
         relationPropertyId,
         rollupPropertyId,
         function: rollupFunction = 'COUNT'
-      } = config;
+      } = config as Record<string, unknown>;
 
       if (!relationPropertyId) {
         rollups[property.name] = null;

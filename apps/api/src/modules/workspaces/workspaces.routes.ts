@@ -972,4 +972,103 @@ export default async function workspaceRoutes(fastify: FastifyInstance) {
       message: 'Invitation revoked.',
     };
   });
+
+  // Update workspace member role
+  fastify.patch('/:workspaceId/members/:memberId', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    if (!['OWNER', 'ADMIN'].includes(request.workspace!.role)) {
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: 'You do not have permission to manage members',
+      });
+    }
+
+    const { memberId } = request.params as { memberId: string };
+    const { role } = request.body as { role: string };
+    const validRoles = ['OWNER', 'ADMIN', 'MEMBER', 'GUEST'];
+
+    if (!validRoles.includes(role)) {
+      return reply.status(400).send({ error: 'Invalid role' });
+    }
+
+    // Prevent removing the last owner
+    if (role !== 'OWNER') {
+      const member = await fastify.prisma.workspaceMember.findUnique({
+        where: { id: memberId },
+      });
+      if (member?.role === 'OWNER') {
+        const ownerCount = await fastify.prisma.workspaceMember.count({
+          where: { workspaceId: request.workspace!.id, role: 'OWNER', deletedAt: null },
+        });
+        if (ownerCount <= 1) {
+          return reply.status(400).send({ error: 'Cannot change the role of the last owner' });
+        }
+      }
+    }
+
+    const updated = await fastify.prisma.workspaceMember.update({
+      where: { id: memberId },
+      data: { role: role as "OWNER" | "ADMIN" | "MEMBER" | "GUEST" },
+    });
+
+    return {
+      member: {
+        id: updated.id,
+        role: updated.role,
+        updatedAt: updated.updatedAt.toISOString(),
+      },
+    };
+  });
+
+  // Remove workspace member (soft delete)
+  fastify.delete('/:workspaceId/members/:memberId', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    if (!['OWNER', 'ADMIN'].includes(request.workspace!.role)) {
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: 'You do not have permission to remove members',
+      });
+    }
+
+    const { memberId } = request.params as { memberId: string };
+
+    const member = await fastify.prisma.workspaceMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!member || member.workspaceId !== request.workspace!.id) {
+      return reply.status(404).send({ error: 'Member not found' });
+    }
+
+    // Prevent removing the last owner
+    if (member.role === 'OWNER') {
+      const ownerCount = await fastify.prisma.workspaceMember.count({
+        where: { workspaceId: request.workspace!.id, role: 'OWNER', deletedAt: null },
+      });
+      if (ownerCount <= 1) {
+        return reply.status(400).send({ error: 'Cannot remove the last owner' });
+      }
+    }
+
+    await fastify.prisma.workspaceMember.update({
+      where: { id: memberId },
+      data: { deletedAt: new Date() },
+    });
+
+    return { success: true, message: 'Member removed' };
+  });
+
+  // List workspace labels
+  fastify.get('/:workspaceId/labels', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const labels = await fastify.prisma.label.findMany({
+      where: { workspaceId: request.workspace!.id },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, color: true },
+    });
+    return { labels };
+  });
 }

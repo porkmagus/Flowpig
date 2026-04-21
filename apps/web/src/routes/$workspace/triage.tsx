@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 import { API_URL } from '~/lib/runtime-config';
 import { useWorkspaceRealtime } from '~/lib/ws';
+import { getDescriptionText } from '~/lib/description';
 import { Badge } from '~/components/ui/badge';
+import { Select } from '~/components/ui/select';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
@@ -310,7 +312,7 @@ export default function TriagePage() {
   const filteredIssues = useMemo(() => {
     const filtered = triageIssues.filter((issue) => {
       const query = search.trim().toLowerCase();
-      const matchesSearch = query.length === 0 || issue.title.toLowerCase().includes(query) || issue.identifier.toLowerCase().includes(query) || issue.description?.toLowerCase().includes(query);
+      const matchesSearch = query.length === 0 || issue.title.toLowerCase().includes(query) || issue.identifier.toLowerCase().includes(query) || getDescriptionText(issue.description).toLowerCase().includes(query);
       const matchesPriority = priorityFilter === 'ALL' || issue.priority === priorityFilter;
       return matchesSearch && matchesPriority;
     });
@@ -383,18 +385,24 @@ export default function TriagePage() {
               <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search triage issues" className="w-full bg-transparent outline-none placeholder:text-linear-text-tertiary" />
             </label>
 
-            <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value as 'ALL' | keyof typeof priorityMeta)} className="rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text outline-none">
-              <option value="ALL">All priorities</option>
-              {Object.entries(priorityMeta).map(([key, meta]) => (
-                <option key={key} value={key}>{meta.label}</option>
-              ))}
-            </select>
+            <Select
+              value={priorityFilter}
+              onChange={(v) => setPriorityFilter(v as 'ALL' | keyof typeof priorityMeta)}
+              options={[
+                { value: 'ALL', label: 'All priorities' },
+                ...Object.entries(priorityMeta).map(([key, meta]) => ({ value: key, label: meta.label })),
+              ]}
+            />
 
-            <select value={sortMode} onChange={(event) => setSortMode(event.target.value as 'oldest' | 'priority' | 'newest')} className="rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text outline-none">
-              <option value="oldest">Sort by oldest</option>
-              <option value="priority">Sort by priority</option>
-              <option value="newest">Sort by newest</option>
-            </select>
+            <Select
+              value={sortMode}
+              onChange={(v) => setSortMode(v as 'oldest' | 'priority' | 'newest')}
+              options={[
+                { value: 'oldest', label: 'Sort by oldest' },
+                { value: 'priority', label: 'Sort by priority' },
+                { value: 'newest', label: 'Sort by newest' },
+              ]}
+            />
           </div>
         </CardContent>
       </Card>
@@ -452,7 +460,7 @@ export default function TriagePage() {
                           {issue.commentCount ? <Badge variant="outline">{issue.commentCount} comments</Badge> : null}
                         </div>
                         <Link to={`/${workspace}/issues/${issue.id}`} className="mt-2 block text-lg font-medium text-linear-text hover:text-linear-accent">{issue.title}</Link>
-                        {issue.description ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-linear-text-secondary">{issue.description}</p> : null}
+                        {issue.description ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-linear-text-secondary">{getDescriptionText(issue.description)}</p> : null}
                         <div className="mt-3 flex flex-wrap gap-2 text-xs text-linear-text-secondary">
                           <span>Created by {issue.creator.name || 'Unknown'}</span>
                           <span>{formatRelativeDays(issue.createdAt)}</span>
@@ -465,24 +473,39 @@ export default function TriagePage() {
                       <div className="grid w-full gap-3 xl:w-90">
                         <div className="grid gap-2 md:grid-cols-[1fr_1fr] xl:grid-cols-1">
                           <label className="grid gap-1 text-xs font-medium uppercase tracking-[0.16em] text-linear-text-tertiary">Assignee
-                            <select value={selectedAssigneeId} onChange={(event) => setAssignmentDrafts((current) => ({ ...current, [issue.id]: event.target.value }))} className="rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm font-normal text-linear-text outline-none">
-                              <option value="">Assign to me</option>
-                              {teamMembers.map((member) => <option key={member.id} value={member.user.id}>{member.user.name || member.user.email}</option>)}
-                            </select>
+                            <Select
+                              value={selectedAssigneeId}
+                              onChange={(v) => setAssignmentDrafts((current) => ({ ...current, [issue.id]: v }))}
+                              options={[
+                                { value: '', label: 'Assign to me' },
+                                ...teamMembers.map((member) => ({ value: member.user.id, label: member.user.name || member.user.email })),
+                              ]}
+                              size="sm"
+                            />
                           </label>
 
                           <label className="grid gap-1 text-xs font-medium uppercase tracking-[0.16em] text-linear-text-tertiary">Workflow state
-                            <select value={selectedWorkflowId} onChange={(event) => setWorkflowDrafts((current) => ({ ...current, [issue.id]: event.target.value }))} className="rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm font-normal text-linear-text outline-none">
-                              <option value="">Default team todo</option>
-                              {workflowStates.map((state) => <option key={state.id} value={state.id}>{state.name}</option>)}
-                            </select>
+                            <Select
+                              value={selectedWorkflowId}
+                              onChange={(v) => setWorkflowDrafts((current) => ({ ...current, [issue.id]: v }))}
+                              options={[
+                                { value: '', label: 'Default team todo' },
+                                ...workflowStates.map((state) => ({ value: state.id, label: state.name })),
+                              ]}
+                              size="sm"
+                            />
                           </label>
                         </div>
 
                         <div className="grid gap-2 md:grid-cols-[1fr_auto] xl:grid-cols-[1fr_auto]">
                           <Button className="gap-2" onClick={() => assignMutation.mutate({ issueId: issue.id, assigneeId: selectedAssigneeId || undefined, workflowStateId: selectedWorkflowId || undefined })} disabled={assignMutation.isPending}><UserPlus className="h-4 w-4" />Assign and route</Button>
                           <div className="grid grid-cols-[100px_auto] gap-2">
-                            <select value={snoozeDays} onChange={(event) => setSnoozeDrafts((current) => ({ ...current, [issue.id]: Number(event.target.value) }))} className="rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text outline-none">{snoozeOptions.map((days) => <option key={days} value={days}>{days}d</option>)}</select>
+                            <Select
+                              value={String(snoozeDays)}
+                              onChange={(v) => setSnoozeDrafts((current) => ({ ...current, [issue.id]: Number(v) }))}
+                              options={snoozeOptions.map((days) => ({ value: String(days), label: `${days}d` }))}
+                              size="sm"
+                            />
                             <Button variant="outline" className="gap-2" onClick={() => snoozeMutation.mutate({ issueId: issue.id, days: snoozeDays })} disabled={snoozeMutation.isPending}><Clock3 className="h-4 w-4" />Snooze</Button>
                           </div>
                         </div>

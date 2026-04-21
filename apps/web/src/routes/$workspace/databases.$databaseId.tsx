@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
+import { DatabaseView } from '~/components/database-views/database-view';
 import { AnimatedPage } from '@flowpigdev/ui';
 import {
   ChevronLeft,
@@ -27,6 +29,8 @@ import {
   CheckSquare,
 
   Tags,
+  Image,
+  Clock,
 } from 'lucide-react';
 
 interface Property {
@@ -46,7 +50,7 @@ interface Row {
 interface View {
   id: string;
   name: string;
-  type: 'TABLE' | 'BOARD' | 'CALENDAR' | 'LIST';
+  type: 'TABLE' | 'BOARD' | 'CALENDAR' | 'LIST' | 'GALLERY' | 'TIMELINE';
   config: Record<string, unknown>;
 }
 
@@ -83,6 +87,8 @@ export default function DatabaseDetailRoute() {
   const [newPropertyType, setNewPropertyType] = useState('TEXT');
   const [editingCell, setEditingCell] = useState<{ rowId: string; propertyId: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [showRowEdit, setShowRowEdit] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['database', workspace, databaseId],
@@ -96,8 +102,8 @@ export default function DatabaseDetailRoute() {
     },
   });
 
-  const database: Database | undefined = data?.database
-    ? { ...data.database, rows: data.rows || [] }
+  const database = data?.database
+    ? { ...data.database, rows: data.rows || [] } as Database & { rows: Row[] }
     : undefined;
 
   const activeView = useMemo(() => {
@@ -365,6 +371,8 @@ export default function DatabaseDetailRoute() {
             {view.type === 'BOARD' && <Kanban className="w-4 h-4" />}
             {view.type === 'CALENDAR' && <Calendar className="w-4 h-4" />}
             {view.type === 'LIST' && <List className="w-4 h-4" />}
+            {view.type === 'GALLERY' && <Image className="w-4 h-4" />}
+            {view.type === 'TIMELINE' && <Clock className="w-4 h-4" />}
             {view.name}
           </button>
         ))}
@@ -508,6 +516,25 @@ export default function DatabaseDetailRoute() {
         </div>
       )}
 
+      {(activeView?.type === 'GALLERY' || activeView?.type === 'TIMELINE') && (
+        <div className="flex-1 overflow-auto">
+          <DatabaseView
+            view={{
+              id: activeView.id,
+              name: activeView.name,
+              type: activeView.type.toLowerCase() as any,
+              config: activeView.config,
+            }}
+            database={database}
+            onRowClick={(rowId) => {
+              setEditingRow(rowId);
+              setShowRowEdit(true);
+            }}
+            onAddRow={() => addRowMutation.mutate()}
+          />
+        </div>
+      )}
+
       {/* Add Property Modal */}
       <AnimatePresence>
         {showAddProperty && (
@@ -540,19 +567,20 @@ export default function DatabaseDetailRoute() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-linear-text-secondary mb-1">Type</label>
-                  <select
+                  <Select
                     value={newPropertyType}
-                    onChange={(e) => setNewPropertyType(e.target.value)}
-                    className="w-full px-3 py-2 border border-linear-border rounded-lg focus:ring-2 focus:ring-linear-accent/40"
-                  >
-                    <option value="TEXT">Text</option>
-                    <option value="NUMBER">Number</option>
-                    <option value="DATE">Date</option>
-                    <option value="SELECT">Select</option>
-                    <option value="MULTI_SELECT">Multi-select</option>
-                    <option value="STATUS">Status</option>
-                    <option value="CHECKBOX">Checkbox</option>
-                  </select>
+                    onChange={(v) => setNewPropertyType(v)}
+                    options={[
+                      { value: 'TEXT', label: 'Text' },
+                      { value: 'NUMBER', label: 'Number' },
+                      { value: 'DATE', label: 'Date' },
+                      { value: 'SELECT', label: 'Select' },
+                      { value: 'MULTI_SELECT', label: 'Multi-select' },
+                      { value: 'STATUS', label: 'Status' },
+                      { value: 'CHECKBOX', label: 'Checkbox' },
+                    ]}
+                    className="w-full"
+                  />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-4">
                   <button

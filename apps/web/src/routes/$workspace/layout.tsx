@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useGotoShortcuts } from '~/hooks/use-goto-shortcuts';
 import { Navigate, Outlet, Link, useParams, useLocation, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,7 +52,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/issues`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { issues: any[] };
+        return data.issues || [];
       },
       staleTime: 60 * 1000,
     });
@@ -61,7 +63,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/notes`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { notes: any[] };
+        return data.notes || [];
       },
       staleTime: 60 * 1000,
     });
@@ -71,7 +74,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/cycles`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { cycles: any[] };
+        return data.cycles || [];
       },
       staleTime: 60 * 1000,
     });
@@ -81,7 +85,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/databases`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { databases: any[] };
+        return data.databases || [];
       },
       staleTime: 60 * 1000,
     });
@@ -91,7 +96,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/members`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { members: any[] };
+        return data.members || [];
       },
       staleTime: 60 * 1000,
     });
@@ -101,7 +107,8 @@ function prefetchRouteData(queryClient: ReturnType<typeof useQueryClient>, works
       queryFn: async () => {
         const res = await fetch(`${API_URL}/workspaces/${workspace}/projects`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed');
-        return res.json();
+        const data = await res.json() as { projects: any[] };
+        return data.projects || [];
       },
       staleTime: 60 * 1000,
     });
@@ -166,6 +173,7 @@ function NavSection({ title, items, activePath }: { title?: string; items: NavIt
 }
 
 export default function WorkspaceLayout() {
+  useGotoShortcuts();
   const { workspace } = useParams();
   const navigate = useNavigate();
   const { user, isLoading, logout } = useAuth();
@@ -177,6 +185,17 @@ export default function WorkspaceLayout() {
       window.localStorage.setItem(LAST_WORKSPACE_KEY, workspace);
     }
   }, [workspace]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        createIssueModal.open();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [createIssueModal]);
 
   // Get unread notification count for sidebar badge
   const { data: unreadCountData } = useQuery({
@@ -201,7 +220,7 @@ export default function WorkspaceLayout() {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch workspace');
-      return response.json() as { workspace: { settings?: { appearance?: { theme?: 'light' | 'dark' | 'system' } } | null } };
+      return response.json() as Promise<{ workspace: { settings?: { appearance?: { theme?: 'light' | 'dark' | 'system' } } | null } }>;
     },
   });
 

@@ -125,7 +125,7 @@ export default async function teamRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
     const { name, key, color, description } = request.body as {
       name: string;

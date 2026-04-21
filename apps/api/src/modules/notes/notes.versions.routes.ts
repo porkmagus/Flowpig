@@ -243,7 +243,7 @@ export default async function noteVersionRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId, versionId } = request.params as { noteId: string; versionId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     const note = await fastify.prisma.note.findFirst({

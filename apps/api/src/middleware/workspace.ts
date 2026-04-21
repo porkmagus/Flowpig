@@ -1,8 +1,9 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
+import type { AuthenticatedRequest } from '../plugins/auth.js';
 
 // Extend request with workspace context
-export interface WorkspaceRequest extends FastifyRequest {
+export interface WorkspaceRequest extends AuthenticatedRequest {
   workspace?: {
     id: string;
     slug: string;
@@ -31,7 +32,7 @@ export async function extractWorkspace(
   // Accept either form here so all workspace-scoped APIs resolve consistently.
   const member = await request.server.prisma.workspaceMember.findFirst({
     where: {
-      userId: (request as any).user?.id,
+      userId: request.user?.id,
       deletedAt: null,
       OR: [
         {

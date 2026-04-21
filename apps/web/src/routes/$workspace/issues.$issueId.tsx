@@ -38,7 +38,9 @@ import {
   UserMinus,
   Trash,
   MessageCircle,
-  GitCommit
+  GitCommit,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
@@ -50,6 +52,8 @@ import { Button } from '~/components/ui/button';
 import { Badge } from '~/components/ui/badge';
 import { Input } from '~/components/ui/input';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
+import { useToast } from '~/components/ui/toast';
+import { getDescriptionText } from '~/lib/description';
 
 interface Comment {
   id: string;
@@ -143,7 +147,8 @@ export default function IssueDetail() {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error('Failed to fetch issue');
-      return response.json();
+      const payload = await response.json() as { issue?: any };
+      return payload.issue;
     },
   });
 
@@ -296,6 +301,48 @@ export default function IssueDetail() {
       queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
       navigate(`/${workspace}/issues`);
     },
+  });
+
+  const { success: showSuccess, error: showError } = useToast();
+
+  const subscribeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/issues/${issueId}/subscribe`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) throw new Error('Failed to subscribe');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      showSuccess('Subscribed');
+    },
+    onError: (err: Error) => showError(err.message),
+  });
+
+  const unsubscribeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(
+        `${API_URL}/workspaces/${workspace}/issues/${issueId}/subscribe`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+      if (!response.ok) throw new Error('Failed to unsubscribe');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      showSuccess('Unsubscribed');
+    },
+    onError: (err: Error) => showError(err.message),
   });
 
   // Handlers
@@ -473,7 +520,7 @@ export default function IssueDetail() {
             ) : (
               <div className="prose prose-sm max-w-none text-linear-text-secondary">
                 {issue.description ? (
-                  <div className="whitespace-pre-wrap">{issue.description}</div>
+                  <div className="whitespace-pre-wrap">{getDescriptionText(issue.description)}</div>
                 ) : (
                   <p className="text-linear-text-tertiary italic">No description provided</p>
                 )}
@@ -954,6 +1001,20 @@ export default function IssueDetail() {
 
           {/* Actions */}
           <div className="bg-linear-elevated rounded-lg border border-linear-border p-3 space-y-2">
+            <button
+              onClick={() => {
+                if (issue.isSubscribed) {
+                  unsubscribeMutation.mutate();
+                } else {
+                  subscribeMutation.mutate();
+                }
+              }}
+              disabled={subscribeMutation.isPending || unsubscribeMutation.isPending}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:text-linear-text hover:bg-linear-surface rounded-md transition-colors"
+            >
+              {issue.isSubscribed ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+              {issue.isSubscribed ? 'Unsubscribe' : 'Subscribe'}
+            </button>
             <button
               onClick={copyIssueLink}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-linear-text-secondary hover:text-linear-text hover:bg-linear-surface rounded-md transition-colors"

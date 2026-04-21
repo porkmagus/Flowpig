@@ -86,7 +86,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { issueId } = request.params as { issueId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { content, parentId } = request.body as { content: string; parentId?: string };
 
     if (!content || content.trim().length === 0) {
@@ -157,7 +157,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { commentId } = request.params as { commentId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { content } = request.body as { content: string };
 
     const comment = await fastify.prisma.comment.findFirst({
@@ -208,7 +208,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { commentId } = request.params as { commentId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
 
     const comment = await fastify.prisma.comment.findFirst({
       where: {
@@ -236,7 +236,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { commentId } = request.params as { commentId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { emoji } = request.body as { emoji: string };
 
     const comment = await fastify.prisma.comment.findFirst({
@@ -281,7 +281,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { commentId } = request.params as { commentId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const { emoji } = request.query as { emoji: string };
 
     await fastify.prisma.commentReaction.updateMany({

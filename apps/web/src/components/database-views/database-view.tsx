@@ -44,10 +44,7 @@ interface DatabaseViewProps {
     }>;
     rows: Array<{
       id: string;
-      cells: Array<{
-        propertyId: string;
-        value: any;
-      }>;
+      cells: Record<string, any>;
     }>;
   };
   onRowClick?: (rowId: string) => void;
@@ -87,8 +84,7 @@ export function DatabaseView({
   const filteredRows = database.rows.filter(row => {
     if (!searchQuery) return true;
     const searchLower = searchQuery.toLowerCase();
-    return row.cells.some(cell => {
-      const value = cell.value;
+    return Object.values(row.cells).some(value => {
       if (value === null || value === undefined) return false;
       return String(value).toLowerCase().includes(searchLower);
     });
@@ -176,8 +172,7 @@ export function DatabaseView({
                     className="hover:bg-linear-surface cursor-pointer"
                   >
                     {database.properties.map(prop => {
-                      const cell = row.cells.find(c => c.propertyId === prop.id);
-                      const value = cell?.value;
+                      const value = row.cells[prop.id];
                       
                       return (
                         <td 

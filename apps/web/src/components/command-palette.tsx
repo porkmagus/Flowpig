@@ -192,11 +192,15 @@ export function CommandPalette({ workspaceId, workspaceSlug }: CommandPalettePro
         setOpen(false);
         break;
       case 'create-project':
-        navigate(`/${currentWorkspace}/projects`);
+        window.dispatchEvent(new CustomEvent('open-create-project'));
         setOpen(false);
         break;
       case 'create-note':
-        navigate(`/${currentWorkspace}/notes`);
+        window.dispatchEvent(new CustomEvent('open-create-note'));
+        setOpen(false);
+        break;
+      case 'create-cycle':
+        window.dispatchEvent(new CustomEvent('open-create-cycle'));
         setOpen(false);
         break;
       case 'toggle-theme':

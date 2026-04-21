@@ -5,6 +5,7 @@ import { API_URL } from '~/lib/api';
 import { useCreateIssueModal } from '~/components/create-issue-modal';
 import { AnimatedList, AnimatedItem, AnimatedCard } from '@flowpigdev/ui';
 import { CircleDot, FileText, Users, ArrowRight } from 'lucide-react';
+import { Skeleton, SkeletonCard, SkeletonList } from '~/components/ui/skeleton';
 
 interface WorkspaceStats {
   workspace: {
@@ -38,8 +39,26 @@ export default function WorkspaceIndex() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-linear-accent/30 border-t-linear-accent rounded-full animate-spin" />
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-linear-border bg-linear-surface p-5 space-y-3">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-6 w-16" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-6 w-32" />
+            <SkeletonList count={5} />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-32" />
+            <SkeletonCard />
+          </div>
+        </div>
       </div>
     );
   }

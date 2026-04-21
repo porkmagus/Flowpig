@@ -118,7 +118,7 @@ export default async function billingRoutes(fastify: FastifyInstance) {
         return reply.status(503).send({ error: 'Stripe SDK not installed' });
       }
 
-      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as any });
+      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as never });
       const billing = await getOrCreateBilling(workspaceId);
 
       const priceKey = `${plan}_${interval.toUpperCase()}`;
@@ -168,7 +168,7 @@ export default async function billingRoutes(fastify: FastifyInstance) {
         return reply.status(503).send({ error: 'Stripe SDK not installed' });
       }
 
-      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as any });
+      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as never });
       const appUrl = process.env.APP_URL || 'http://localhost:5173';
 
       const session = await stripe.billingPortal.sessions.create({
@@ -202,7 +202,7 @@ export async function stripeWebhookRoute(fastify: FastifyInstance) {
       const { default: Stripe } = await import('stripe').catch(() => ({ default: null }));
       if (!Stripe) return reply.status(503).send({ error: 'Stripe SDK not installed' });
 
-      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as any });
+      const stripe = new Stripe(stripeKey, { apiVersion: '2024-04-10' as never });
 
       const sig = request.headers['stripe-signature'] as string;
       let event: import('stripe').Stripe.Event;
@@ -237,16 +237,16 @@ export async function stripeWebhookRoute(fastify: FastifyInstance) {
                 status: 'ACTIVE',
                 stripeCustomerId: session.customer as string,
                 stripeSubscriptionId: subscription?.id,
-                currentPeriodStart: subscription ? new Date((subscription as any).current_period_start * 1000) : undefined,
-                currentPeriodEnd: subscription ? new Date((subscription as any).current_period_end * 1000) : undefined,
+                currentPeriodStart: subscription ? new Date(subscription.current_period_start * 1000) : undefined,
+                currentPeriodEnd: subscription ? new Date(subscription.current_period_end * 1000) : undefined,
               },
               update: {
                 plan,
                 status: 'ACTIVE',
                 stripeCustomerId: session.customer as string,
                 stripeSubscriptionId: subscription?.id,
-                currentPeriodStart: subscription ? new Date((subscription as any).current_period_start * 1000) : undefined,
-                currentPeriodEnd: subscription ? new Date((subscription as any).current_period_end * 1000) : undefined,
+                currentPeriodStart: subscription ? new Date(subscription.current_period_start * 1000) : undefined,
+                currentPeriodEnd: subscription ? new Date(subscription.current_period_end * 1000) : undefined,
               },
             });
 
@@ -276,8 +276,8 @@ export async function stripeWebhookRoute(fastify: FastifyInstance) {
                 plan,
                 status,
                 cancelAtPeriodEnd: sub.cancel_at_period_end,
-                currentPeriodStart: new Date((sub as any).current_period_start * 1000),
-                currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
+                currentPeriodStart: new Date(sub.current_period_start * 1000),
+                currentPeriodEnd: new Date(sub.current_period_end * 1000),
               },
             });
 

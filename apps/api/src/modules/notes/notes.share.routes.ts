@@ -16,7 +16,7 @@ export default async function shareRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId } = request.params as { noteId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     const note = await fastify.prisma.note.findFirst({
@@ -91,7 +91,7 @@ export default async function shareRoutes(fastify: FastifyInstance) {
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId } = request.params as { noteId: string };
     const { publicAccess } = request.body as { publicAccess: 'PRIVATE' | 'READONLY' | 'COMMENT' | 'EDIT' };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     const note = await fastify.prisma.note.findFirst({
@@ -151,7 +151,7 @@ export default async function shareRoutes(fastify: FastifyInstance) {
       userId?: string;
       permission?: 'VIEW' | 'COMMENT' | 'EDIT';
     };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     if (!email && !targetUserId) {
@@ -228,7 +228,7 @@ export default async function shareRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace],
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId, shareId } = request.params as { noteId: string; shareId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     const note = await fastify.prisma.note.findFirst({

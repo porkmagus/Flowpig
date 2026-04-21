@@ -6,6 +6,7 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Bold,
   Italic,
@@ -22,6 +23,8 @@ import {
   Undo,
   Redo,
 } from 'lucide-react';
+import { SlashCommandExtension, slashCommandProps, setSlashCommandUpdater } from './editor-slash-extension';
+import { SlashCommandList, type SlashCommandRef } from './editor-slash-commands';
 
 interface RichTextEditorProps {
   content?: object;
@@ -36,6 +39,11 @@ export function RichTextEditor({
   placeholder = 'Start typing...',
   editable = true,
 }: RichTextEditorProps) {
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const slashMenuRef = useRef<HTMLDivElement>(null);
+  const slashListRef = useRef<SlashCommandRef>(null);
+  const [, forceUpdate] = useState({});
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -54,6 +62,7 @@ export function RichTextEditor({
       TaskItem.configure({
         nested: true,
       }),
+      SlashCommandExtension,
     ],
     content: content || { type: 'doc', content: [] },
     editable,
@@ -61,6 +70,47 @@ export function RichTextEditor({
       onChange?.(editor.getJSON());
     },
   });
+
+  useEffect(() => {
+    setSlashCommandUpdater(() => {
+      const hasProps = slashCommandProps !== null;
+      setShowSlashMenu(hasProps);
+      forceUpdate({});
+    });
+    return () => setSlashCommandUpdater(null);
+  }, []);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!showSlashMenu || !slashCommandProps) return;
+      if (slashListRef.current) {
+        const handled = slashListRef.current.onKeyDown({ event });
+        if (handled) {
+          event.preventDefault();
+        }
+      }
+    };
+
+    const view = editor.view;
+    view.dom.addEventListener('keydown', handleKeyDown);
+    return () => {
+      view.dom.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [editor, showSlashMenu]);
+
+  const slashMenuPosition = useCallback(() => {
+    if (!slashCommandProps?.clientRect) return { top: 0, left: 0 };
+    const rect = slashCommandProps.clientRect();
+    if (!rect) return { top: 0, left: 0 };
+    const editorRect = editor?.view.dom.getBoundingClientRect();
+    if (!editorRect) return { top: rect.bottom + 8, left: rect.left };
+    return {
+      top: rect.bottom - editorRect.top + 8,
+      left: rect.left - editorRect.left,
+    };
+  }, [editor]);
 
   if (!editor) {
     return null;
@@ -90,8 +140,10 @@ export function RichTextEditor({
     </button>
   );
 
+  const pos = slashMenuPosition();
+
   return (
-    <div className="border border-linear-border rounded-lg overflow-hidden">
+    <div className="border border-linear-border rounded-lg overflow-hidden relative">
       {/* Toolbar */}
       {editable && (
         <div className="flex items-center gap-1 p-2 border-b border-linear-border bg-linear-elevated/50">
@@ -271,6 +323,21 @@ export function RichTextEditor({
         editor={editor}
         className="prose prose-sm max-w-none p-4 min-h-50 focus:outline-none"
       />
+
+      {/* Slash Command Menu */}
+      {showSlashMenu && slashCommandProps && (
+        <div
+          ref={slashMenuRef}
+          className="absolute z-50"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          <SlashCommandList
+            ref={slashListRef}
+            items={slashCommandProps.items}
+            command={slashCommandProps.command}
+          />
+        </div>
+      )}
     </div>
   );
 }

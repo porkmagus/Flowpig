@@ -32,7 +32,9 @@ import { API_URL } from '~/lib/api';
 import { useAuth } from '~/lib/auth-client';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
+import { Skeleton, SkeletonText, SkeletonCard } from '~/components/ui/skeleton';
 import { Input } from '~/components/ui/input';
+import { Select } from '~/components/ui/select';
 import { Badge } from '~/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
 import { FadeIn } from '~/components/ui/motion';
@@ -215,8 +217,16 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-linear-accent" />
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
@@ -428,12 +438,13 @@ function MemberSettings({ workspace }: { workspace?: string }) {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to load members');
-      return response.json() as Promise<{ members: WorkspaceMemberRecord[] }>;
+      const payload = await response.json() as { members: WorkspaceMemberRecord[] };
+      return payload.members || [];
     },
     enabled: !!workspace,
   });
 
-  const members = data?.members || [];
+  const members = data || [];
   const canManageInvites = members.some(
     (member) => member.userId === user?.id && ['OWNER', 'ADMIN'].includes(member.role)
   );
@@ -556,15 +567,15 @@ function MemberSettings({ workspace }: { workspace?: string }) {
                   placeholder="teammate@company.com"
                   type="email"
                 />
-                <select
+                <Select
                   value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'MEMBER' | 'GUEST')}
-                  className="h-10 rounded-lg border border-linear-border bg-linear-surface px-3 text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
-                >
-                  <option value="MEMBER">Member</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="GUEST">Guest</option>
-                </select>
+                  onChange={(v) => setInviteRole(v as 'ADMIN' | 'MEMBER' | 'GUEST')}
+                  options={[
+                    { value: 'MEMBER', label: 'Member' },
+                    { value: 'ADMIN', label: 'Admin' },
+                    { value: 'GUEST', label: 'Guest' },
+                  ]}
+                />
                 <Button
                   onClick={() => {
                     setMessage(null);

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedPage } from '@flowpigdev/ui';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
 import {
   ArrowUpRight,
   Calendar,
@@ -221,17 +222,15 @@ export default function ProjectDetailRoute() {
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Status</label>
-                  <select
+                  <Select
                     value={initiativeStatus}
-                    onChange={(event) => setInitiativeStatus(event.target.value as (typeof initiativeStatusOptions)[number])}
-                    className="w-full rounded-lg border border-linear-border px-3 py-2 focus:ring-2 focus:ring-linear-accent/40"
-                  >
-                    {initiativeStatusOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option.replaceAll('_', ' ')}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setInitiativeStatus(v as (typeof initiativeStatusOptions)[number])}
+                    options={initiativeStatusOptions.map((option) => ({
+                      value: option,
+                      label: option.replaceAll('_', ' '),
+                    }))}
+                    className="w-full"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-linear-text-secondary">Description</label>
@@ -296,17 +295,15 @@ export default function ProjectDetailRoute() {
                 placeholder="Description"
               />
               <div className="flex items-center gap-2">
-                <select
+                <Select
                   value={editStatus}
-                  onChange={(event) => setEditStatus(event.target.value as Project['status'])}
-                  className="rounded-lg border border-linear-border px-3 py-2 text-sm"
-                >
-                  {Object.keys(statusConfig).map((option) => (
-                    <option key={option} value={option}>
-                      {option.replaceAll('_', ' ')}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setEditStatus(v as Project['status'])}
+                  options={Object.keys(statusConfig).map((option) => ({
+                    value: option,
+                    label: option.replaceAll('_', ' '),
+                  }))}
+                  size="sm"
+                />
                 <button
                   onClick={() => updateMutation.mutate()}
                   disabled={updateMutation.isPending || !editName.trim()}

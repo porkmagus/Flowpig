@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '~/lib/api';
+import { Select } from '~/components/ui/select';
 import { 
   Share2, 
   Link, 
@@ -277,15 +278,12 @@ export function ShareDialog({ noteId, workspace, onClose }: ShareDialogProps) {
                     className="w-full pl-10 pr-4 py-2 border border-linear-border rounded-lg focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
                   />
                 </div>
-                <select
+                <Select
                   value={selectedPermission}
-                  onChange={(e) => setSelectedPermission(e.target.value as any)}
-                  className="px-3 py-2 border border-linear-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
-                >
-                  {permissions.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setSelectedPermission(v as any)}
+                  options={permissions.map((p) => ({ value: p.value, label: p.label }))}
+                  size="sm"
+                />
                 <button
                   type="submit"
                   disabled={!emailInput.trim() || inviteMutation.isPending}

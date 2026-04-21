@@ -59,12 +59,13 @@ export default async function noteRoutes(fastify: FastifyInstance) {
   fastify.get('/', { 
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
-    const { search, parentId, page = '1', limit = '50' } = 
+    const { search, parentId, page = '1', limit = '50', archived } = 
       request.query as { 
         search?: string;
         parentId?: string;
         page?: string;
         limit?: string;
+        archived?: string;
       };
 
     const pageNum = parseInt(page, 10);
@@ -74,7 +75,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     const where: any = {
       workspaceId: request.workspace!.id,
       deletedAt: null,
-      isArchived: false,
+      isArchived: archived === 'true',
     };
 
     if (parentId) {
@@ -190,7 +191,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
           orderBy: { createdAt: 'asc' },
         },
         subscriptions: {
-          where: { userId: (request as any).user!.id },
+          where: { userId: request.user!.id },
         },
       },
     });
@@ -243,7 +244,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     }
 
     const { title, content, emoji, parentId } = parseResult.data;
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
     const workspaceId = request.workspace!.id;
 
     // Generate unique slug
@@ -305,7 +306,7 @@ export default async function noteRoutes(fastify: FastifyInstance) {
     preHandler: [requireAuth, extractWorkspace] 
   }, async (request: WorkspaceRequest, reply) => {
     const { noteId } = request.params as { noteId: string };
-    const userId = (request as any).user!.id;
+    const userId = request.user!.id;
 
     const parseResult = UpdateNoteSchema.safeParse(request.body);
     

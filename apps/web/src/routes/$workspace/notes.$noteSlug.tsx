@@ -7,6 +7,7 @@ import { useAuth } from '~/lib/auth-client';
 import { AnimatedPage } from '@flowpigdev/ui';
 import { RichTextEditor } from '~/components/rich-text-editor';
 import { FileUploader } from '~/components/file-uploader';
+import { EmojiPicker } from '~/components/emoji-picker';
 import { ShareDialog } from '~/components/share-dialog';
 import {
   ArrowLeft,
@@ -22,6 +23,8 @@ import {
   Clock,
   Edit3,
   History,
+  Image,
+  X,
 } from 'lucide-react';
 import { NoteHistory } from '~/components/note-history';
 
@@ -96,6 +99,8 @@ export default function NoteDetailRoute() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState<Record<string, unknown> | null>(null);
   const [editEmoji, setEditEmoji] = useState<string | null>(null);
+  const [editCoverImage, setEditCoverImage] = useState<string | null>(null);
+  const [showEmojiPickerPopover, setShowEmojiPickerPopover] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
   const [showActions, setShowActions] = useState(false);
@@ -124,6 +129,7 @@ export default function NoteDetailRoute() {
       setEditTitle(note.title);
       setEditContent(note.content);
       setEditEmoji(note.emoji);
+      setEditCoverImage(note.coverImage);
     }
   }, [note, isEditing]);
 
@@ -241,6 +247,7 @@ export default function NoteDetailRoute() {
       title: editTitle,
       content: editContent,
       emoji: editEmoji,
+      coverImage: editCoverImage,
     });
     setIsEditing(false);
   };
@@ -305,10 +312,50 @@ export default function NoteDetailRoute() {
       </div>
 
       {/* Cover Image */}
-      {note.coverImage && (
+      {isEditing ? (
+        <div className="mb-4">
+          {editCoverImage ? (
+            <div className="relative rounded-xl overflow-hidden h-64 bg-linear-elevated mb-3">
+              <img src={editCoverImage} alt="" className="w-full h-full object-cover" />
+              <button
+                onClick={() => setEditCoverImage(null)}
+                className="absolute top-3 right-3 p-1.5 rounded-lg bg-linear-elevated/80 text-linear-text hover:bg-linear-elevated"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="mb-3">
+              <FileUploader
+                workspaceId={workspace!}
+                accept="image/*"
+                multiple={false}
+                onUploadComplete={(files) => {
+                  if (files[0]?.url) setEditCoverImage(files[0].url);
+                }}
+              />
+            </div>
+          )}
+          <input
+            type="text"
+            value={editCoverImage || ''}
+            onChange={(e) => setEditCoverImage(e.target.value || null)}
+            placeholder="Or paste a cover image URL..."
+            className="w-full rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
+          />
+        </div>
+      ) : note.coverImage ? (
         <div className="mb-8 rounded-xl overflow-hidden h-64 bg-linear-elevated">
           <img src={note.coverImage} alt="" className="w-full h-full object-cover" />
         </div>
+      ) : (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="mb-4 text-sm text-linear-text-tertiary hover:text-linear-text-secondary flex items-center gap-1.5 transition-colors"
+        >
+          <Image className="w-4 h-4" />
+          Add cover
+        </button>
       )}
 
       {/* Header */}
@@ -316,17 +363,24 @@ export default function NoteDetailRoute() {
         {isEditing ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  const emojis = ['📄', '📝', '📋', '📊', '🎯', '💡', '🚀', '📚', '🔧', '🎨', '📱', '💻'];
-                  const currentIndex = emojis.indexOf(editEmoji || '📄');
-                  const nextEmoji = emojis[(currentIndex + 1) % emojis.length];
-                  setEditEmoji(nextEmoji);
-                }}
-                className="text-4xl hover:scale-110 transition-transform p-2 rounded-lg hover:bg-linear-elevated"
-              >
-                {editEmoji || '📄'}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowEmojiPickerPopover(!showEmojiPickerPopover)}
+                  className="text-4xl hover:scale-110 transition-transform p-2 rounded-lg hover:bg-linear-elevated"
+                >
+                  {editEmoji || '📄'}
+                </button>
+                {showEmojiPickerPopover && (
+                  <EmojiPicker
+                    value={editEmoji || ''}
+                    onChange={(emoji) => {
+                      setEditEmoji(emoji);
+                      setShowEmojiPickerPopover(false);
+                    }}
+                    onClose={() => setShowEmojiPickerPopover(false)}
+                  />
+                )}
+              </div>
               <input
                 type="text"
                 value={editTitle}
@@ -349,6 +403,7 @@ export default function NoteDetailRoute() {
                   setEditTitle(note.title);
                   setEditContent(note.content);
                   setEditEmoji(note.emoji);
+                  setEditCoverImage(note.coverImage);
                 }}
                 className="text-linear-text-secondary hover:text-linear-text px-4 py-2"
               >

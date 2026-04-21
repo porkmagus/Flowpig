@@ -10,10 +10,7 @@ import { ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
 interface TimelineViewProps {
   rows: Array<{
     id: string;
-    cells: Array<{
-      propertyId: string;
-      value: any;
-    }>;
+    cells: Record<string, any>;
   }>;
   properties: Array<{
     id: string;
@@ -44,8 +41,7 @@ export function TimelineView({
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const getCellValue = (row: any, propertyId: string) => {
-    const cell = row.cells.find((c: any) => c.propertyId === propertyId);
-    return cell?.value;
+    return row.cells[propertyId];
   };
 
   // Show 4 weeks of data

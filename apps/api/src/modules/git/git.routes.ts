@@ -565,7 +565,9 @@ export default async function gitIntegrationRoutes(fastify: FastifyInstance) {
     // This is a simplified version - real implementation should verify signatures
     
     const event = request.headers['x-github-event'] || request.headers['x-gitlab-event'];
-    const payload = request.body as any;
+    // Webhook payloads vary by provider (GitHub vs GitLab) and event type,
+    // so we use a permissive type here.
+    const payload = request.body as Record<string, any>;
 
     try {
       const integration = await fastify.prisma.gitIntegration.findUnique({

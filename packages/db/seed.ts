@@ -281,6 +281,121 @@ async function main() {
 
   console.log('✅ Created sample notes');
 
+  // Create sample database
+  const database = await prisma.database.upsert({
+    where: { id: 'db_sample_001' },
+    update: {},
+    create: {
+      id: 'db_sample_001',
+      workspaceId: workspace.id,
+      name: 'Product Tasks',
+      description: 'Track product tasks and features',
+    },
+  });
+
+  // Create database views
+  await prisma.databaseView.upsert({
+    where: { id: 'dbv_sample_001' },
+    update: {},
+    create: {
+      id: 'dbv_sample_001',
+      databaseId: database.id,
+      name: 'All Tasks',
+      type: 'TABLE',
+    },
+  });
+
+  // Create database properties
+  const titleProp = await prisma.databaseProperty.upsert({
+    where: { id: 'dbp_title_001' },
+    update: {},
+    create: {
+      id: 'dbp_title_001',
+      databaseId: database.id,
+      name: 'Title',
+      type: 'TITLE',
+      order: 0,
+      required: true,
+    },
+  });
+
+  const statusProp = await prisma.databaseProperty.upsert({
+    where: { id: 'dbp_status_001' },
+    update: {},
+    create: {
+      id: 'dbp_status_001',
+      databaseId: database.id,
+      name: 'Status',
+      type: 'STATUS',
+      order: 1,
+      config: { options: [{ id: 'todo', name: 'To Do', color: '#6E6E6E' }, { id: 'in_progress', name: 'In Progress', color: '#F2A50C' }, { id: 'done', name: 'Done', color: '#0D9B6A' }] },
+    },
+  });
+
+  const priorityProp = await prisma.databaseProperty.upsert({
+    where: { id: 'dbp_priority_001' },
+    update: {},
+    create: {
+      id: 'dbp_priority_001',
+      databaseId: database.id,
+      name: 'Priority',
+      type: 'SELECT',
+      order: 2,
+      config: { options: [{ id: 'low', name: 'Low', color: '#6E6E6E' }, { id: 'medium', name: 'Medium', color: '#F2A50C' }, { id: 'high', name: 'High', color: '#E85913' }] },
+    },
+  });
+
+  // Create sample rows
+  const rows = [
+    { title: 'Dark mode support', status: 'done', priority: 'medium' },
+    { title: 'Command palette', status: 'in_progress', priority: 'high' },
+    { title: 'Mobile responsiveness', status: 'todo', priority: 'low' },
+  ];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const dbRow = await prisma.databaseRow.upsert({
+      where: { id: `dbr_sample_00${i + 1}` },
+      update: {},
+      create: {
+        id: `dbr_sample_00${i + 1}`,
+        databaseId: database.id,
+      },
+    });
+
+    await prisma.databaseCell.upsert({
+      where: { rowId_propertyId: { rowId: dbRow.id, propertyId: titleProp.id } },
+      update: {},
+      create: {
+        rowId: dbRow.id,
+        propertyId: titleProp.id,
+        value: row.title,
+      },
+    });
+
+    await prisma.databaseCell.upsert({
+      where: { rowId_propertyId: { rowId: dbRow.id, propertyId: statusProp.id } },
+      update: {},
+      create: {
+        rowId: dbRow.id,
+        propertyId: statusProp.id,
+        value: row.status,
+      },
+    });
+
+    await prisma.databaseCell.upsert({
+      where: { rowId_propertyId: { rowId: dbRow.id, propertyId: priorityProp.id } },
+      update: {},
+      create: {
+        rowId: dbRow.id,
+        propertyId: priorityProp.id,
+        value: row.priority,
+      },
+    });
+  }
+
+  console.log('✅ Created sample database');
+
   console.log('\n🎉 Seeding complete!');
   console.log('\nTest credentials:');
   console.log('  Email: test@flowpig.dev');

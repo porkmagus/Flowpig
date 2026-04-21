@@ -483,4 +483,66 @@ export default async function analyticsRoutes(fastify: FastifyInstance) {
 
     return { contributors: contributors.slice(0, 20) };
   });
+
+  // Get issue trends (created vs completed over time)
+  fastify.get('/trends', {
+    preHandler: [requireAuth, extractWorkspace],
+  }, async (request: WorkspaceRequest, reply) => {
+    const workspaceId = request.workspace!.id;
+    const { period = '30' } = request.query as { period?: string };
+    const daysBack = parseInt(period, 10);
+
+    const since = new Date();
+    since.setDate(since.getDate() - daysBack);
+    since.setHours(0, 0, 0, 0);
+
+    const [createdIssues, completedIssues] = await Promise.all([
+      fastify.prisma.issue.findMany({
+        where: {
+          workspaceId,
+          deletedAt: null,
+          createdAt: { gte: since },
+        },
+        select: { createdAt: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      fastify.prisma.issue.findMany({
+        where: {
+          workspaceId,
+          deletedAt: null,
+          state: 'DONE',
+          completedAt: { gte: since },
+        },
+        select: { completedAt: true },
+        orderBy: { completedAt: 'asc' },
+      }),
+    ]);
+
+    // Group by day
+    const dailyData: Record<string, { created: number; completed: number }> = {};
+    const now = new Date();
+
+    for (let d = new Date(since); d <= now; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      dailyData[dateStr] = { created: 0, completed: 0 };
+    }
+
+    for (const issue of createdIssues) {
+      const dateStr = issue.createdAt.toISOString().split('T')[0];
+      if (dailyData[dateStr]) dailyData[dateStr].created++;
+    }
+
+    for (const issue of completedIssues) {
+      const dateStr = (issue.completedAt || new Date()).toISOString().split('T')[0];
+      if (dailyData[dateStr]) dailyData[dateStr].completed++;
+    }
+
+    const data = Object.entries(dailyData).map(([date, counts]) => ({
+      date,
+      created: counts.created,
+      completed: counts.completed,
+    }));
+
+    return { data };
+  });
 }

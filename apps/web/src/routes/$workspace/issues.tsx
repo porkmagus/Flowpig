@@ -1,13 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowUpDown,
   Bookmark,
+  Bell,
+  BellOff,
   Check,
   CornerUpRight,
+  Copy,
   Filter,
+  GitBranch,
   LayoutGrid,
   List,
   Loader2,
@@ -22,9 +26,14 @@ import { cn } from '~/lib/utils';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { Select } from '~/components/ui/select';
+import { Skeleton, SkeletonList } from '~/components/ui/skeleton';
 import { FadeIn, StaggerContainer, StaggerItem } from '~/components/ui/motion';
 import { CreateIssueModal, useCreateIssueModal } from '~/components/create-issue-modal';
+import { useToast } from '~/components/ui/toast';
 import { IssueBoard } from '~/components/issue-board';
+import { ContextMenu } from '~/components/ui/context-menu';
+import { InlineSelect } from '~/components/inline-select';
 
 interface Issue {
   id: string;
@@ -57,6 +66,7 @@ interface Issue {
   }>;
   commentCount: number;
   childrenCount?: number;
+  isSubscribed?: boolean;
   workflowState: {
     id: string;
     name: string;
@@ -80,11 +90,11 @@ interface SortState {
 }
 
 const priorities = [
-  { id: 'URGENT', label: 'Urgent', color: 'text-priority-urgent', bg: 'bg-priority-urgent/10' },
-  { id: 'HIGH', label: 'High', color: 'text-priority-high', bg: 'bg-priority-high/10' },
-  { id: 'MEDIUM', label: 'Medium', color: 'text-priority-medium', bg: 'bg-priority-medium/10' },
-  { id: 'LOW', label: 'Low', color: 'text-priority-low', bg: 'bg-priority-low/10' },
-  { id: 'NO_PRIORITY', label: 'No priority', color: 'text-priority-none', bg: 'bg-priority-none/10' },
+  { id: 'URGENT', label: 'Urgent', color: 'text-priority-urgent', bg: 'bg-priority-urgent/10', dotColor: '#D13B3B' },
+  { id: 'HIGH', label: 'High', color: 'text-priority-high', bg: 'bg-priority-high/10', dotColor: '#E85913' },
+  { id: 'MEDIUM', label: 'Medium', color: 'text-priority-medium', bg: 'bg-priority-medium/10', dotColor: '#F2A50C' },
+  { id: 'LOW', label: 'Low', color: 'text-priority-low', bg: 'bg-priority-low/10', dotColor: '#0D9B6A' },
+  { id: 'NO_PRIORITY', label: 'No priority', color: 'text-priority-none', bg: 'bg-priority-none/10', dotColor: '#6E6E6E' },
 ];
 
 const states = [
@@ -101,6 +111,7 @@ export default function IssuesList() {
   const initialProjectId = searchParams.get('projectId');
   const queryClient = useQueryClient();
   const createIssueModal = useCreateIssueModal();
+  const { success, error: showError } = useToast();
 
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -120,6 +131,8 @@ export default function IssuesList() {
   const [showSaveView, setShowSaveView] = useState(false);
   const [viewName, setViewName] = useState('');
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [keyboardSelectedId, setKeyboardSelectedId] = useState<string | null>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch saved views
   const { data: viewsData } = useQuery({
@@ -275,6 +288,56 @@ export default function IssuesList() {
     });
   }, [issueData?.issues, filters.dueDate]);
 
+  // Keyboard navigation (J/K)
+  useEffect(() => {
+    if (viewMode !== 'list') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore when typing in inputs, textareas, or modals
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (createIssueModal.isOpen) return;
+      if (editingIssue) return;
+
+      if (event.key === 'j' || event.key === 'J') {
+        event.preventDefault();
+        setKeyboardSelectedId((prev) => {
+          const ids = visibleIssues.map((i) => i.id);
+          if (ids.length === 0) return null;
+          const currentIndex = prev ? ids.indexOf(prev) : -1;
+          const nextIndex = Math.min(currentIndex + 1, ids.length - 1);
+          return ids[nextIndex];
+        });
+      } else if (event.key === 'k' || event.key === 'K') {
+        event.preventDefault();
+        setKeyboardSelectedId((prev) => {
+          const ids = visibleIssues.map((i) => i.id);
+          if (ids.length === 0) return null;
+          const currentIndex = prev ? ids.indexOf(prev) : ids.length;
+          const nextIndex = Math.max(currentIndex - 1, 0);
+          return ids[nextIndex];
+        });
+      } else if (event.key === 'Enter' && keyboardSelectedId) {
+        event.preventDefault();
+        window.location.href = `/${workspace}/issues/${keyboardSelectedId}`;
+      } else if (event.key === 'Escape') {
+        setKeyboardSelectedId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewMode, visibleIssues, keyboardSelectedId, workspace, createIssueModal.isOpen, editingIssue]);
+
+  // Scroll selected issue into view
+  useEffect(() => {
+    if (!keyboardSelectedId || !listContainerRef.current) return;
+    const el = listContainerRef.current.querySelector(`[data-issue-id="${keyboardSelectedId}"]`) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [keyboardSelectedId]);
+
   const updateIssueMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const response = await fetch(`${API_URL}/workspaces/${workspace}/issues/${id}`, {
@@ -288,7 +351,9 @@ export default function IssuesList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      success('Issue updated');
     },
+    onError: (err) => showError(err.message),
   });
 
   const bulkUpdateMutation = useMutation({
@@ -306,7 +371,9 @@ export default function IssuesList() {
       queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
       setSelectedIssues(new Set());
       setIsSelectMode(false);
+      success(`${selectedIssues.size} issues updated`);
     },
+    onError: (err) => showError(err.message),
   });
 
   const bulkDeleteMutation = useMutation({
@@ -324,7 +391,41 @@ export default function IssuesList() {
       queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
       setSelectedIssues(new Set());
       setIsSelectMode(false);
+      success(`${selectedIssues.size} issues deleted`);
     },
+    onError: (err) => showError(err.message),
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issues/${issueId}/subscribe`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to subscribe');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      success('Subscribed');
+    },
+    onError: (err) => showError(err.message),
+  });
+
+  const unsubscribeMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      const response = await fetch(`${API_URL}/workspaces/${workspace}/issues/${issueId}/subscribe`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to unsubscribe');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues', workspace] });
+      success('Unsubscribed');
+    },
+    onError: (err) => showError(err.message),
   });
 
   const activeFiltersCount = Object.values(filters).filter((value) => Array.isArray(value) ? value.length > 0 : value !== null && value !== '').length;
@@ -417,24 +518,24 @@ export default function IssuesList() {
 
             {/* Saved Views */}
             {viewsData && viewsData.views.length > 0 && (
-              <select
+              <Select
                 value={activeViewId || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    applyView(e.target.value);
+                onChange={(v) => {
+                  if (v) {
+                    applyView(v);
                   } else {
                     setActiveViewId(null);
                   }
                 }}
-                className="h-8 rounded-md border border-linear-border bg-linear-surface px-2 text-xs focus:outline-none focus:ring-2 focus:ring-linear-accent"
-              >
-                <option value="">All issues</option>
-                {viewsData.views.map((view) => (
-                  <option key={view.id} value={view.id}>
-                    {view.name}{view.isDefault ? ' ★' : ''}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'All issues' },
+                  ...(viewsData?.views.map((view) => ({
+                    value: view.id,
+                    label: `${view.name}${view.isDefault ? ' ★' : ''}`,
+                  })) || []),
+                ]}
+                size="sm"
+              />
             )}
 
             <Button size="sm" onClick={() => createIssueModal.open()} className="gap-1.5">
@@ -600,58 +701,53 @@ export default function IssuesList() {
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-linear-text-secondary">Assignee</label>
-                <select
+                <Select
                   value={filters.assignee[0] || ''}
-                  onChange={(event) => setFilters((prev) => ({
+                  onChange={(v) => setFilters((prev) => ({
                     ...prev,
-                    assignee: event.target.value ? [event.target.value] : [],
+                    assignee: v ? [v] : [],
                   }))}
-                  className="w-full rounded-md border border-linear-border bg-linear-elevated px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-linear-accent"
-                >
-                  <option value="">All assignees</option>
-                  {users?.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: 'All assignees' },
+                    ...(users?.map((user) => ({ value: user.id, label: user.name || user.email })) || []),
+                  ]}
+                  size="sm"
+                />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-linear-text-secondary">Project</label>
-                <select
+                <Select
                   value={filters.project[0] || ''}
-                  onChange={(event) => setFilters((prev) => ({
+                  onChange={(v) => setFilters((prev) => ({
                     ...prev,
-                    project: event.target.value ? [event.target.value] : [],
+                    project: v ? [v] : [],
                   }))}
-                  className="w-full rounded-md border border-linear-border bg-linear-elevated px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-linear-accent"
-                >
-                  <option value="">All projects</option>
-                  {projects?.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: 'All projects' },
+                    ...(projects?.map((project) => ({ value: project.id, label: project.name })) || []),
+                  ]}
+                  size="sm"
+                />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-linear-text-secondary">Due date</label>
-                <select
+                <Select
                   value={filters.dueDate || ''}
-                  onChange={(event) => setFilters((prev) => ({
+                  onChange={(v) => setFilters((prev) => ({
                     ...prev,
-                    dueDate: event.target.value ? event.target.value as FilterState['dueDate'] : null,
+                    dueDate: v ? v as FilterState['dueDate'] : null,
                   }))}
-                  className="w-full rounded-md border border-linear-border bg-linear-elevated px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-linear-accent"
-                >
-                  <option value="">Any time</option>
-                  <option value="overdue">Overdue</option>
-                  <option value="today">Due today</option>
-                  <option value="week">Due this week</option>
-                  <option value="month">Due this month</option>
-                </select>
+                  options={[
+                    { value: '', label: 'Any time' },
+                    { value: 'overdue', label: 'Overdue' },
+                    { value: 'today', label: 'Due today' },
+                    { value: 'week', label: 'Due this week' },
+                    { value: 'month', label: 'Due this month' },
+                  ]}
+                  size="sm"
+                />
               </div>
             </div>
 
@@ -724,8 +820,17 @@ export default function IssuesList() {
       </AnimatePresence>
 
       {isLoading ? (
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-linear-accent" />
+        <div className="space-y-2 py-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5">
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-4 w-14" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
         </div>
       ) : viewMode === 'board' ? (
         <IssueBoard
@@ -735,17 +840,73 @@ export default function IssuesList() {
           }}
         />
       ) : (
-        <div className="flex-1 overflow-auto">
+        <div ref={listContainerRef} className="flex-1 overflow-auto">
           <StaggerContainer className="space-y-1">
             {visibleIssues.map((issue) => (
               <StaggerItem key={issue.id}>
+                <ContextMenu
+                  groups={[
+                    {
+                      items: [
+                        {
+                          label: 'Copy link',
+                          icon: <Copy className="w-3.5 h-3.5" />,
+                          shortcut: '⌘C',
+                          onClick: () => {
+                            navigator.clipboard.writeText(`${window.location.origin}/${workspace}/issues/${issue.id}`);
+                            success('Link copied');
+                          },
+                        },
+                        {
+                          label: 'Open in new tab',
+                          icon: <GitBranch className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            window.open(`/${workspace}/issues/${issue.id}`, '_blank');
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      items: [
+                        {
+                          label: issue.isSubscribed ? 'Unsubscribe' : 'Subscribe',
+                          icon: issue.isSubscribed ? <BellOff className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            if (issue.isSubscribed) {
+                              unsubscribeMutation.mutate(issue.id);
+                            } else {
+                              subscribeMutation.mutate(issue.id);
+                            }
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      items: [
+                        {
+                          label: 'Delete',
+                          icon: <Trash2 className="w-3.5 h-3.5" />,
+                          destructive: true,
+                          onClick: () => {
+                            if (confirm('Delete this issue?')) {
+                              bulkDeleteMutation.mutate([issue.id]);
+                            }
+                          },
+                        },
+                      ],
+                    },
+                  ]}
+                >
                 <motion.div
                   layout
+                  data-issue-id={issue.id}
                   className={cn(
                     'group flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors',
                     selectedIssues.has(issue.id)
                       ? 'border-linear-accent/30 bg-linear-accent-light'
-                      : 'hover:bg-linear-surface'
+                      : keyboardSelectedId === issue.id
+                        ? 'bg-linear-elevated ring-1 ring-linear-accent/40'
+                        : 'hover:bg-linear-surface'
                   )}
                 >
                   {isSelectMode && (
@@ -762,7 +923,13 @@ export default function IssuesList() {
                     </button>
                   )}
 
-                  {priorityDot(issue.priority)}
+                  <InlineSelect
+                    value={issue.priority}
+                    options={priorities.map((p) => ({ value: p.id, label: p.label, color: p.dotColor }))}
+                    onChange={(v) => updateIssueMutation.mutate({ id: issue.id, data: { priority: v } })}
+                  >
+                    {priorityDot(issue.priority)}
+                  </InlineSelect>
 
                   <div className="w-14 shrink-0 text-xs font-medium text-linear-text-tertiary">{issue.identifier}</div>
 
@@ -836,17 +1003,24 @@ export default function IssuesList() {
                     <div className="h-6 w-6 shrink-0 rounded-full border border-dashed border-linear-border" />
                   )}
 
-                  <Badge
-                    variant="outline"
-                    className="h-5 shrink-0 px-1.5 py-0 text-[10px]"
-                    style={{
-                      borderColor: `${issue.workflowState?.color || '#6E6E6E'}40`,
-                      backgroundColor: `${issue.workflowState?.color || '#6E6E6E'}15`,
-                      color: issue.workflowState?.color || '#6E6E6E',
-                    }}
+                  <InlineSelect
+                    value={issue.state}
+                    options={states.map((s) => ({ value: s.id, label: s.label, color: s.color }))}
+                    onChange={(v) => updateIssueMutation.mutate({ id: issue.id, data: { state: v } })}
+                    align="right"
                   >
-                    {issue.workflowState?.name || issue.state}
-                  </Badge>
+                    <Badge
+                      variant="outline"
+                      className="h-5 shrink-0 px-1.5 py-0 text-[10px] cursor-pointer hover:opacity-80"
+                      style={{
+                        borderColor: `${issue.workflowState?.color || '#6E6E6E'}40`,
+                        backgroundColor: `${issue.workflowState?.color || '#6E6E6E'}15`,
+                        color: issue.workflowState?.color || '#6E6E6E',
+                      }}
+                    >
+                      {issue.workflowState?.name || issue.state}
+                    </Badge>
+                  </InlineSelect>
 
                   {issue.childrenCount ? (
                     <div className="shrink-0 flex items-center gap-0.5 text-xs text-linear-text-tertiary">
@@ -856,10 +1030,30 @@ export default function IssuesList() {
                   ) : null}
                   {issue.commentCount > 0 && <div className="shrink-0 text-xs text-linear-text-tertiary">{issue.commentCount}</div>}
 
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (issue.isSubscribed) {
+                        unsubscribeMutation.mutate(issue.id);
+                      } else {
+                        subscribeMutation.mutate(issue.id);
+                      }
+                    }}
+                    className={cn(
+                      'rounded p-1 transition-all hover:bg-linear-border',
+                      issue.isSubscribed ? 'text-linear-accent opacity-100' : 'opacity-0 group-hover:opacity-100 text-linear-text-secondary'
+                    )}
+                    title={issue.isSubscribed ? 'Unsubscribe' : 'Subscribe'}
+                  >
+                    {issue.isSubscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                  </button>
+
                   <button className="rounded p-1 opacity-0 transition-all hover:bg-linear-border group-hover:opacity-100">
                     <MoreHorizontal className="h-4 w-4 text-linear-text-secondary" />
                   </button>
                 </motion.div>
+                </ContextMenu>
               </StaggerItem>
             ))}
           </StaggerContainer>
