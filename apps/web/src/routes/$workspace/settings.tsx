@@ -718,6 +718,18 @@ function MemberSettings({ workspace }: { workspace?: string }) {
   );
 }
 
+function applyThemeToDom(theme: 'light' | 'dark' | 'system') {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light');
+  } else if (theme === 'dark') {
+    document.documentElement.classList.remove('light');
+  } else if (theme === 'system') {
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    document.documentElement.classList.toggle('light', prefersLight);
+  }
+  localStorage.setItem('flowpig:theme', theme);
+}
+
 function AppearanceSettings({ 
   workspace,
   onUpdate,
@@ -743,7 +755,20 @@ function AppearanceSettings({
     setTheme(workspace.settings?.appearance?.theme || 'system');
   }, [workspace]);
 
-  const isDirty = selectedColor !== currentColor || theme !== currentTheme;
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    if (color !== currentColor) {
+      onUpdate({ color });
+    }
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
+    applyThemeToDom(newTheme);
+    if (newTheme !== currentTheme) {
+      onUpdate({ settings: { appearance: { theme: newTheme } } });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -759,9 +784,10 @@ function AppearanceSettings({
             {colors.map((color) => (
               <button
                 key={color}
-                onClick={() => setSelectedColor(color)}
+                onClick={() => handleColorChange(color)}
+                disabled={isUpdating}
                 className={cn(
-                  "w-10 h-10 rounded-lg transition-all",
+                  "w-10 h-10 rounded-lg transition-all disabled:opacity-50",
                   selectedColor === color && "ring-2 ring-offset-2 ring-linear-accent scale-110"
                 )}
                 style={{ backgroundColor: color }}
@@ -769,42 +795,6 @@ function AppearanceSettings({
                 {selectedColor === color && <Check className="w-5 h-5 text-white mx-auto" />}
               </button>
             ))}
-          </div>
-          <div className="mt-4">
-            <Button
-              onClick={() => {
-                localStorage.setItem('flowpig:theme', theme);
-                if (theme === 'light') {
-                  document.documentElement.classList.add('light');
-                } else if (theme === 'dark') {
-                  document.documentElement.classList.remove('light');
-                } else if (theme === 'system') {
-                  const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-                  document.documentElement.classList.toggle('light', prefersLight);
-                }
-                const updates: Partial<WorkspaceSettings> = {};
-                if (selectedColor !== currentColor) {
-                  updates.color = selectedColor;
-                }
-                if (theme !== currentTheme) {
-                  updates.settings = {
-                    appearance: { theme },
-                  };
-                }
-                if (Object.keys(updates).length > 0) {
-                  onUpdate(updates);
-                }
-              }}
-              disabled={isUpdating || !isDirty}
-              className="gap-1.5"
-            >
-              {isUpdating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              Save appearance
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -819,9 +809,10 @@ function AppearanceSettings({
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
             <button
-              onClick={() => setTheme('light')}
+              onClick={() => handleThemeChange('light')}
+              disabled={isUpdating}
               className={cn(
-                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all disabled:opacity-50",
                 theme === 'light' 
                   ? "border-linear-accent bg-linear-accent-light" 
                   : "border-linear-border hover:border-linear-border-hover"
@@ -831,9 +822,10 @@ function AppearanceSettings({
               <span className="text-sm font-medium">Light</span>
             </button>
             <button
-              onClick={() => setTheme('dark')}
+              onClick={() => handleThemeChange('dark')}
+              disabled={isUpdating}
               className={cn(
-                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all disabled:opacity-50",
                 theme === 'dark' 
                   ? "border-linear-accent bg-linear-accent-light" 
                   : "border-linear-border hover:border-linear-border-hover"
@@ -843,9 +835,10 @@ function AppearanceSettings({
               <span className="text-sm font-medium">Dark</span>
             </button>
             <button
-              onClick={() => setTheme('system')}
+              onClick={() => handleThemeChange('system')}
+              disabled={isUpdating}
               className={cn(
-                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all",
+                "p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all disabled:opacity-50",
                 theme === 'system' 
                   ? "border-linear-accent bg-linear-accent-light" 
                   : "border-linear-border hover:border-linear-border-hover"

@@ -103,7 +103,12 @@ export default function DatabaseDetailRoute() {
   });
 
   const database = data?.database
-    ? { ...data.database, rows: data.rows || [] } as Database & { rows: Row[] }
+    ? {
+        ...data.database,
+        rows: data.rows || [],
+        views: data.database.views || [],
+        properties: data.database.properties || [],
+      } as Database & { rows: Row[] }
     : undefined;
 
   const activeView = useMemo(() => {
@@ -438,7 +443,7 @@ export default function DatabaseDetailRoute() {
       </div>
 
       {/* Content based on view type */}
-      {activeView?.type === 'TABLE' && (
+      {(!activeView || activeView?.type === 'TABLE' || activeView?.type === 'LIST') && (
         <div className="flex-1 overflow-auto bg-linear-surface rounded-xl border border-linear-border">
           <table className="w-full">
             <thead className="bg-linear-elevated/50 border-b border-linear-border">

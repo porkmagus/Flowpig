@@ -66,11 +66,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
       body: rawBody
     };
 
-    if (isSocialSignIn) {
-      console.log('[auth] sign-in/social request:', {
+    const isEmailSignIn = request.url.includes('/sign-in/email');
+    const isEmailSignUp = request.url.includes('/sign-up/email');
+
+    if (isSocialSignIn || isEmailSignIn || isEmailSignUp) {
+      console.log('[auth] auth request:', {
         url: request.url,
         origin: headers.get('origin') || 'missing',
-        body: rawBody,
+        body: rawBody?.slice(0, 200),
       });
     }
 
@@ -100,9 +103,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
       }
 
       const responseBody = await response.text();
-      if (isSocialSignIn) {
-        console.log('[auth] sign-in/social response:', {
+      if (isSocialSignIn || isEmailSignIn || isEmailSignUp) {
+        console.log('[auth] auth response:', {
+          url: request.url,
           status: response.status,
+          cookies: setCookies,
           body: responseBody.slice(0, 500),
         });
       }

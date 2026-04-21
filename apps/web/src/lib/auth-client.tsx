@@ -119,10 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: toAbsoluteCallbackUrl(callbackPath),
     });
 
     if (error) {
+      console.error('Email sign-in error:', error);
       throw new Error(error.message || 'Login failed');
     }
 
@@ -136,10 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       name,
-      callbackURL: toAbsoluteCallbackUrl(callbackPath),
     });
 
     if (error) {
+      console.error('Email sign-up error:', error);
       throw new Error(error.message || 'Signup failed');
     }
 
