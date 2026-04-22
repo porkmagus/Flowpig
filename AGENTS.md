@@ -48,6 +48,7 @@ apps/
         notes/notes.public.routes.ts
         notes/notes.share.routes.ts
         notes/notes.versions.routes.ts
+        templates/templates.routes.ts
         ai/ai.routes.ts
         uploads/uploads.routes.ts
         uploads/uploads.public.routes.ts
@@ -210,7 +211,9 @@ Seed data creates:
 - User: `test@flowpig.dev` / `testpassword123`
 - Workspace: `acme-corp` (slug)
 - Team: `ENG`
-- Sample issues, notes, cycles, etc.
+- 10 sample issues (ENG-1 through ENG-10)
+- 3 sample notes
+- "Product Tasks" database with TABLE view, 3 properties, and 3 rows
 
 ### Development Servers
 ```bash
@@ -267,6 +270,9 @@ preHandler: [requireAuth, extractWorkspace]
 - `requireAuth` (`apps/api/src/plugins/auth.ts`) sends 401 if `request.user` is missing.
 - `extractWorkspace` (`apps/api/src/middleware/workspace.ts`) sends 403 if the user is not a member.
 
+### `request.user` Type Pattern
+`AuthenticatedRequest` declares `user` as optional (`user?: User`). After `requireAuth` runs, it is guaranteed present, but TypeScript still sees it as optional. **Do not add `as any` casts** — use non-null assertions (`request.user!`) or guard checks instead. All existing routes have been cleaned of `as any` on `request.user`.
+
 ### Workspace Identifier Duality
 `extractWorkspace` accepts **either a workspace slug or a workspace ID** in the `workspaceId` route parameter. The frontend navigates with slugs (e.g., `/acme-corp/issues`), but some internal/backend paths may still pass IDs. Do not break this duality.
 
@@ -279,11 +285,21 @@ API responses manually serialize dates with `.toISOString()`. Keep this consiste
 ### Validation
 Many write routes import Zod schemas from `@flowpigdev/contracts` (e.g., `CreateIssueSchema`, `UpdateWorkspaceSchema`). Some newer modules may still parse raw request bodies.
 
+### Workspace Settings Merge
+The `PATCH /:workspaceId` endpoint uses `mergeJsonSettings()` to deeply merge incoming `settings` JSON with existing values. This preserves unrelated keys (e.g., updating `appearance.theme` does not wipe `appearance.color`). Frontend settings patches should send partial nested objects like `{ settings: { appearance: { theme: 'dark' } } }`.
+
 ### Prisma Access
 Use `fastify.prisma` (decorated by `prismaPlugin`). Do not instantiate `PrismaClient` directly in routes.
 
 ### Storage Access
 Use `fastify.storage` (decorated by `storagePlugin`). The interface is `StorageProvider` with `upload`, `delete`, and `getPublicUrl`.
+
+### Database Endpoints (Added)
+The databases module now supports full property/view/cell management:
+- `POST /:databaseId/views` — create a DatabaseView
+- `POST /:databaseId/properties` — create a DatabaseProperty (order auto-increments from max existing)
+- `PATCH /:databaseId/rows/:rowId/cells/:propertyId` — upsert a DatabaseCell
+- Cells are returned as `Record<string, any>` (property ID → value), not an array of `{propertyId, value}` objects.
 
 ### WebSocket Broadcasts
 Use the decorated helpers:
@@ -291,6 +307,11 @@ Use the decorated helpers:
 - `fastify.broadcastToUser(userId, event)`
 
 Event types emitted by the backend include: `issue.updated`, `comment.created`, `note.updated`, `notification.created`.
+
+### Auth Route Proxy
+All `/auth/*` requests are proxied through `apps/api/src/modules/auth/auth.routes.ts` to the Better Auth handler. The proxy uses a **scoped** content-type parser (`parseAs: 'buffer'`) so Better Auth can parse its own JSON. **Do not call `removeAllContentTypeParsers()` globally** inside the auth plugin — it breaks sibling routes (e.g., uploads) that expect parsed bodies.
+
+Cookie forwarding from the proxy to the client uses `response.headers.getSetCookie()` to properly handle multiple `Set-Cookie` headers. The proxy skips forwarding the `Location` header on 2xx JSON responses so the React app receives clean JSON without hard redirects.
 
 ## Frontend Conventions
 
@@ -314,11 +335,18 @@ All workspace-scoped URLs use the workspace **slug**:
 ### Auth
 The `AuthProvider` in `apps/web/src/lib/auth-client.tsx` wraps `better-auth/react`. It exposes `login`, `signup`, `loginWithProvider`, `logout`, and `useAuth`. The `RequireAuth` component redirects unauthenticated users to `/login`.
 
+**Email/password auth**: Do **not** pass `callbackURL` to `authClient.signIn.email()` or `signUp.email()`. Better Auth's `redirectPlugin` forces a hard `window.location.href` reload when `callbackURL` is present, which breaks React state and session cookie processing. The React app calls `navigate()` after successful login instead.
+
+**Appearance auto-save**: Workspace color and theme settings auto-save on click without requiring a "Save appearance" button. The `applyThemeToDom()` helper in `settings.tsx` updates `localStorage` and toggles the `.light` class on `<html>` immediately, then fires the API PATCH.
+
 ### Animations
 Shared wrappers from `@flowpigdev/ui` are used throughout workspace screens:
 - `<AnimatedPage>` — fade + slide on mount
 - `<AnimatedList>` + `<AnimatedItem>` — staggered list entrance
 - `<AnimatedCard>` — hover scale + tap shrink
+
+### TipTap JSON Text Extraction
+`Issue.description` is stored as TipTap JSON (`Json?` in Prisma). Do not render it directly as `{issue.description}` — it will crash React. Use `getDescriptionText()` from `apps/web/src/lib/description.ts` to extract plain text for list views, triage cards, and any non-editor display.
 
 ### Runtime Config
 `apps/web/src/lib/runtime-config.ts` resolves `API_URL` and `WS_URL`:
@@ -339,6 +367,13 @@ The schema includes Better Auth-managed tables (`Account`, `Session`, `Verificat
 
 ### Prisma Client Generation
 The generator outputs to `packages/db/src/generated/prisma`. Import from `@flowpigdev/db` or `@flowpigdev/db/client`.
+
+### Prisma Enum Exports
+The `@prisma/client` stub in `packages/db` does **not** export generated enums directly. Enums like `TemplateType` are re-exported from `packages/db/src/index.ts`:
+```typescript
+export { TemplateType } from './generated/prisma/index.js';
+```
+API routes should import enums from `@flowpigdev/db`, not `@prisma/client`.
 
 ### Client Singleton
 `packages/db/src/client.ts` creates a single `PrismaClient` instance using `@prisma/adapter-pg` with a `pg.Pool`. In non-production, the instance is cached on `globalThis` to survive HMR.
@@ -431,3 +466,9 @@ Key required vars in `.env.prod`:
 5. **Native dependency guard**: `scripts/check-native-deps.cjs` runs before `npm run dev:web` and `npm run build:web`. It aborts the build if `node_modules` were installed for a different platform (common with WSL/Windows switching). If you see an error about esbuild/rollup platform mismatches, delete `node_modules` and reinstall from the current OS.
 
 6. **Prisma adapter runtime**: The Prisma client uses `@prisma/adapter-pg` with a `pg.Pool`. This requires `DATABASE_URL` to be set before any import of `@flowpigdev/db`. The client singleton searches parent directories for `.env` / `.env.dev` as a fallback, but explicit env is preferred.
+
+7. **Issue identifier generation**: The identifier generator finds the maximum issue number **numerically** (`parseInt(match[1], 10) + 1`), not by lexicographic `orderBy: { identifier: 'desc' }`. Lexicographic sort breaks after 10 issues (`ENG-9` > `ENG-10`).
+
+8. **Content-type parser scope**: The auth route proxy previously called `fastify.removeAllContentTypeParsers()` globally, which broke upload routes expecting parsed JSON bodies. The fix uses a scoped parser. Never remove all parsers inside a plugin.
+
+9. **Better Auth `callbackURL` on email auth**: Passing `callbackURL` to `authClient.signIn.email()` triggers Better Auth's built-in `redirectPlugin`, which sets `window.location.href = response.data.url` and interrupts React state / session cookie processing. **Do not pass `callbackURL` for email/password auth** — let the React app handle navigation smoothly via `navigate()`. OAuth flows (GitHub, Google) still need `callbackURL` because external redirects are required.

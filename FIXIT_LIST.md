@@ -1,9 +1,11 @@
-# Flowpig Exhaustive Testing — Fixit List
+# Flowpig Exhaustive Testing — Fixit List (Historical Record)
 
 Generated: 2026-04-20
 Tested: local dev servers (API 3001, Web 5173), seeded user `test@flowpig.dev`
 
 **Status: ALL DISCREPANCIES RESOLVED ✅**
+
+> This file documents the fixes applied during a comprehensive testing pass. All items below are fixed and verified. See [AGENTS.md](../../AGENTS.md) for current conventions and [README.md](../../README.md) for project overview.
 
 ---
 

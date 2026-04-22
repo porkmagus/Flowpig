@@ -4,16 +4,16 @@ Bare-essential scaffold and conventions for the backend-first rebuild.
 
 ## Core decisions
 
-- Frontend: **React Router**
-- Backend: **Fastify**
-- Auth: **Better Auth**, merged into existing auth tables
+- Frontend: **React Router v7** (framework mode)
+- Backend: **Fastify 5**
+- Auth: **Better Auth 1.6.2**, merged into existing auth tables
 - IDs: **CUID** everywhere
-- ORM: **Prisma**
+- ORM: **Prisma 7**
 - Realtime: **WebSocket** for app events, **SSE** for AI token streaming
 - Storage: **local filesystem first**, object storage later
-- Deploy: **Dokploy**
-- Local dev DB: **Postgres in Docker**
-- VPS app routing: via **Dokploy/Traefik**, not public app ports
+- Deploy: **Coolify** (see docs/coolify.md)
+- Local dev DB: **Postgres 17 in Docker**
+- VPS app routing: via reverse proxy, not public app ports
 
 ---
 
@@ -28,15 +28,8 @@ flowpig-v2/
           router.tsx
           providers.tsx
         components/
-        features/
-          auth/
-          workspaces/
-          issues/
-          notes/
-          comments/
-          notifications/
-          ai/
-        hooks/
+        features/            # (not yet scaffolded — code lives in routes/ + components/)
+        hooks/               # (not yet scaffolded)
         lib/
           api/
           auth/
@@ -85,46 +78,34 @@ flowpig-v2/
             errors.ts
             logger.ts
         modules/
-          auth/
-            auth.routes.ts
-            auth.service.ts
-            auth.schemas.ts
-          users/
-            users.routes.ts
-            users.service.ts
-            users.schemas.ts
-          workspaces/
-            workspaces.routes.ts
-            workspaces.service.ts
-            workspaces.schemas.ts
-          teams/
-            teams.routes.ts
-            teams.service.ts
-            teams.schemas.ts
-          issues/
-            issues.routes.ts
-            issues.service.ts
-            issues.schemas.ts
-          notes/
-            notes.routes.ts
-            notes.service.ts
-            notes.schemas.ts
-          comments/
-            comments.routes.ts
-            comments.service.ts
-            comments.schemas.ts
-          notifications/
-            notifications.routes.ts
-            notifications.service.ts
-          uploads/
-            uploads.routes.ts
-            uploads.service.ts
-          ai/
-            ai.routes.ts
-            ai.service.ts
-            ai.providers.ts
-            ai.stream.ts
-            ai.schemas.ts
+          auth/auth.routes.ts
+          health/health.routes.ts
+          workspaces/workspaces.routes.ts
+          issues/issues.routes.ts
+          issues/issues.relations.routes.ts
+          comments/comments.routes.ts
+          notes/notes.routes.ts
+          notes/notes.comments.routes.ts
+          notes/notes.public.routes.ts
+          notes/notes.share.routes.ts
+          notes/notes.versions.routes.ts
+          templates/templates.routes.ts
+          ai/ai.routes.ts
+          uploads/uploads.routes.ts
+          uploads/uploads.public.routes.ts
+          notifications/notifications.routes.ts
+          search/search.routes.ts
+          databases/databases.routes.ts
+          cycles/cycles.routes.ts
+          teams/teams.routes.ts
+          triage/triage.routes.ts
+          roadmap/roadmap.routes.ts
+          history/history.routes.ts
+          git/git.routes.ts
+          analytics/analytics.routes.ts
+          billing/billing.routes.ts
+          projects/projects.routes.ts
+          # Note: no .service.ts / .schemas.ts subfiles — logic is inline in routes
       package.json
       tsconfig.json
       Dockerfile
@@ -269,6 +250,7 @@ Notes:
 - `POST /workspaces/:workspaceId/teams`
 - `GET /teams/:teamId`
 - `PATCH /teams/:teamId`
+- `GET /workspaces/:workspaceId/labels`
 
 ### Issues
 - `GET /workspaces/:workspaceId/issues`
@@ -276,6 +258,8 @@ Notes:
 - `GET /issues/:issueId`
 - `PATCH /issues/:issueId`
 - `DELETE /issues/:issueId`
+- `GET /issues/:issueId/comments`
+- `POST /issues/:issueId/comments`
 - `POST /issues/:issueId/archive`
 - `POST /issues/:issueId/subscribe`
 - `DELETE /issues/:issueId/subscribe`
@@ -286,6 +270,8 @@ Notes:
 - `GET /notes/:noteId`
 - `PATCH /notes/:noteId`
 - `DELETE /notes/:noteId`
+- `GET /notes/:noteId/comments`
+- `POST /notes/:noteId/comments`
 - `POST /notes/:noteId/publish`
 - `POST /notes/:noteId/archive`
 - `POST /notes/:noteId/subscribe`
@@ -308,11 +294,25 @@ Notes:
 ### Uploads
 - `POST /uploads`
 - `DELETE /uploads/:fileId`
-- `GET /files/:key`
+- `GET /uploads/public/:key`
 
 Notes:
 - Start with local filesystem-backed storage.
 - Switch provider via storage adapter later.
+
+### Databases
+- `GET /workspaces/:workspaceId/databases`
+- `POST /workspaces/:workspaceId/databases`
+- `GET /workspaces/:workspaceId/databases/:databaseId`
+- `POST /workspaces/:workspaceId/databases/:databaseId/rows`
+- `PATCH /workspaces/:workspaceId/databases/:databaseId/rows/:rowId`
+- `DELETE /workspaces/:workspaceId/databases/:databaseId/rows/:rowId`
+- `POST /workspaces/:workspaceId/databases/:databaseId/views`
+- `POST /workspaces/:workspaceId/databases/:databaseId/properties`
+- `PATCH /workspaces/:workspaceId/databases/:databaseId/rows/:rowId/cells/:propertyId`
+
+### Search
+- `GET /search/workspace/:workspaceId`
 
 ### AI
 - `POST /ai/chat` -> normal JSON response
@@ -484,7 +484,7 @@ S3_SECRET_ACCESS_KEY=
 ```yaml
 services:
   postgres:
-    image: postgres:16
+    image: postgres:17
     container_name: flowpig-postgres-dev
     restart: unless-stopped
     environment:
@@ -511,30 +511,22 @@ Remove Redis if not needed yet.
 
 ---
 
-## Prod / Dokploy notes
+## Prod / Coolify notes
 
 ### Subdomains
-Start with:
-- `app.flowpig.dev`
-- `api.flowpig.dev`
-
-Optional later:
-- `admin.flowpig.dev`
-- `files.flowpig.dev`
+- `app.example.com` -> web app (port 3000)
+- `api.example.com` -> API app (port 3001)
 
 ### Port rules
-- local web can use `5173`
-- local api can use `3001`
-- on VPS under Dokploy, **do not rely on host port 3000 for your app**
-- let Dokploy/Traefik route by domain over `80/443`
-- app containers can listen on internal ports like `3001` and `3002`
+- local web uses `5173`
+- local api uses `3001`
+- in production, containers listen on internal ports; reverse proxy routes by domain
 
 ### Firewall on VPS
 Allow only:
 - `22/tcp`
 - `80/tcp`
 - `443/tcp`
-- `3000/tcp` only if Dokploy UI still needs it publicly
 
 Do not expose:
 - `5432`
@@ -550,14 +542,14 @@ Do not expose:
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev:web": "npm --workspace @flowpig/web run dev",
-    "dev:api": "npm --workspace @flowpig/api run dev",
-    "dev:infra": "docker compose -f ops/docker/compose.dev.yml --env-file .env.dev up -d",
-    "dev:infra:down": "docker compose -f ops/docker/compose.dev.yml --env-file .env.dev down",
-    "db:generate": "npm --workspace @flowpig/db run generate",
-    "db:migrate": "npm --workspace @flowpig/db run migrate",
-    "db:deploy": "npm --workspace @flowpig/db run deploy",
-    "db:seed": "npm --workspace @flowpig/db run seed"
+    "dev:web": "npm --workspace @flowpigdev/web run dev",
+    "dev:api": "npm --workspace @flowpigdev/api run dev",
+    "dev:infra": "docker compose -f ops/docker/compose.dev.yml up -d",
+    "dev:infra:down": "docker compose -f ops/docker/compose.dev.yml down",
+    "db:generate": "npm --workspace @flowpigdev/db run generate",
+    "db:migrate": "npm --workspace @flowpigdev/db run migrate",
+    "db:deploy": "npm --workspace @flowpigdev/db run deploy",
+    "db:seed": "npm --workspace @flowpigdev/db run seed"
   }
 }
 ```
