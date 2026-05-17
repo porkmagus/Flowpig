@@ -1,4 +1,4 @@
-# Flowpig.dev
+# Flowpig
 
 Modern project management rebuilt with Fastify 5 + React Router v7 + Prisma 7.
 
