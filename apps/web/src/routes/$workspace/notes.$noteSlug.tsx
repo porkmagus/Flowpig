@@ -95,6 +95,22 @@ export default function NoteDetailRoute() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const sanitizeCoverImageUrl = (value: string | null | undefined): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.toString();
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState<Record<string, unknown> | null>(null);
@@ -331,7 +347,7 @@ export default function NoteDetailRoute() {
                 accept="image/*"
                 multiple={false}
                 onUploadComplete={(files) => {
-                  if (files[0]?.url) setEditCoverImage(files[0].url);
+                  if (files[0]?.url) setEditCoverImage(sanitizeCoverImageUrl(files[0].url));
                 }}
               />
             </div>
@@ -339,7 +355,7 @@ export default function NoteDetailRoute() {
           <input
             type="text"
             value={editCoverImage || ''}
-            onChange={(e) => setEditCoverImage(e.target.value || null)}
+            onChange={(e) => setEditCoverImage(sanitizeCoverImageUrl(e.target.value))}
             placeholder="Or paste a cover image URL..."
             className="w-full rounded-lg border border-linear-border bg-linear-surface px-3 py-2 text-sm text-linear-text focus:outline-none focus:ring-2 focus:ring-linear-accent/40"
           />
