@@ -36,6 +36,12 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
+    // Skip connecting if user is not authenticated
+    const hasSessionToken = document.cookie
+      .split('; ')
+      .some(row => row.startsWith('better-auth.session_token='));
+    if (!hasSessionToken) return;
+
     try {
       const ws = new WebSocket(url);
       wsRef.current = ws;
@@ -94,9 +100,15 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
         onDisconnect?.();
 
         if (reconnect) {
-          reconnectTimerRef.current = setTimeout(() => {
-            connect();
-          }, reconnectInterval);
+          // Only reconnect if still authenticated
+          const stillHasToken = document.cookie
+            .split('; ')
+            .some(row => row.startsWith('better-auth.session_token='));
+          if (stillHasToken) {
+            reconnectTimerRef.current = setTimeout(() => {
+              connect();
+            }, reconnectInterval);
+          }
         }
       };
 

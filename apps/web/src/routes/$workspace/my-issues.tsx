@@ -313,6 +313,8 @@ function IssueGroupSection({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-linear-elevated rounded-lg border border-linear-border overflow-hidden mb-3"
+      role="region"
+      aria-label={`${group.title} issue group`}
     >
       {/* Group header */}
       <button
@@ -383,6 +385,8 @@ function StatCard({
           ? "bg-linear-elevated border-linear-accent/30 shadow-elevation-1" 
           : "bg-linear-elevated border-linear-border hover:border-linear-border-hover"
       )}
+      role="region"
+      aria-label={`${title} stat card`}
     >
       <div className="flex items-center justify-between">
         <div>
@@ -451,7 +455,7 @@ export default function MyIssues() {
   const stats = data?.stats;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto" role="main" aria-label="My Issues page">
       {/* Header */}
       <FadeIn>
         <div className="flex items-center justify-between mb-6">
@@ -539,6 +543,8 @@ export default function MyIssues() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center py-16"
+          role="status"
+          aria-label="No assigned issues"
         >
           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-linear-surface flex items-center justify-center border border-linear-border">
             <CheckCircle2 className="w-6 h-6 text-linear-text-tertiary" />

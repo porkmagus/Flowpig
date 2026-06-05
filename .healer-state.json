@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.1.0",
+  "run_id": "flowpig-healer-2026-05-24",
+  "app_type": "web",
+  "app_url": "http://localhost:5173",
+  "app_binary": "",
+  "app_context": {
+    "purpose": "Project management app (Linear x Notion mashup)",
+    "key_flows": [
+      "Landing page -> Signup/Login -> Onboarding -> Workspace",
+      "Create/view issues (ENG-1, ENG-2, etc.)",
+      "Create/view notes with rich text editor",
+      "Databases with multiple views (Table, Board, Calendar, Gallery, Timeline)",
+      "AI chat with SSE streaming",
+      "Command palette (CMD+K) search",
+      "Real-time WebSocket updates",
+      "File uploads with drag & drop"
+    ],
+    "tech_stack": {
+      "frontend": "React Router v7 framework mode + Vite 7 + React 19 + Tailwind CSS 4",
+      "backend": "Fastify 5.8.4 + TypeScript 5.9",
+      "database": "Prisma 7.7 + PostgreSQL 17 + Redis 7",
+      "auth": "Better Auth 1.6.2 session-based cookies",
+      "realtime": "Custom WebSocket @fastify/websocket",
+      "ai": "OpenAI + Anthropic SSE streaming",
+      "monorepo": "npm workspaces (no Turbo)"
+    },
+    "fragile_areas": [],
+    "auth_requirements": "Test auth/signup flow too — create a new user each run",
+    "reset_command": "npm run dev:infra:down && npm run dev:infra && npm run db:seed",
+    "env_setup": "cp .env.dev.example .env.dev (already done)"
+  },
+  "setup": {
+    "status": "completed",
+    "steps_completed": ["intake", "docker_infra", "npm_install", "db_generate", "db_push", "db_seed", "dev_api", "dev_web", "verify_running"],
+    "steps_failed": [],
+    "readme_parsed": true,
+    "docs_read": ["README.md", "AGENTS.md", "devservcmds.md"],
+    "app_confirmed_running": true,
+    "url_or_binary": "http://localhost:5173",
+    "setup_errors": [],
+    "setup_fixes_applied": [
+      {"description": "Docker credential helper blocked by locked macOS keychain", "result": "Bypassed with temporary DOCKER_CONFIG without credsStore"},
+      {"description": "prisma migrate dev prompted for migration name on fresh DB", "result": "Used prisma db push --accept-data-loss instead for dev environment"}
+    ]
+  },
+  "discovery": {
+    "status": "completed",
+    "pages_mapped": [
+      {"path": "/", "elements": 23, "interactive": 9, "notes": "landing page"},
+      {"path": "/login", "elements": 12, "interactive": 12, "notes": "sign in / demo account"},
+      {"path": "/signup", "elements": 12, "interactive": 12, "notes": "registration form"},
+      {"path": "/workspaces", "elements": 5, "interactive": 5, "notes": "workspace selection"},
+      {"path": "/:workspace", "elements": 31, "interactive": 31, "notes": "dashboard home"},
+      {"path": "/:workspace/inbox", "elements": 24, "interactive": 24, "notes": "empty notifications state"},
+      {"path": "/:workspace/my-issues", "elements": 30, "interactive": 30, "notes": "a11y improved with roles and landmarks"},
+      {"path": "/:workspace/issues", "elements": 60, "interactive": 60, "notes": "list/board views, filters, issue rows with status/subscribe buttons"},
+      {"path": "/:workspace/cycles", "elements": 28, "interactive": 28, "notes": "empty cycles state"},
+      {"path": "/:workspace/triage", "elements": 53, "interactive": 53, "notes": "team inbox with assignee/workflow state buttons, snooze/decline"},
+      {"path": "/:workspace/roadmap", "elements": 44, "interactive": 44, "notes": "timeline, initiatives, cycle schedule, issue links"},
+      {"path": "/:workspace/projects", "elements": 30, "interactive": 30, "notes": "empty projects state"},
+      {"path": "/:workspace/initiatives", "elements": 27, "interactive": 27, "notes": "empty initiatives state"},
+      {"path": "/:workspace/analytics", "elements": 55, "interactive": 55, "notes": "a11y improved with roles and landmarks; charts exposed as images"},
+      {"path": "/:workspace/notes", "elements": 34, "interactive": 34, "notes": "note list, create note"},
+      {"path": "/:workspace/databases", "elements": 32, "interactive": 32, "notes": "product tasks db, new db button"},
+      {"path": "/:workspace/team", "elements": 29, "interactive": 29, "notes": "members, invite, teams, create team"},
+      {"path": "/:workspace/settings", "elements": 36, "interactive": 36, "notes": "9 tabs (General/Members/Appearance/Notifications/Security/Integrations/Webhooks/Data/Billing)"}
+    ],
+    "flows_tested": [
+      "signup -> workspace creation -> dashboard",
+      "login with demo account -> workspace selection -> dashboard",
+      "create issue (seeded workspace)",
+      "create issue (fresh workspace) → WORKS after fix",
+      "create note",
+      "command palette (CMD+K)",
+      "navigation across all sidebar links"
+    ],
+    "console_errors_observed": []
+  },
+  "elements": [],
+  "fixes_applied": [
+    {
+      "element": "POST /workspaces (workspace creation)",
+      "bug": "Fresh workspace had no teams, blocking issue creation with 'No teams available' disabled submit button",
+      "fix": "Added default team + workflow states + team member creation inside workspace creation route (apps/api/src/modules/workspaces/workspaces.routes.ts)",
+      "verification": "Signed up new user (healer-test2), created workspace (Healer Workspace 2), opened New Issue modal — team selector showed 'Healer Workspace 2', Create issue button enabled, issue created successfully and appeared in Issues list as 'First issue in fresh workspace with fix'"
+    },
+    {
+      "element": "WebSocket connections (ws.ts)",
+      "bug": "Console flooded with ~167 generic WebSocket errors when navigating to authenticated pages while logged out",
+      "fix": "Added session token guard in connect() and onclose() reconnect logic in apps/web/src/lib/ws.ts — skips WS connection entirely when no better-auth.session_token cookie exists",
+      "verification": "Navigated to /acme-corp while logged out → 0 WebSocket console errors (previously ~167). API logs confirm no WS connection attempts. Authenticated WS connections still function normally."
+    },
+    {
+      "element": "Analytics and My Issues pages",
+      "bug": "browser_snapshot returned 0 elements despite visible content — pages lacked ARIA roles and semantic landmarks",
+      "fix": "Added role='region', role='img', role='status', role='main', and aria-label attributes to chart containers, stat cards, empty states, and page wrappers in analytics.tsx and my-issues.tsx",
+      "verification": "Analytics page: 55 a11y elements (was 0). My Issues page: 30 a11y elements (was 0). Regions, images, headings, and status messages now all discoverable."
+    }
+  ],
+  "deferred_problems": [],
+  "pass_count": 3,
+  "fail_count": 0,
+  "deferred_count": 0,
+  "phase": "regression",
+  "regression_mode": false
+}

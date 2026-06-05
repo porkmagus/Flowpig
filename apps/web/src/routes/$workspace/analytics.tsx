@@ -459,10 +459,10 @@ export default function AnalyticsPage() {
       </StaggerContainer>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" role="region" aria-label="Analytics charts">
         {/* Velocity Chart */}
         <FadeIn delay={0.2}>
-          <Card>
+          <Card role="region" aria-label="Velocity chart">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Velocity</CardTitle>
               <p className="text-xs text-linear-text-secondary">
@@ -470,7 +470,7 @@ export default function AnalyticsPage() {
               </p>
             </CardHeader>
             <CardContent>
-              <div className="h-48">
+              <div className="h-48" role="img" aria-label="Bar chart showing velocity over time">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={velocity?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--linear-border)" />
@@ -501,7 +501,7 @@ export default function AnalyticsPage() {
         {/* Burndown Chart */}
         <FadeIn delay={0.25}>
           {burndown ? (
-            <Card>
+            <Card role="region" aria-label="Burndown chart">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
@@ -531,7 +531,7 @@ export default function AnalyticsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-48">
+                <div className="h-48" role="img" aria-label="Area chart showing burndown progress">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={burndown.burndown}>
                       <defs>
@@ -577,7 +577,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="flex h-full min-h-70 flex-col items-center justify-center">
+            <Card role="region" aria-label="Active cycle" className="flex h-full min-h-70 flex-col items-center justify-center">
               <div className="w-12 h-12 rounded-full bg-linear-surface flex items-center justify-center mb-3">
                 <Calendar className="w-6 h-6 text-linear-text-tertiary" />
               </div>
@@ -597,7 +597,7 @@ export default function AnalyticsPage() {
 
       {/* Issue Trends */}
       <FadeIn delay={0.28}>
-        <Card>
+        <Card role="region" aria-label="Issue trends chart">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Issue Trends</CardTitle>
             <p className="text-xs text-linear-text-secondary">
@@ -605,7 +605,7 @@ export default function AnalyticsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="h-56">
+            <div className="h-56" role="img" aria-label="Area chart showing issue trends over time">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trends?.data || []}>
                   <defs>

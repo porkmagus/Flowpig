@@ -129,6 +129,38 @@ export default async function workspaceRoutes(fastify: FastifyInstance) {
       },
     });
 
+    // Create a default team so new users can immediately create issues
+    const team = await fastify.prisma.team.create({
+      data: {
+        workspaceId: workspace.id,
+        name: workspace.name,
+        key: workspace.slug.substring(0, 3).toUpperCase(),
+        color: '#5E6AD2',
+      },
+    });
+
+    const defaultStates = [
+      { name: 'Backlog', key: 'backlog', category: 'BACKLOG' as const, position: 0, isDefault: true },
+      { name: 'Todo', key: 'todo', category: 'TODO' as const, position: 1 },
+      { name: 'In Progress', key: 'in_progress', category: 'IN_PROGRESS' as const, position: 2 },
+      { name: 'In Review', key: 'in_review', category: 'IN_REVIEW' as const, position: 3 },
+      { name: 'Done', key: 'done', category: 'DONE' as const, position: 4, isTerminal: true },
+    ];
+
+    await fastify.prisma.teamWorkflowState.createMany({
+      data: defaultStates.map(s => ({
+        teamId: team.id,
+        ...s,
+      })),
+    });
+
+    await fastify.prisma.teamMember.create({
+      data: {
+        teamId: team.id,
+        userId,
+      },
+    });
+
     return {
       workspace: {
         id: workspace.id,
