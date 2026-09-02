@@ -18,7 +18,7 @@
     "@flowpigdev/db": "*",
     "better-auth": "1.6.22",
     "dotenv": "^17.4.2",
-    "fastify": "5.8.5",
+    "fastify": "5.12.1",
     "fastify-plugin": "5.1.0",
     "openai": "6.34.0",
     "stripe": "^16.0.0",
